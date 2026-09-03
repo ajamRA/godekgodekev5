@@ -1,0 +1,28 @@
+# Huge binaries - do NOT commit
+*.zip
+*.tar.gz
+*.img
+*.apk
+*.dex
+*.odex
+*.vdex
+payload.bin
+pdg.zip
+pdg.tar.gz
+jadx.zip
+bin/
+lib/
+parts/
+extract/
+decompile/
+jadx_out/
+jadx_em/
+jadx_dbg_manifest/
+META-INF/
+__MACOSX/
+
+# Keep only research docs & scripts
+!RESEARCH-README.md
+!hu_password.py
+!hu-password.ps1
+!NOTES-*.md
