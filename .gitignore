@@ -45,6 +45,12 @@ workspace_injection/candidate_hook/
 workspace_injection/old_output/
 workspace_injection/revert_package/
 
+# Tools & Decompilers
+tools/
+bin/
+*.jar
+update_engine_bin
+
 # Log Dumps (Car Diagnostics)
 latest_car_log/
 logs_backup/
@@ -52,6 +58,12 @@ _logs/
 log_analysis_1604/
 *.log
 launch_log.txt
+_*.txt
+*upgrade.txt
+engine_curf.txt
+dp_list.txt
+payload_properties.txt
+*.p7s
 
 # Screenshots / UI Dumps
 *.png
@@ -77,3 +89,4 @@ jadx_upgradeservice/
 New folder/
 temp_settings/
 META-INF/
+
