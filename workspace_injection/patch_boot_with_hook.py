@@ -1,5 +1,5 @@
 """
-Advanced boot.img patcher for Proton e.MAS 5 (IHU801P):
+Advanced boot.img patcher for Geely EX2 (IHU801P):
 1. Injects mount hook into system/bin/init to bind-mount /first_stage_ramdisk/prop.default over /system/etc/prop.default.
 2. Bypasses /force_debuggable and /debug_ramdisk/adb_debug.prop checks in init.
 3. Injects /force_debuggable and /debug_ramdisk/adb_debug.prop into ramdisk.

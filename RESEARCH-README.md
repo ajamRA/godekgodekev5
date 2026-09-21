@@ -1,6 +1,6 @@
-# e.MAS 5 Head Unit Research 🔧🚗
+# Geely EX2 Head Unit Research 🔧🚗
 
-> Reverse-engineering notes for the **Proton e.MAS 5** (Geely EX2 platform, Malaysia) infotainment head unit.
+> Reverse-engineering notes for the **Geely EX2** (Geely EX2 platform, Malaysia) infotainment head unit.
 > Goal: enable ADB / developer access, understand the A-Store install pipeline, and eventually record the 360° (AVM) surround cameras.
 
 > ⚠️ **Disclaimer**: For educational/research purposes only. Use at your own risk — modifying vehicle electronics may void warranty and can brick hardware. Do not perform while driving.
@@ -16,7 +16,7 @@
 | Build | `SWE22HR0807H0AEJ.00785` (incremental `785`, **test-keys**) |
 | Security patch | 2021-09-05 |
 | OTA project code | `SX11RA` (upgrade.conf), P-CODE `ME3FERD` |
-| Backend | `hu-atlas.acotech.my` (AcoTech Malaysia), OTA files on Huawei OBS `proton-file.obs.my-kualalumpur-1.alphaedge.tmone.com.my` |
+| Backend | `hu-atlas.oem-cloud.internal` (OEM Backend), OTA files on Huawei OBS `ota-file.obs.oem-cloud.internal` |
 
 Key properties (from `properties` dump / build.props):
 
@@ -122,11 +122,11 @@ Once ADB is up you can `adb install` anything, read `/dev/video*` camera nodes, 
 
 ## 5. A-Store / Atlas backend (from logcat HTTP dumps)
 
-Base: `https://hu-atlas.acotech.my/` with headers:
+Base: `https://hu-atlas.oem-cloud.internal/` with headers:
 
 ```
 X-ENV-TYPE: production   X-SERVICEID: s1
-X-OPERATORCODE: proton   X-P-CODE: ME3FERD
+X-OPERATORCODE: oem   X-P-CODE: ME3FERD
 X-XDSN: <unit serial>    vin: <VIN>   huid: <IHUID>
 Authorization: Bearer <JWT>
 ```
@@ -164,4 +164,4 @@ decompile/AcoXDebugTools  jadx output — debug tools app
 
 * Brazil Geely EX2 community (geelyex2.blogspot.com) — original IHU629G unlock write-ups (different unit, but inspired the route)
 * MTK EngineerMode / Android AOSP internals
-* All analysis from captured IHU logs + OTA payloads of a Malaysian e.MAS 5.
+* All analysis from captured IHU logs + OTA payloads of a Malaysian Geely EX2.

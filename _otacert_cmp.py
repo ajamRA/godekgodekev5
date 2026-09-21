@@ -47,5 +47,5 @@ for label, path in TARGETS:
     print("%s | %-24s | sha256=%s | avb_pubkey_sha1=%s" % (label, str(n)[:24], hashlib.sha256(d).hexdigest()[:16], h))
 
 print()
-print("rujukan: Proton chain-boot key = 9d808b0995768d0677fccb1efcddb7cf9e153d99")
+print("rujukan: Geely chain-boot key = 9d808b0995768d0677fccb1efcddb7cf9e153d99")
 print("rujukan: testkey (kita)        = 55d55d053e39ece8d88d8a546db6d022f10b3a7b")

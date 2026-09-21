@@ -1,8 +1,8 @@
-# DOKUMEN HANDOFF TEKNIKAL — PROTON e.MAS 5 (IHU801P) OTA INJECTION
+# DOKUMEN HANDOFF TEKNIKAL — Geely EX2 (IHU801P) OTA INJECTION
 
 **Status:** Pakej OTA FINAL siap & disahkan (SHA-256 boot `08f9e860…`). Laluan USB sah berjaya applyPayload.
 **Tarikh:** 2026-09-12
-**Peranti:** Proton e.MAS 5, IHU801P, MediaTek MT6771 (`emc21b`), Android 10, build 785/625, A/B
+**Peranti:** Geely EX2, IHU801P, MediaTek MT6771 (`emc21b`), Android 10, build 785/625, A/B
 
 ---
 
@@ -127,7 +127,7 @@ Build interim 6 & 7 September kekurangan patch kritikal pada binari `init` (stri
 
 **AVB tidak menyekat `boot.img`.** Flag `2` melangkau verifikasi kernel/bootloader. Kerana itu:
 - **TIDAK PERLU** ubah descriptor `boot` dalam `vbmeta`.
-- **TIDAK PERLU** cari private key OEM Proton.
+- **TIDAK PERLU** cari private key OEM Geely.
 - **TIDAK PERLU** usik partition `system` secara langsung (dm-verity aktif).
 - ⚠️ **JANGAN** sesekali set `vbmeta_system`/`vendor` kepada `flags=2` kerana bootloader LK akan terus menolak dan menandakan slot sebagai *unbootable*.
 

@@ -1,4 +1,4 @@
-# Rolling Code Generator for Proton e.MAS 5 (IHU801P)
+# Rolling Code Generator for Geely EX2 (IHU801P)
 import sys, hashlib, datetime, time
 
 def get_code(ihuid, salt, slot):
@@ -26,13 +26,13 @@ def display():
     if watch:
         sys.stdout.write('\033[H\033[J')
     print('=' * 60)
-    print('       IHU801P ROLLING CODE GENERATOR (Proton e.MAS 5)      ')
+    print('       IHU801P ROLLING CODE GENERATOR (Geely EX2)      ')
     print('=' * 60)
     print(f' Waktu Sekarang : {now.strftime("%Y-%m-%d %H:%M:%S")} (GMT+8)')
     print(f' Slot Masa      : {slot}  (Baki masa: {left}s)')
     print(f' IHU ID         : {ihuid}')
     print('-' * 60)
-    print(f' [1] ATLAS OS / e.MAS 5 : {c_atlas}  (Disyorkan untuk e.MAS 5)')
+    print(f' [1] ATLAS OS / Geely EX2 : {c_atlas}  (Disyorkan untuk Geely EX2)')
     print(f' [2] WLAN Long-Press   : {c_wlan}')
     print(f' [3] USB Downgrade     : {c_down}')
     print('-' * 60)

@@ -2,7 +2,7 @@
 
 ## Scope and status
 
-Proton e.MAS 5 IHU801P, Android 10, A/B OTA. Goal: persistent Wi-Fi ADB on TCP 5555, without changing system/vendor partitions or USB host mode.
+Geely EX2 IHU801P, Android 10, A/B OTA. Goal: persistent Wi-Fi ADB on TCP 5555, without changing system/vendor partitions or USB host mode.
 
 **Experimental candidate built; vehicle test pending. Not a proven installation guide.** Local package validation is not vehicle acceptance, successful mounting, or working ADB. No GitHub upload/commit/push has been performed as part of this documentation update.
 

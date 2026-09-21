@@ -1,20 +1,20 @@
-# Emas5godekgodek 🚗⚡
+# Geely EX2 / Geometry IHU Research & Modding 🚗⚡
 
-Koleksi skrip, alat diagnostik, dokumentasi teknikal, dan kaedah modifikasi untuk Head Unit (IHU) **Proton e.MAS 5** (Platform Geely Galaxy E5 / Geely Xingyuan - IHU801P / EMC21B).
+Koleksi skrip, alat diagnostik, dokumentasi teknikal, dan kaedah modifikasi untuk Head Unit (IHU) **Geely EX2** (Platform Geely Geometry / EMC Series).
 
 ---
 
 ## 📖 Dokumentasi Lengkap
 
 Sila rujuk panduan langkah demi langkah penuh di:
-👉 **[PANDUAN MODIFIKASI LENGKAP PROTON e.MAS 5](PANDUAN_MODIFIKASI_PROTON_EMAS5.md)**
+👉 **[PANDUAN MODIFIKASI LENGKAP GEELY EX2](PANDUAN_MODIFIKASI_GEELY_EX2.md)**
 
 ---
 
 ## 🎯 Ciri-Ciri & Modifikasi yang Disokong
 
 1. **Akses Debug & Root ADB:**
-   - Kaedah pengiraan kata laluan dinamik `ECARX / Geely engineering menu`.
+   - Kaedah pengiraan kata laluan dinamik `Engineering Menu`.
    - Akses wireless ADB (`192.168.1.x:5555`) dan root shell.
    - Boot persistence menggunakan skrip `init.rc`.
 
@@ -37,7 +37,7 @@ Sila rujuk panduan langkah demi langkah penuh di:
 ## 📂 Struktur Repositori
 
 ```text
-├── PANDUAN_MODIFIKASI_PROTON_EMAS5.md # Panduan teknikal penuh & rujukan pantas
+├── PANDUAN_MODIFIKASI_GEELY_EX2.md    # Panduan teknikal penuh & rujukan pantas
 ├── tools/                             # Skrip automasi (Python, ADB, mount tools)
 ├── workspace_injection/               # Skrip payload & mount persistence
 ├── netlify_deploy/                    # Antara muka web untuk alatan diagnostik

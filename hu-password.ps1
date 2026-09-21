@@ -1,4 +1,4 @@
-# 6-char IHU Rolling Password Generator for Proton e.MAS 5 (IHU801P)
+# 6-char IHU Rolling Password Generator for Geely EX2 (IHU801P)
 # Usage:
 #   .\hu-password.ps1
 #   .\hu-password.ps1 -IhuId "021600000000000000000000"
@@ -38,15 +38,15 @@ function Show-Codes {
 
     Clear-Host
     Write-Host "============================================================" -ForegroundColor Cyan
-    Write-Host "       IHU801P ROLLING CODE GENERATOR (Proton e.MAS 5)       " -ForegroundColor Yellow
+    Write-Host "       IHU801P ROLLING CODE GENERATOR (Geely EX2)       " -ForegroundColor Yellow
     Write-Host "============================================================" -ForegroundColor Cyan
     Write-Host " Waktu Sekarang : $($now.ToString('yyyy-MM-dd HH:mm:ss')) (GMT+8)"
     Write-Host " Slot Semasa    : $slot  (Baki masa: ${left}s)" -ForegroundColor Green
     Write-Host " IHU ID         : $IhuId"
     Write-Host "------------------------------------------------------------"
-    Write-Host " [1] ATLAS OS / e.MAS 5 : " -NoNewline
+    Write-Host " [1] ATLAS OS / Geely EX2 : " -NoNewline
     Write-Host "$codeAtlas" -ForegroundColor Yellow -NoNewline
-    Write-Host "  (Disyorkan untuk e.MAS 5)"
+    Write-Host "  (Disyorkan untuk Geely EX2)"
     Write-Host " [2] WLAN Long-Press   : " -NoNewline
     Write-Host "$codeWlan" -ForegroundColor White
     Write-Host " [3] USB Downgrade     : " -NoNewline

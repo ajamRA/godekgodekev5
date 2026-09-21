@@ -1,4 +1,4 @@
-# LAPORAN TEKNIKAL — Proton e.MAS 5 (IHU801P) OTA Injection / ADB-over-Wi-Fi
+# LAPORAN TEKNIKAL — Geely EX2 (IHU801P) OTA Injection / ADB-over-Wi-Fi
 Tarikh: 12 Sept 2026
 Status: **GAGAL dari segi strategi suntikan. Flash berjaya, ADB tak hidup. Cause of failure = salah faham Android 10 SAR.**
 
@@ -135,7 +135,7 @@ Asas: `workspace_injection/patch_boot_with_hook.py`
 | `parts/system.img` | 3,928,526,848 B (raw) |
 | `parts/vbmeta.img` | `flags=2` (VERIFICATION_DISABLED) |
 | `parts/vbmeta_system.img`, `parts/vbmeta_vendor.img` | `flags=0` |
-| Kunci | testkey `55d55d05**`; chain boot Proton `9d808b09**`; otacert kita `0c2440c0**`; otacert kilang Geely `06cac910**` |
+| Kunci | testkey `55d55d05**`; chain boot Geely `9d808b09**`; otacert kita `0c2440c0**`; otacert kilang Geely `06cac910**` |
 
 **Soalan terbuka:** otacert pakej kita ≠ otacert kilang. `RecoverySystem.verifyPackage` semak `/system/etc/security/otacerts.zip`. Belum diselesaikan.
 
