@@ -108,14 +108,14 @@ fi
 
 ### B. Init Trigger: `/system/etc/init/zzz_custom_apps.rc`
 ```rc
-# Persistent custom apps auto-mount (Netflix & SmartTube)
+# Persistent custom mounts (Netflix, SmartTube, AVAS V8)
 on post-fs-data
-    exec -- /system/bin/sh /system/bin/ex2_mount.sh
-
-on property:sys.boot_completed=1
-    exec -- /system/bin/sh /system/bin/ex2_mount.sh
+    mount none /data/local/custom_apps/SmartTube /system/app/ttincar_tiktok_ACO bind rec
+    mount none /data/local/custom_apps/Netflix /system/app/JOOXMusic_ACO bind rec
+    mount none /data/local/avas/Settings_MOLEAD_v8.apk /system/app/Settings_MOLEAD/Settings_MOLEAD.apk bind rec
+    mount none /data/local/avas/v8_clean.wav /vendor/etc/avas/sound_type_3/pixel.wav bind rec
 ```
-* Trigger dijalankan pada fasa **`post-fs-data`** (sebelum Zygote dan PackageManager memulakan imbasan), memastikan aplikasi dikesan secara automatik tanpa perlu restart framework.
+* **Punca Isu & Penyelesaian:** Perintah `exec -- /system/bin/sh` dalam Android Enforcing SELinux disekat oleh sekatan `neverallow init shell_exec:file execute_no_trans`. Oleh itu, arahan C++ dalaman `mount none <src> <dst> bind rec` digunakan secara terus oleh `init` (PID 1) pada fasa `post-fs-data` sebelum PackageManagerService memulakan imbasan aplikasi. Ini memastikan kestabilan 100% pada setiap kali kereta dihidupkan (*cold boot*).
 
 ---
 
