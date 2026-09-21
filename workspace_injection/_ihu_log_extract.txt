@@ -1,0 +1,768 @@
+
+===== APLog_2026_0907_151423__2/properties =====
+[init.svc.adbd]: [stopped]
+[ro.boot.slot]: [b]
+[ro.boot.verifiedbootstate]: [orange]
+[ro.build.type]: [user]
+[ro.build.display.id]: [QP1A.190711.020 test-keys]
+[ro.build.version.incremental]: [785]
+[ro.debuggable]: [0]
+[sys.usb.state]: [mtp]
+[ro.boot.slot_suffix]: [_b]
+[sys.usb.ffs.ready]: [0]
+[ro.adb.secure]: [1]
+[ro.secure]: [1]
+[sys.usb.config]: [mtp]
+[sys.usb.configfs]: [1]
+[persist.sys.usb.config]: [iAP2,uac2]
+[persist.sys.molead.usb.mode]: [host]
+
+===== APLog_2026_0907_151750__3/properties =====
+[init.svc.adbd]: [stopped]
+[ro.boot.slot]: [a]
+[ro.boot.verifiedbootstate]: [orange]
+[ro.build.type]: [user]
+[ro.build.display.id]: [QP1A.190711.020 test-keys]
+[ro.build.version.incremental]: [625]
+[ro.debuggable]: [0]
+[sys.usb.state]: [mtp]
+[ro.boot.slot_suffix]: [_a]
+[sys.usb.ffs.ready]: [0]
+[ro.adb.secure]: [1]
+[ro.secure]: [1]
+[sys.usb.config]: [mtp]
+[sys.usb.configfs]: [1]
+[persist.sys.usb.config]: [iAP2,uac2]
+[persist.sys.molead.usb.mode]: [host]
+
+===== APLog_2026_0907_151239__1/properties =====
+[init.svc.adbd]: [stopped]
+[ro.boot.slot]: [b]
+[ro.boot.verifiedbootstate]: [orange]
+[ro.build.type]: [user]
+[ro.build.display.id]: [QP1A.190711.020 test-keys]
+[ro.build.version.incremental]: [785]
+[ro.debuggable]: [0]
+[sys.usb.state]: [mtp]
+[ro.boot.slot_suffix]: [_b]
+[sys.usb.ffs.ready]: [0]
+[ro.adb.secure]: [1]
+[ro.secure]: [1]
+[sys.usb.config]: [mtp]
+[sys.usb.configfs]: [1]
+[persist.sys.usb.config]: [iAP2,uac2]
+[persist.sys.molead.usb.mode]: [host]
+
+===== GREP APLog_2026_0907_151423__2/sys_log_2026_0907_151423.curf =====
+
+===== GREP APLog_2026_0907_151423__2/main_log_2026_0907_151423.curf =====
+09-07 15:14:25.155557  4033  4033 I VSM     : start to connect to car service...
+09-07 15:14:30.607557  1941  1958 I ConnectService: System: registerCallback: com.malaysia.ConnectServiceApi.SystemService.ISystemServiceCallback$Stub$Proxy@eadbdb0, android.os.BinderProxy@5e59429
+09-07 15:14:31.044925  1941  1958 I ConnectService: System: key= android.os.BinderProxy@5e59429, value= com.malaysia.ConnectServiceApi.SystemService.ISystemServiceCallback$Stub$Proxy@eadbdb0, package= com.malaysia.popview
+09-07 15:14:34.550936  1941  1958 I ConnectService: System: key= android.os.BinderProxy@5e59429, value= com.malaysia.ConnectServiceApi.SystemService.ISystemServiceCallback$Stub$Proxy@eadbdb0, package= com.malaysia.popview
+09-07 15:14:41.555506  2137  2137 W UpgradeService: handleMessage MSG_SHOW_PROGRESS_WITHOUT_PROCESS_UPDATE title = Software updating…, message = Upgrading MCU, progress = 15
+09-07 15:14:50.385555   469   537 E automotive.vehicle@2.0-impl: VehicleHalManager get value:  property: 0x287002e9
+09-07 15:15:04.855554   469   469 E automotive.vehicle@2.0-impl: VehicleHalManager get value:  property: 0x287002e9
+09-07 15:15:04.955556   502  4263 W MCU_UPGRADE: updateData[1920] == {0x21 0x06 0xac 0xa7 0xbf 0xfe 0x25 0x56 0x14 0x00 0x7f 0x00 0x40 0x2e 0xc0 0xfe 0x65 0x07 0x94 0xa7 0x7f 0x00 0x40 0x2e 0xc0 0xfe 0x45 0x07 0x98 0xa7 0x40 0x2e 0xc0 0xfe 0x65 0x07 0x9d 0xa7 0x40 0x2e 0xc0 0xfe 0x65 0x07 0x96 0xa7 0x7f 0x00 0x80 0x07 0x21 0x00 0x80 0xff 0x08 0x00 0x40 0x06 0x3f 0x00 0x40 0x2e 0xc0 0xfe 0x05 0x37 0xa0 0xa7 0x86 0x36 0x05 0x00 0xc6 0x36 0xf5 0x00 0x45 0x37 0xa0 0xa7 0x7f 0x00 0x40 0x2e 0xc0 0xfe 0x05 0x2f 0xa0 0xa7 0x82 0x2a 0xc5 0x56 0x03 0x00 0x7f 0x00 0x80 0x07 0x21 0x0c 0x06 0xa6 0x00 0x00 0xfa 0x05 0x20 0x3e 0xd4 0x10 0x20 0x36 0x13 0x00 0xbf 0xff 0x22 0xcc 0x40 0xae 0xc0 0xfe 0x15 0x2f 0xa0 0xa7 0x82 }
+09-07 15:15:25.565555   502  4263 W MCU_UPGRADE: updateData[1280] == {0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff }
+09-07 15:15:27.855551   502  4263 W MCU_UPGRADE: updateData[0] == {0xff }
+09-07 15:15:29.755550   499   665 I LiteCameraDevice: [freePreAllocateCamBuf] freePreAllocateCamBuf vImgBuf Q imgBuf:0x74b1904d00, PA:0xf200000
+09-07 15:15:30.555510   469   490 E automotive.vehicle@2.0-impl: VehicleHalManager get value:  property: 0x287002e9
+09-07 15:15:42.655558   499   665 I LiteCameraDevice: [preAllocateCamBuffer] preAllocateCamBuffer [3]Port(6) iMemBuf id:63 va:0x74758f3000 size 8192000 
+
+===== GREP APLog_2026_0907_151423__2/bsp_log_2026_0907_151423.curf =====
+           <...>-4860  [006] ....    61.085555: sched_process_exit: comm=cat pid=4860 prio=120
+
+===== GREP APLog_2026_0907_151423__2/boot__normal/kernel_log_6__2026_0907_151423 =====
+<6>[    0.155554]  (4)[1:swapper/0]MMP: mmprofile_force_start(): start: 1
+<14>[    1.586565]  (5)[1:init]init 3: ReapLogC PropSet [persist.device_config.runtime_native.usap_pool_enabled]=[false]1.580365 [persist.molead.gesture.enable]=[true]1.580437 [persist.molead.threefinger.step]=[35]1.580444 [persist.molead.twofinger.step]=[10]1.580451 [persist.radio.multisim.config]=[ss]1.580459 [persist.spm.sdk_service]=[1]1.580466 [persist.sys.country]=[MY]1.580474 [persist.sys.dalvik.vm.lib.2]=[libart.so]1.580484 [persist.sys.dataSwitch]=[on]1.580491 [persist.sys.language]=[en]1.580498 [persist.sys.molead.usb.mode]=[host]1.580506 [persist.sys.timezone]=[Asia/Kuala_Lumpur]1.580513 [persist.sys.usb.config]=[none]1.580521 [persist.tbox.debugable]=[1]1.580527 [persist.vendor.camera3.pipeline.bufnum.base.imgo]=[5]1.580539 [persist.vendor.camera3.pipeline.bufnum.base.lcso]=[5]1.580549 Done
+<14>[    1.606925]  (5)[1:init]init 3: ReapLogF PropSet [sys.usb.controller]=[musb-hdrc]1.600783 Done
+<6>[    3.520709]  (7)[317:init]gadgets_make name=g1
+<14>[    4.166754]  (1)[1:init]init 16: ReapLogC PropSet [persist.device_config.attempted_boot_count]=[0]4.159996 [persist.sys.boot.reason.history]=[reboot,factory_reset,1788765148 reboot,lk_crash,1788765130]4.160103 [persist.sys.boot.reason]=[]4.160133 [persist.vendor.mtk.aee.mode]=[4]4.160226 [persist.vendor.aee.fatal_db.count]=[4]4.160300 [persist.vendor.aee.db.count]=[4]4.160330 [persist.sys.usb.config]=[iAP2,uac2]4.160361 [persist.vendor.connsys.chipid]=[0x6771]4.160434 [persist.vendor.audiohal.firstboot]=[0]4.160529 [persist.vendor.audiohal.besloudness_state]=[1]4.160559 [persist.vendor.connsys.patch.version]=[20220328165322a]4.160587 [persist.vendor.sys.pq.mdp.color.idx]=[0]4.160675 [persist.vendor.sys.pq.adl.idx]=[0]4.160704 [persist.vendor.sys.pq.iso.shp.en]=[2]4.160732 Done
+<14>[    4.485574]  (5)[1:init]init 15: ReapLogF PropSet [sys.usb.configfs]=[0]4.479472 Done
+<14>[    4.485729]  (5)[1:init]init 19: processing action (persist.sys.usb.config=* && boot) from (/init.usb.rc:102)
+<14>[    4.489074]  (5)[1:init]init 15: ReapLogF PropSet [sys.usb.config]=[iAP2,uac2]4.479818 [vendor.touchdriver.status]=[start]4.480678 Done
+<14>[    4.658735]  (5)[1:init]init 19: ReapLogF PropSet [sys.usb.configfs]=[1]4.648257 [sys.usb.ffs.aio_compat]=[1]4.648794 [vendor.usb.controller]=[musb-hdrc]4.649142 [vendor.usb.acm_cnt]=[0]4.649238 [vendor.usb.acm_port0]=[]4.649304 [vendor.usb.acm_port1]=[]4.649367 [vendor.usb.acm_enable]=[0]4.649430 Done
+<14>[    4.782488]  (5)[1:init]init 16: processing action (ro.debuggable=0) from (/init.rc:860)
+<14>[    4.784374]  (5)[1:init]init 16: processing action (persist.sys.molead.usb.mode=host) from (/system/etc/init/init.molead.system.rc:2)
+<14>[    4.806148]  (7)[1:init]init 19: ReapLogF PropSet [persist.sys.usb.config]=[iAP2,uac2]4.799906 [sys.usb.config]=[iAP2,uac2]4.800107 Done
+<14>[    5.592648]  (4)[1:init]init 15: processing action (persist.sys.usb.config=*) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:49)
+<14>[    5.593875]  (4)[1:init]init 19: ReapLogF PropSet [sys.usb.config]=[iAP2,uac2]5.587719 Done
+<14>[    5.593887]  (4)[1:init]init 15: processing action (sys.usb.config=iAP2,uac2 && sys.usb.configfs=1) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:59)
+<14>[    5.597339]  (4)[1:init]init 15: processing action (sys.usb.config=iAP2,uac2 && sys.usb.configfs=1) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:64)
+<6>[    5.600226]  (4)[317:init]gadget_dev_desc_UDC_store write musb-hdrc
+<6>[    5.600236]  (4)[317:init]usb_gadget_probe_driver musb-hdrc musb-hdrc
+<3>[    5.600275]  (4)[317:init]configfs-gadget musb-hdrc: failed to start g1: -22
+<14>[    5.600459]  (4)[1:init]init 15: Command 'write /config/usb_gadget/g1/UDC ${sys.usb.controller}' action=sys.usb.config=iAP2,uac2 && sys.usb.configfs=1 (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:71) took 0ms and failed: Unable to write to file '/config/usb_gadget/g1/UDC': Unable to write file contents: Invalid argument
+<14>[    5.600926]  (4)[1:init]init 21: ReapLogF PropSet [sys.usb.state]=[iAP2,uac2]5.594817 Done
+<14>[    5.845208]  (7)[1:init]init 19: processing action (persist.sys.usb.config=*) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:49)
+<14>[    5.847316]  (6)[1:init]init 21: ReapLogF PropSet [sys.usb.config]=[iAP2,uac2]5.841200 Done
+<14>[    5.847985]  (6)[1:init]init 15: processing action (sys.usb.config=iAP2,uac2 && sys.usb.configfs=1) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:59)
+<14>[    5.862216]  (6)[1:init]init 15: processing action (sys.usb.config=iAP2,uac2 && sys.usb.configfs=1) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:64)
+<6>[    5.895730]  (7)[317:init]gadget_dev_desc_UDC_store write musb-hdrc
+<6>[    5.895741]  (7)[317:init]usb_gadget_probe_driver musb-hdrc musb-hdrc
+<3>[    5.895776]  (7)[317:init]configfs-gadget musb-hdrc: failed to start g1: -22
+<14>[    5.895992]  (7)[1:init]init 15: Command 'write /config/usb_gadget/g1/UDC ${sys.usb.controller}' action=sys.usb.config=iAP2,uac2 && sys.usb.configfs=1 (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:71) took 1ms and failed: Unable to write to file '/config/usb_gadget/g1/UDC': Unable to write file contents: Invalid argument
+<14>[    5.898580]  (7)[1:init]init 21: ReapLogF PropSet [vendor.pullFWlog]=[]5.890352 [sys.usb.state]=[iAP2,uac2]5.890936 [vendor.MB.prepare]=[1]5.891100 Done
+<14>[    6.422259]  (5)[1:init]init 19: processing action (sys.usb.config=iAP2,uac2 && sys.usb.configfs=1) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:59)
+<14>[    6.425814]  (5)[1:init]init 19: processing action (sys.usb.config=iAP2,uac2 && sys.usb.configfs=1) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:64)
+<6>[    6.500623]  (2)[317:init]gadget_dev_desc_UDC_store write musb-hdrc
+<6>[    6.500635]  (2)[317:init]usb_gadget_probe_driver musb-hdrc musb-hdrc
+<3>[    6.500689]  (2)[317:init]configfs-gadget musb-hdrc: failed to start g1: -22
+<14>[    6.500965]  (0)[1:init]init 19: Command 'write /config/usb_gadget/g1/UDC ${sys.usb.controller}' action=sys.usb.config=iAP2,uac2 && sys.usb.configfs=1 (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:71) took 1ms and failed: Unable to write to file '/config/usb_gadget/g1/UDC': Unable to write file contents: Invalid argument
+<14>[    6.523356]  (2)[1:init]init 15: ReapLogF PropSet [persist.vendor.sys.pq.ultrares.en]=[2]6.501345 [sys.usb.state]=[iAP2,uac2]6.502511 [log.tag.APM_AudioPolicyManager]=[D]6.503004 Done
+<14>[    6.560514]  (4)[1:init]init 21: processing action (sys.usb.config=iAP2,uac2 && sys.usb.configfs=1) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:59)
+<14>[    6.575429]  (6)[1:init]init 21: processing action (sys.usb.config=iAP2,uac2 && sys.usb.configfs=1) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:64)
+<6>[    6.599480]  (4)[317:init]gadget_dev_desc_UDC_store write musb-hdrc
+<6>[    6.599490]  (4)[317:init]usb_gadget_probe_driver musb-hdrc musb-hdrc
+<3>[    6.599527]  (4)[317:init]configfs-gadget musb-hdrc: failed to start g1: -22
+<14>[    6.599761]  (4)[1:init]init 21: Command 'write /config/usb_gadget/g1/UDC ${sys.usb.controller}' action=sys.usb.config=iAP2,uac2 && sys.usb.configfs=1 (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:71) took 0ms and failed: Unable to write to file '/config/usb_gadget/g1/UDC': Unable to write file contents: Invalid argument
+<14>[    6.607236]  (4)[1:init]init 19: ReapLogF PropSet [service.sf.present_timestamp]=[1]6.594177 [sys.usb.state]=[iAP2,uac2]6.594622 [vendor.debug.pq.dre.dbg]=[0]6.594776 Done
+
+===== GREP APLog_2026_0907_151423__2/boot__normal/sys_log_4__2026_0907_151423 =====
+09-07 15:14:10.877192  1062  1062 I UsbDeviceManager: USB GADGET HAL not present in the device
+09-07 15:14:10.877192  1062  1062 I UsbDeviceManager: 	at android.hardware.usb.gadget.V1_0.IUsbGadget.getService(IUsbGadget.java:55)
+09-07 15:14:10.877192  1062  1062 I UsbDeviceManager: 	at android.hardware.usb.gadget.V1_0.IUsbGadget.getService(IUsbGadget.java:62)
+09-07 15:14:10.975555  1062  1062 E LockSettingsStorage: Cannot read file java.io.FileNotFoundException: /data/system/gatekeeper.gesture.key: open failed: ENOENT (No such file or directory)
+09-07 15:14:14.695555  1062  1086 W ActivityManager: Slow operation: 376ms so far, now at startProcess: returned from zygote!
+
+===== GREP APLog_2026_0907_151423__2/boot__normal/bsp_log_7__2026_0907_151423 =====
+
+===== GREP APLog_2026_0907_151423__2/boot__normal/main_log_1__2026_0907_151423 =====
+09-07 15:14:05.115555   510   548 I libPowerHal: [loadConTable] cmd:PERF_RES_GPU_GED_GX_BOOST, path:/sys/module/ged/parameters/gx_force_cpu_boost, normal:0, default:0
+09-07 15:14:06.555854   332   332 I hwservicemanager: getTransport: Cannot find entry android.hardware.usb.gadget@1.0::IUsbGadget/default in either framework or device manifest.
+09-07 15:14:10.165555   884  1118 I kuiper  : level=info msg="trigger status change handler" file="mqtt/conn.go:114" subtopo=triggerStream
+09-07 15:14:10.876681   332   332 I hwservicemanager: getTransport: Cannot find entry android.hardware.usb.gadget@1.0::IUsbGadget/default in either framework or device manifest.
+09-07 15:14:17.455557  1367  2418 E ECarXCarConfigService: F110Config containsID prop = 0x28700005, isContain false
+09-07 15:14:17.655558  2587  2658 D A2dpProxy: onA2dpServiceReady
+09-07 15:14:18.555521  2095  2951 E CarSignalManager: getCarPropertyManager mCarApiClient.isConnected() mCarApiClient.isConnected() =true
+09-07 15:14:18.776581  2454  2454 I DisplayModule: registerFunctionValueWatcher:funids( 0x00000057 0x00000056) watcher(com.malaysia.xui.adaptapi.vehicle.settings.AmbientLightAdjustImpl$1@eadbdb0) propid( INFO_ID_LIGHTINSIDE_ATMOSPHERE_LAMP_MODE INFO_ID_LIGHTINSIDE_ATMOSPHERE_LAMP_BRIGHTNESS)
+09-07 15:14:20.235555  2996  2996 D ControlBoard: getCPAAAuth:false
+
+===== GREP APLog_2026_0907_151423__2/kernel_log_2026_0907_151423.curf =====
+<14>[   13.212658]  (7)[1:init]init 22: ReapLogF PropSet [sys.usb.config]=[none]13.206258 Done
+<14>[   13.212674]  (7)[1:init]init 15: processing action (sys.usb.config=none && sys.usb.configfs=1) from (/vendor/etc/init/hw/init.emc21b.usb.rc:104)
+<14>[   13.225351]  (3)[1:init]init 15: processing action (sys.usb.config=none && sys.usb.configfs=1) from (/init.usb.configfs.rc:1)
+<6>[   13.226268]  (3)[1:init]gadget_dev_desc_UDC_store write none
+<14>[   13.226432]  (3)[1:init]init 15: Command 'write /config/usb_gadget/g1/UDC none' action=sys.usb.config=none && sys.usb.configfs=1 (/init.usb.configfs.rc:2) took 0ms and failed: Unable to write to file '/config/usb_gadget/g1/UDC': Unable to write file contents: No such device
+<14>[   13.232405]  (3)[1:init]init 22: ReapLogF PropSet [sys.usb.ffs.ready]=[0]13.221682 [sys.usb.state]=[none]13.225143 Done
+<14>[   13.232423]  (3)[1:init]init 15: processing action (init.svc.adbd=stopped) from (/init.usb.configfs.rc:14)
+<14>[   13.233357]  (3)[1:init]init 22: ReapLogF PropSet [sys.usb.ffs.ready]=[0]13.226602 Done
+<14>[   13.233376]  (3)[1:init]init 15: processing action (init.svc.adbd=stopped) from (/init.usb.configfs.rc:14)
+<14>[   13.234491]  (3)[1:init]init 19: ReapLogF PropSet [sys.usb.ffs.ready]=[0]13.227465 Done
+<14>[   13.234511]  (3)[1:init]init 15: processing action (sys.usb.ffs.ready=0) from (/vendor/etc/init/hw/init.emc21b.usb.rc:773)
+<14>[   13.238129]  (3)[1:init]init 15: processing action (sys.usb.ffs.ready=0) from (/vendor/etc/init/hw/init.emc21b.usb.rc:773)
+<14>[   13.240322]  (0)[1:init]init 21: processing action (sys.usb.ffs.ready=0) from (/vendor/etc/init/hw/init.emc21b.usb.rc:773)
+<14>[   13.264301]  (0)[1:init]init 19: ReapLogF PropSet [vendor.usb.ffs.ready]=[0]13.234667 [sys.usb.config]=[mtp]13.257594 Done
+<14>[   13.264323]  (0)[1:init]init 21: processing action (sys.usb.config=mtp && sys.usb.configfs=1 && vendor.usb.acm_cnt=0) from (/vendor/etc/init/hw/init.emc21b.usb.rc:169)
+<14>[   13.264729]  (0)[1:init]init 21: processing action (sys.usb.config=mtp && sys.usb.configfs=1 && vendor.usb.acm_enable=0) from (/vendor/etc/init/hw/init.emc21b.usb.rc:192)
+<6>[   13.272284]  (3)[317:init]gadget_dev_desc_UDC_store write musb-hdrc
+<6>[   13.272299]  (3)[317:init]usb_gadget_probe_driver musb-hdrc musb-hdrc
+<6>[   13.272337]  (3)[317:init]configfs-gadget gadget: adding 'mtp'/000000003df509b2 to config 'b'/00000000b6950860
+<6>[   13.272560]  (5)[317:init]mtu3_phone musb-hdrc: mtu3_gadget_pullup (on) for inactive device
+<14>[   13.273757]  (1)[1:init]init 19: ReapLogF PropSet [sys.usb.state]=[mtp]13.267625 Done
+<14>[   13.273778]  (1)[1:init]init 21: processing action (sys.usb.config=mtp && sys.usb.configfs=1) from (/init.usb.configfs.rc:26)
+<6>[   13.275911]  (1)[1:init]gadget_dev_desc_UDC_store write musb-hdrc
+<14>[   13.275996]  (1)[1:init]init 21: Command 'write /config/usb_gadget/g1/UDC ${sys.usb.controller}' action=sys.usb.config=mtp && sys.usb.configfs=1 (/init.usb.configfs.rc:29) took 0ms and failed: Unable to write to file '/config/usb_gadget/g1/UDC': Unable to write file contents: Device or resource busy
+<14>[   13.334537]  (3)[1969:init]init 19: ReapLogF PropSet [sys.usb.state]=[mtp]13.270119 [selinux.restorecon_recursive]=[]13.320868 Done
+<14>[   13.339238]  (2)[1:init]init 19: ReapLogF PropSet [sys.usb.state]=[mtp]13.270119 [selinux.restorecon_recursive]=[]13.320868 [selinux.restorecon_recursive]=[/data/system_ce/0]13.333050 Done
+<5>[   52.855550]  (5)[1609:kworker/5:2][Power/PPM] (0x80)(-1)(0)(0-7)(15)(0)(4)(4) (15)(0)(4)(4) 
+
+===== GREP APLog_2026_0907_151750__3/kernel_log_8__2026_0907_153307 =====
+<4>[  687.002801]  (1)[431:vehicleBootServ]1788766118.ns445555#LC00_ECP.W#[hex_array_printk_warn] mcu->mpu  : fe 5a aa a5 11 00 91 10 01 01 1c 00 00 06 ef 00 00 00 d6 02 a4 13 32 00 8e 01 00 00 00 00 00 00 f8 00 48 00 00 00 8c 0f 0f a5 55 5a 
+<6>[  707.005555]  (3)[431:vehicleBootServ]# ecarx_ecp.W #  1788766138.ns448311 read_one_frame block...
+<5>[  708.555593]  (0)[9247:kworker/0:0][Power/PPM] (0x80)(-1)(0)(0-7)(15)(0)(4)(4) (15)(0)(4)(4) 
+<4>[  711.112819]  (2)[431:vehicleBootServ]1788766142.ns555571#LC00_ECP.W#[hex_array_printk_warn] mcu->mpu  : fe 5a aa a5 11 00 91 10 01 01 1c 00 00 06 ef 00 00 00 d6 02 a4 13 32 00 8e 01 00 00 00 00 00 00 f8 00 48 00 00 00 8c 0f 0f a5 55 5a 
+<3>[  731.435555]  (0)[1582:disp_queue_E3][DDP/OVL]error:L0 layout not match: cur=-1, in=0
+<3>[  731.555537]  (2)[786:CameraImageCode]max9286 ioctl entry
+<6>[  733.242800]  (0)[431:vehicleBootServ]# ecarx_ecp.W #  1788766164.ns685555 read_one_frame has read : 16...
+<3>[  736.475555]  (1)[786:CameraImageCode]max9286 ioctl entry
+<6>[  742.555571]  (2)[431:vehicleBootServ]# ecarx_ecp.W #  1788766173.ns998317 read_one_frame has read : 16...
+<4>[  747.112828]  (1)[431:vehicleBootServ]1788766178.ns555578#LC00_ECP.W#[hex_array_printk_warn] mcu->mpu  : fe 5a aa a5 10 00 91 00 0f 01 1c 01 02 01 14 02 13 55 11 70 88 00 00 00 00 00 01 f0 60 55 11 76 88 8e 15 00 52 01 00 01 00 55 12 20 88 0b 3e 0d f4 4f 10 03 00 55 12 21 88 4e 00 00 00 00 00 00 01 55 12 22 88 00 00 00 ff f8 00 00 00 55 10 b0 88 30 00 03 00 08 00 00 00 55 11 60 88 00 00 d1 e1 80 00 00 00 55 13 f2 88 00 00 00 00 00 00 00 00 55 13 15 88 0f 87 f8 08 03 64 00 00 55 10 a0 88 21 00 19 2e e0 0c 00 00 55 13 a1 88 19 00 00 10 00 00 00 00 55 13 d8 88 01 27 00 00 00 00 00 00 55 13 a2 88 51 00 04 80 00 04 60 00 55 12 14 88 0e f0 14 00 00 00 00 00 55 11 63 88 00 00 00 00 00 00 00 00 55 11 78 88 64 13 a6 63 cf 8c 00 00 55 13 51 88 01 0f 67 b8 67 90 87 00 55 11 7a 88 04 91 29 b6 ad 67 81 00 55 11 7b 88 00 00 00 00 00 00 00 00 55 13 52 88 af 52 00 00 fe 00 00 00 55 11 79 88 24 a2 0e 42 81 c5 00 00 55 13 53 88 00 00 00 00 00 00 4e 20 55 13 55 88 69 7e 00 00 00 ff fc 00 00 00 00 fc a5 55 5a 
+<6>[  748.602799]  (3)[431:vehicleBootServ]# ecarx_ecp.W #  1788766180.ns45555 read_one_frame block...
+<3>[  752.255550]  (1)[786:CameraImageCode]max9286 ioctl entry
+<3>[  760.555526]  (2)[786:CameraImageCode]max9286 ioctl entry
+<5>[  761.655558]  (1)[101:kworker/u16:1][Power/PPM] (0x80)(-1)(0)(0-7)(15)(10)(4)(4) (15)(14)(4)(4) 
+<4>[  764.555566] -(0)[175:pbm]CPU0: update max cpu_capacity 604
+<6>[  766.555508]  (3)[431:vehicleBootServ]# ecarx_ecp.W #  1788766197.ns998257 read_one_frame has read : 16...
+<4>[  766.555544]  (3)[431:vehicleBootServ]1788766197.ns998297#LC00_ECP.W#[hex_array_printk_warn] mcu->mpu  : fe 5a aa a5 11 00 91 03 01 06 02 00 00 00 51 a5 55 5a 
+<6>[  772.165555]  (1)[431:vehicleBootServ]# ecarx_ecp.W #  1788766203.ns608309 read_one_frame block...
+<6>[  786.555658]  (5)[1406:kworker/5:2][ISP][ISP_BH_Workqueue] [786.555585]CAMB P1_DON_19(0x18000_0x141501,0x0_0x0)
+<6>[  787.555796]  (5)[1406:kworker/5:2][ISP][ISP_BH_Workqueue] [787.555569]CAMB P1_DON_44(0x18000_0x2d2e01,0x0_0x0)
+<6>[  788.155629]  (5)[1406:kworker/5:2][ISP][ISP_BH_Workqueue] [788.155558]CAMB P1_DON_59(0x18000_0x3c3d01,0x0_0x0)
+<6>[  788.195681]  (2)[5714:kworker/2:3][ISP][ISP_BH_Workqueue] [788.195555]CAMB P1_DON_60(0x18000_0x3d3e01,0x0_0x0)
+<6>[  788.355634]  (6)[8900:kworker/6:0][ISP][ISP_BH_Workqueue] [788.355555]CAMB P1_DON_64(0x18000_0x10201,0x0_0x0)
+<6>[  788.556018]  (0)[9247:kworker/0:0][ISP][ISP_BH_Workqueue] [788.555552]CAMB P1_DON_69(0x18000_0x60701,0x0_0x0)
+<6>[  789.555618]  (6)[8900:kworker/6:0][ISP][ISP_BH_Workqueue] [789.555533]CAMB P1_DON_94(0x18000_0x1f2001,0x0_0x0)
+<6>[  790.555583]  (4)[8581:kworker/4:0][ISP][ISP_BH_Workqueue] [790.555515]CAMB P1_DON_119(0x18000_0x383901,0x0_0x0)
+<6>[  791.555586]  (1)[9471:kworker/1:0][ISP][ISP_BH_Workqueue] [791.555498]CAMB P1_DON_144(0x18000_0x111201,0x0_0x0)
+<6>[  793.355551]  (0)[9247:kworker/0:0][ISP][ISP_BH_Workqueue] [793.355466]CAMB P1_DON_189(0x18000_0x3e3f01,0x0_0x0)
+<6>[  793.555586]  (0)[9247:kworker/0:0][ISP][ISP_BH_Workqueue] [793.555464]CAMB P1_DON_194(0x18000_0x30401,0x0_0x0)
+<6>[  794.355557]  (0)[9247:kworker/0:0][ISP][ISP_BH_Workqueue] [794.355449]CAMB P1_DON_214(0x18000_0x171801,0x0_0x0)
+<6>[  794.755558]  (0)[9247:kworker/0:0][ISP][ISP_BH_Workqueue] [794.755443]CAMB P1_DON_224(0x18000_0x212201,0x0_0x0)
+<6>[  795.155550]  (0)[9247:kworker/0:0][ISP][ISP_BH_Workqueue] [795.155437]CAMB P1_DON_234(0x18000_0x2b2c01,0x0_0x0)
+<6>[  795.555528]  (5)[1406:kworker/5:2][ISP][ISP_BH_Workqueue] [795.555430]CAMB P1_DON_244(0x18000_0x353601,0x0_0x0)
+<6>[  796.045555]  (1)[431:vehicleBootServ]# ecarx_ecp.W #  1788766227.ns488309 read_one_frame block...
+<6>[  799.555529]  (0)[9247:kworker/0:0][ISP][ISP_BH_Workqueue] [799.555362]CAMB P1_DON_88(0x18000_0x191a01,0x0_0x0)
+<6>[  802.045555]  (3)[431:vehicleBootServ]# ecarx_ecp.W #  1788766233.ns488309 read_one_frame block...
+<6>[  802.355558]  (0)[9247:kworker/0:0][ISP][ISP_BH_Workqueue] [802.355313]CAMB P1_DON_158(0x18000_0x1f2001,0x0_0x0)
+<6>[  802.555538]  (2)[5714:kworker/2:3][ISP][ISP_BH_Workqueue] [802.555306]CAMB P1_DON_163(0x18000_0x242501,0x0_0x0)
+<6>[  809.555591]  (0)[9247:kworker/0:0][ISP][ISP_BH_Workqueue] [809.555185]CAMB P1_DON_82(0x18000_0x131401,0x0_0x0)
+<6>[  812.155555]  (1)[431:vehicleBootServ]# ecarx_ecp.W #  1788766243.ns598310 read_one_frame has read : 16...
+<14>[  818.758545]  (0)[1:init]init 21: ReapLogT PropSet [sys.bluetooth.goc.version]=[GBTSD5.4G5.8251223]818.555565 Done
+<6>[  821.855557]  (1)[1240:kworker/u16:30]mt635x-auxadc mt635x-auxadc: name:VCORE_TEMP, channel=4, adc_out=0x5b2, adc_result=640
+<4>[  827.942802]  (3)[431:vehicleBootServ]1788766259.ns385555#LC00_ECP.W#[hex_array_printk_warn] mcu->mpu  : fe 5a aa a5 11 00 91 00 04 14 08 00 5d 02 83 02 f3 01 1f 02 44 a5 55 5a 
+<4>[  837.155557]  (2)[431:vehicleBootServ]1788766268.ns598310#LC00_ECP.W#[hex_array_printk_warn] mcu->mpu  : fe 5a aa a5 11 00 91 00 04 14 08 00 5d 02 83 02 f3 01 1f 02 44 a5 55 5a 
+<6>[  840.455551]  (0)[431:vehicleBootServ]# ecarx_ecp.W #  1788766271.ns898306 read_one_frame block...
+<6>[  849.055550]  (1)[8907:kworker/u16:2]mt635x-auxadc mt635x-auxadc: name:CHIP_TEMP, channel=4, adc_out=0x5f2, adc_result=668
+<6>[  849.212804]  (0)[431:vehicleBootServ]# ecarx_ecp.W #  1788766280.ns655559 read_one_frame has read : 16...
+<6>[  856.112768]  (0)[431:vehicleBootServ]# ecarx_ecp.W #  1788766287.ns555516 read_one_frame has read : 16...
+<4>[  856.112815]  (0)[431:vehicleBootServ]1788766287.ns555567#LC00_ECP.W#[hex_array_printk_warn] mcu->mpu  : fe 5a aa a5 11 00 91 03 04 00 04 00 00 00 00 00 52 a5 55 5a 
+<4>[  857.262802]  (3)[431:vehicleBootServ]1788766288.ns705555#LC00_ECP.W#[hex_array_printk_warn] mcu->mpu  : fe 5a aa a5 90 00 91 00 01 45 00 00 98 a5 55 5a 
+<6>[  857.275555]  (0)[9247:kworker/0:0][ISP][ISP_BH_Workqueue] [857.274389]CAMB P1_DON_251(0x18000_0x3c3d01,0x0_0x0)
+<6>[  881.278449]  (0)[9247:kworker/0:0][ISP][ISP_BH_Workqueue] [881.278261]CAMB P1_SOF_84_84(0x18000_0x141501,0x0_0x0,0x8400000,0x0,0x5555),int_us:39995,cq:0x5a00000
+<6>[  888.145555]  (1)[431:vehicleBootServ]# ecarx_ecp.W #  1788766319.ns588299 read_one_frame has read : 16...
+<4>[  888.755559] -(2)[1079:spp_socket_thre]CPU2: update max cpu_capacity 364
+<4>[  891.512802]  (0)[431:vehicleBootServ]1788766322.ns955557#LC00_ECP.W#[hex_array_printk_warn] mcu->mpu  : fe 5a aa a5 90 00 91 00 02 51 00 00 8b a5 55 5a 
+<6>[  897.112753]  (0)[431:vehicleBootServ]# ecarx_ecp.W #  1788766328.ns555506 read_one_frame has read : 16...
+<4>[  897.112795]  (0)[431:vehicleBootServ]1788766328.ns555548#LC00_ECP.W#[hex_array_printk_warn] mcu->mpu  : fe 5a aa a5 11 00 91 10 01 01 1c 00 00 06 ee 00 00 00 d4 02 a2 13 32 00 8e 01 00 00 00 00 00 00 f7 00 48 00 00 00 8c 0f 15 a5 55 5a 
+<4>[  912.455555]  (2)[431:vehicleBootServ]1788766343.ns898308#LC00_ECP.W#[hex_array_printk_warn] mcu->mpu  : fe 5a aa a5 11 00 91 03 01 06 02 00 00 00 51 a5 55 5a 
+<14>[  926.271274]  (6)[1:init]init 21: ReapLogF PropSet [persist.sys.molead.usb.mode]=[host]926.267783 Done
+<14>[  926.271305]  (6)[1:init]init 15: processing action (persist.sys.molead.usb.mode=host) from (/system/etc/init/init.molead.system.rc:2)
+...truncated...
+
+===== GREP APLog_2026_0907_151750__3/boot__normal/bsp_log_7__2026_0907_151750 =====
+           <...>-1008  [007] d..1    16.455555: signal_deliver: sig=23 errno=0 code=-6 sa_handler=56221cbdd0 sa_flags=18000004
+
+===== GREP APLog_2026_0907_151750__3/boot__normal/kernel_log_6__2026_0907_151750 =====
+<5>[    0.855554]  (7)[1:swapper/0][SWPM] copy pwr data (size: aphy/dram = 672/84) done!
+<14>[    1.714663]  (3)[1:init]init 3: ReapLogC PropSet [persist.device_config.runtime_native.usap_pool_enabled]=[false]1.711767 [persist.molead.gesture.enable]=[true]1.711939 [persist.molead.threefinger.step]=[35]1.711959 [persist.molead.twofinger.step]=[10]1.711979 [persist.radio.multisim.config]=[ss]1.712032 [persist.spm.sdk_service]=[1]1.712055 [persist.sys.country]=[MY]1.712077 [persist.sys.dalvik.vm.lib.2]=[libart.so]1.712101 [persist.sys.dataSwitch]=[on]1.712122 [persist.sys.language]=[en]1.712142 [persist.sys.molead.usb.mode]=[host]1.712165 [persist.sys.timezone]=[Asia/Kuala_Lumpur]1.712188 [persist.sys.usb.config]=[none]1.712208 [persist.tbox.debugable]=[1]1.712227 [persist.vendor.camera3.pipeline.bufnum.base.imgo]=[5]1.712255 [persist.vendor.camera3.pipeline.bufnum.base.lcso]=[5]1.712283 Done
+<14>[    1.739929]  (3)[1:init]init 3: ReapLogF PropSet [sys.usb.controller]=[musb-hdrc]1.737390 Done
+<6>[    3.765404]  (7)[310:init]gadgets_make name=g1
+<14>[    4.818654]  (0)[1:init]init 19: ReapLogC PropSet [persist.device_config.attempted_boot_count]=[0]4.814814 [persist.sys.boot.reason.history]=[cold,powerkey,1788765244 reboot,factory_reset,1788765148 reboot,lk_crash,1788765130]4.814906 [persist.sys.boot.reason]=[]4.814976 [persist.vendor.mtk.aee.mode]=[4]4.815115 [persist.vendor.aee.fatal_db.count]=[4]4.815257 [persist.vendor.aee.db.count]=[4]4.815348 [persist.sys.usb.config]=[iAP2,uac2]4.815435 [persist.vendor.connsys.chipid]=[0x6771]4.815564 [persist.vendor.audiohal.firstboot]=[0]4.815745 [persist.vendor.audiohal.besloudness_state]=[1]4.815830 [persist.vendor.connsys.patch.version]=[20220328165322a]4.815915 [persist.vendor.sys.pq.mdp.color.idx]=[0]4.816109 [persist.vendor.sys.pq.adl.idx]=[0]4.816193 [persist.vendor.sys.pq.iso.shp.en]=[2]4.816278 Done
+<14>[    5.676681]  (2)[1:init]init 15: ReapLogF PropSet [sys.usb.configfs]=[0]5.673813 [vendor.touchdriver.status]=[start]5.674258 Done
+<14>[    5.676693]  (2)[1:init]init 16: processing action (persist.sys.usb.config=* && boot) from (/init.usb.rc:102)
+<14>[    5.677061]  (2)[1:init]init 15: ReapLogF PropSet [sys.usb.config]=[iAP2,uac2]5.674433 [sys.ecarx.hw_version]=[HWE22HR0701M0101]5.674679 Done
+<14>[    5.837730]  (7)[1:init]init 15: ReapLogF PropSet [sys.usb.configfs]=[1]5.835269 Done
+<14>[    5.844812]  (6)[1:init]init 15: ReapLogF PropSet [sys.usb.ffs.aio_compat]=[1]5.835997 [vendor.debug.sf.hdr_enable]=[0]5.836352 [vendor.usb.controller]=[musb-hdrc]5.836600 [sys.ecarx.local_config]=[0502ea940590800064799001e421701043820c35082005060000700ae00070000000627fbdf70000]5.836797 [vendor.usb.acm_cnt]=[0]5.837207 [vendor.debug.sf.hwc_pid]=[482]5.837466 [vendor.usb.acm_port0]=[]5.837642 [vendor.debug.sf.latch_unsignaled]=[1]5.837849 [vendor.usb.acm_port1]=[]5.838030 [vendor.usb.acm_enable]=[0]5.838311 Done
+<14>[    5.972780]  (4)[1:init]init 19: processing action (ro.debuggable=0) from (/init.rc:860)
+<14>[    5.974680]  (4)[1:init]init 19: processing action (persist.sys.molead.usb.mode=host) from (/system/etc/init/init.molead.system.rc:2)
+<14>[    6.993580]  (3)[1:init]init 16: ReapLogF PropSet [persist.sys.usb.config]=[iAP2,uac2]6.991115 Done
+<14>[    6.993591]  (3)[1:init]init 19: Command 'setprop persist.sys.usb.config iAP2,uac2' action=persist.sys.molead.usb.mode=host (/system/etc/init/init.molead.system.rc:4) took 1014ms and succeeded
+<14>[    6.995138]  (3)[1:init]init 16: ReapLogF PropSet [vendor.connsys.driver.ready]=[yes]6.991889 [sys.usb.config]=[iAP2,uac2]6.992073 [sys.audio.nav_index]=[0]6.992703 Done
+<14>[    7.769815]  (5)[1:init]init 15: processing action (persist.sys.usb.config=*) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:49)
+<14>[    7.771071]  (5)[1:init]init 16: ReapLogF PropSet [sys.usb.config]=[iAP2,uac2]7.768489 [sys.audio.nav_index]=[0]7.768674 Done
+<14>[    7.771080]  (5)[1:init]init 15: processing action (sys.usb.config=iAP2,uac2 && sys.usb.configfs=1) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:59)
+<14>[    7.988452]  (6)[1:init]init 15: processing action (sys.usb.config=iAP2,uac2 && sys.usb.configfs=1) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:64)
+<6>[    8.123182]  (6)[310:init]gadget_dev_desc_UDC_store write musb-hdrc
+<6>[    8.123189]  (6)[310:init]usb_gadget_probe_driver musb-hdrc musb-hdrc
+<3>[    8.123227]  (6)[310:init]configfs-gadget musb-hdrc: failed to start g1: -22
+<14>[    8.123612]  (6)[1:init]init 15: Command 'write /config/usb_gadget/g1/UDC ${sys.usb.controller}' action=sys.usb.config=iAP2,uac2 && sys.usb.configfs=1 (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:71) took 0ms and failed: Unable to write to file '/config/usb_gadget/g1/UDC': Unable to write file contents: Invalid argument
+<14>[    8.124191]  (6)[1:init]init 21: ReapLogF PropSet [sys.usb.state]=[iAP2,uac2]8.121716 Done
+<14>[    8.453247]  (1)[1:init]init 15: processing action (persist.sys.usb.config=*) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:49)
+<6>[    8.455554]  (1)[431:vehicleBootServ]# ecarx_ecp.W #  1788765440.ns47327 read_one_frame has read : 16...
+<14>[    8.466875]  (1)[1:init]init 21: ReapLogF PropSet [sys.usb.config]=[iAP2,uac2]8.452921 [bpf.progs_loaded]=[1]8.463706 Done
+<14>[    8.909187]  (6)[1:init]init 16: processing action (sys.usb.config=iAP2,uac2 && sys.usb.configfs=1) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:59)
+<6>[    9.355550]  (7)[431:vehicleBootServ]# ecarx_ecp.W #  1788765440.ns947326 read_one_frame has read : 16...
+<14>[    9.431745]  (3)[1:init]init 16: processing action (sys.usb.config=iAP2,uac2 && sys.usb.configfs=1) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:64)
+<6>[    9.439582]  (5)[310:init]gadget_dev_desc_UDC_store write musb-hdrc
+<6>[    9.439588]  (5)[310:init]usb_gadget_probe_driver musb-hdrc musb-hdrc
+<3>[    9.439627]  (5)[310:init]configfs-gadget musb-hdrc: failed to start g1: -22
+<14>[    9.440111]  (5)[1:init]init 16: Command 'write /config/usb_gadget/g1/UDC ${sys.usb.controller}' action=sys.usb.config=iAP2,uac2 && sys.usb.configfs=1 (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:71) took 0ms and failed: Unable to write to file '/config/usb_gadget/g1/UDC': Unable to write file contents: Invalid argument
+<14>[    9.443330]  (5)[1:init]init 15: ReapLogF PropSet [sys.bluetooth.goc.version]=[GBTSD5.4G5.8251223]9.438159 [sys.usb.state]=[iAP2,uac2]9.439333 [vendor.pullFWlog]=[]9.439704 Done
+<14>[    9.443344]  (5)[1:init]init 16: processing action (sys.usb.config=iAP2,uac2 && sys.usb.configfs=1) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:59)
+<14>[    9.449247]  (2)[1:init]init 21: processing action (sys.usb.config=iAP2,uac2 && sys.usb.configfs=1) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:64)
+<6>[   10.445454]  (6)[310:init]gadget_dev_desc_UDC_store write musb-hdrc
+<6>[   10.445462]  (6)[310:init]usb_gadget_probe_driver musb-hdrc musb-hdrc
+<3>[   10.445500]  (6)[310:init]configfs-gadget musb-hdrc: failed to start g1: -22
+<14>[   10.445668]  (6)[1:init]init 21: Command 'write /config/usb_gadget/g1/UDC ${sys.usb.controller}' action=sys.usb.config=iAP2,uac2 && sys.usb.configfs=1 (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:71) took 0ms and failed: Unable to write to file '/config/usb_gadget/g1/UDC': Unable to write file contents: Invalid argument
+<14>[   10.945774]  (0)[1:init]init 15: ReapLogT PropSet [vendor.MB.ftrace.log]=[bsp]10.443544 [sys.usb.state]=[iAP2,uac2]10.444749 [persist.sys.dalvik.vm.lib.2]=[libart.so]10.943398 Done
+<14>[   10.981552]  (7)[1:init]init 21: processing action (sys.usb.config=iAP2,uac2 && sys.usb.configfs=1) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:59)
+<14>[   11.072776]  (4)[1:init]init 21: processing action (sys.usb.config=iAP2,uac2 && sys.usb.configfs=1) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:64)
+<6>[   11.351289]  (2)[310:init]gadget_dev_desc_UDC_store write musb-hdrc
+<6>[   11.351299]  (2)[310:init]usb_gadget_probe_driver musb-hdrc musb-hdrc
+<3>[   11.351351]  (2)[310:init]configfs-gadget musb-hdrc: failed to start g1: -22
+<14>[   11.351511]  (2)[1:init]init 21: Command 'write /config/usb_gadget/g1/UDC ${sys.usb.controller}' action=sys.usb.config=iAP2,uac2 && sys.usb.configfs=1 (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:71) took 0ms and failed: Unable to write to file '/config/usb_gadget/g1/UDC': Unable to write file contents: Invalid argument
+<14>[   11.596624]  (2)[1:init]init 16: ReapLogF PropSet [persist.vendor.sys.pq.mdp.color.dbg]=[1]11.581543 [sys.usb.state]=[iAP2,uac2]11.582597 [log.tag]=[M]11.583091 Done
+<6>[   21.461559]  (7)[999:system_server]BOOTPROF:     21461.555588:PMS:performDexOpt:com.mediatek.gnssdebugreport
+<14>[   27.193757]  (0)[1:init]init 15: ReapLogF PropSet [persist.sys.mute.state]=[2]27.128110 [service.bootanim.exit]=[1]27.129318 [service.bootanim.exit]=[1]27.130921 [vold.checkpoint_committed]=[1]27.156118 [persist.sys.shutdown.period]=[0]27.167265 [sys.usb.config]=[none]27.190812 Done
+<14>[   27.193779]  (0)[1:init]init 21: processing action (sys.usb.config=none && sys.usb.configfs=1) from (/vendor/etc/init/hw/init.emc21b.usb.rc:104)
+<14>[   27.201644]  (5)[1:init]init 21: processing action (sys.usb.config=none && sys.usb.configfs=1) from (/init.usb.configfs.rc:1)
+<6>[   27.202164]  (5)[1:init]gadget_dev_desc_UDC_store write none
+<14>[   27.202262]  (5)[1:init]init 21: Command 'write /config/usb_gadget/g1/UDC none' action=sys.usb.config=none && sys.usb.configfs=1 (/init.usb.configfs.rc:2) took 0ms and failed: Unable to write to file '/config/usb_gadget/g1/UDC': Unable to write file contents: No such device
+<14>[   27.204979]  (5)[1:init]init 15: ReapLogF PropSet [sys.usb.ffs.ready]=[0]27.200725 [sys.usb.state]=[none]27.202221 Done
+<14>[   27.204989]  (5)[1:init]init 21: processing action (init.svc.adbd=stopped) from (/init.usb.configfs.rc:14)
+<14>[   27.205433]  (5)[1:init]init 16: ReapLogF PropSet [sys.usb.ffs.ready]=[0]27.202700 Done
+<14>[   27.263885]  (6)[1:init]init 16: ReapLogF PropSet [sys.usb.config]=[mtp]27.243390 [sys.audio.music_volume]=[10]27.256494 Done
+<14>[   27.398320]  (7)[1:init]init 15: processing action (init.svc.adbd=stopped) from (/init.usb.configfs.rc:14)
+...truncated...
+
+===== GREP APLog_2026_0907_151750__3/boot__normal/main_log_1__2026_0907_151750 =====
+09-07 15:17:17.555504   522   522 E goc_apm_aec: float freq count:36
+09-07 15:17:18.555538   471   492 W VehicleEmulator_v2_0: read data: 91 07 02 00 0c 00 00 00 00 00 00 00 00 00 00 00 00 00 
+09-07 15:17:20.088104   325   325 I hwservicemanager: getTransport: Cannot find entry android.hardware.usb.gadget@1.0::IUsbGadget/default in either framework or device manifest.
+09-07 15:17:22.555587   471   492 I VehicleEmulator_v2_0: parseRxProtoBuf: vp->ap (0x28700313, 0x03 0x01 0x08 0x03 0x41 0x55 0x13 0x56 0x88 0x00 0x0f 0x2c 0x0b 0x06 0x65 0xe2 0x83 0x55 0x13 0x58 0x88 0x00 0x1a 0x00 0x01 0x87 0x00 0xa0 0x09 0x55 0x12 0xce 0x88 0x78 0x41 0x21 0x81 0xd4 0x80 0x00 0x49 0x55 0x12 0xf2 0x88 0x10 0x05 0x10 0x20 0x00 0x00 0x00 0x80 0x55 0x12 0xfe 0x88 0x00 0x00 0x00 0x00 0x00 0x00 0x60 0x00 0x55 0x13 0x74 0x88 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x55 0x12 0xa5 0x88 0x00 0x0f 0x07 0x1f 0x1f 0x00 0x00 0x00 0x55 0x13 0x80 0x88 0x13 0x90 0x2a 0x00 0x00 0x00 0x00 0x00 0x55 )
+09-07 15:17:34.254519   325   325 I hwservicemanager: getTransport: Cannot find entry android.hardware.usb.gadget@1.0::IUsbGadget/default in either framework or device manifest.
+09-07 15:17:36.755559  1734  2304 D Property.service: getPropertyList returns 828 configs
+09-07 15:17:39.895555  2177  2177 D StatusBar: setSystemUiVisibility vis=8008 mask=ffffffff oldVal=0 newVal=8008 diff=8008
+09-07 15:17:41.545555  2498  2985 I issmvw_log: [2026-09-07 15:17:41 513][INF][P0x09c2][T0x0ba9][MvwConfigParser.cpp][parse][775] SessionFrameInterval=50.
+09-07 15:17:42.555573   999  1674 I TBoxApnTracker: maybeTrackInterface ccmni15
+09-07 15:17:42.655551   999  1173 D XCTBoxService: [TBoxBinder] addressUpdated address fe80::cb60:a14d:a7ec:a279/64 iface :apn3
+09-07 15:17:45.355554  1734  1761 E ECarXCarConfigService: F110Config containsID prop = 0x2870002d, isContain false
+09-07 15:17:45.555530  3202  3202 I WiperMaintenanceModule: registerFunctionValueWatcher:funids( 0x0000006f) watcher(com.malaysia.xui.adaptapi.vehicle.settings.WiperMaintenanceImpl$1@45109b4) propid( INFO_ID_FRONT_WIPER_SWITCH)
+09-07 15:17:45.555535  3202  3826 D CarSettingLogs: CarFuncManager--> checkCarFunc: true
+09-07 15:17:46.049616  3244  3859 D AlarmPingSender: Register alarmreceiver to MqttService 555555
+09-07 15:17:47.015555  3093  3093 E BtLib BluetoothAdapter: getDefaultAdapter sAdapter: com.malaysia.btlib.bluetooth.BluetoothAdapter@b237468
+09-07 15:17:48.555588  3202  3202 D CarSettingLogs: BaseNegativeOneScreenWidget--> ===###===BaseNegativeOneScreenWidget onReceive******, intent:Intent { act=android.appwidget.action.APPWIDGET_UPDATE flg=0x10 cmp=ecarx.settings/.vehicle.setting.widget.FrontHoodOpenWidget (has extras) }
+
+===== GREP APLog_2026_0907_151750__3/boot__normal/sys_log_4__2026_0907_151750 =====
+09-07 15:17:30.355554   849   977 D MtkOmxApeDec: ~dtor- this= 0xefcc7600
+09-07 15:17:34.255077   999   999 I UsbDeviceManager: USB GADGET HAL not present in the device
+09-07 15:17:34.255077   999   999 I UsbDeviceManager: 	at android.hardware.usb.gadget.V1_0.IUsbGadget.getService(IUsbGadget.java:55)
+09-07 15:17:34.255077   999   999 I UsbDeviceManager: 	at android.hardware.usb.gadget.V1_0.IUsbGadget.getService(IUsbGadget.java:62)
+09-07 15:17:35.655552   328  1765 D vold    : Found matching PID 537
+09-07 15:17:35.855559   328   328 W vold    : Skipping due to root namespace
+09-07 15:17:35.925555   328  1810 D vold    : Found matching PID 486
+09-07 15:17:36.555534   999  1069 V WindowManager: Forcing UNSPECIFIED orientation in car for display id=0. Ignoring 5
+09-07 15:17:37.037131   999  1173 W Looper  : Slow delivery took 257ms android.fg h=com.android.server.adb.AdbDebuggingManager$AdbDebuggingHandler c=null m=2
+
+===== GREP APLog_2026_0907_151750__3/main_log_2__2026_0907_152902 =====
+09-07 15:17:56.555518   471   492 I VehicleEmulator_v2_0: parseRxProtoBuf: vp->ap (0x287001b0, 0xab 0x13 )
+09-07 15:17:57.855557   999  1673 E XCTBoxService: [TBoxBinder] allObserversInvoke22: onRxTxBytesCountChanged
+09-07 15:18:05.555517   471   492 I VehicleEmulator_v2_0: parseRxProtoBuf: vp->ap (0x287002bd, 0x8e 0x01 )
+09-07 15:18:10.955557   471   492 W VehicleEmulator_v2_0: read data: 91 10 01 01 1c 00 00 06 f1 00 00 00 dc 02 a8 13 32 00 8f 01 00 00 00 00 00 00 fa 00 48 00 00 00 8c 0f 
+09-07 15:18:15.455554   471  1596 E automotive.vehicle@2.0-impl: VehicleHalManager get value:  property: 0x28700283
+09-07 15:18:19.055550   385  4313 D avm_service: AVMDisplayControl.cpp(1310):notificationClientState pid = 5664 ,cmd_id=ID_AVM_CLIENT_GEAR_POSITION(0x20008) state= GEAR_UNKNOW(0x00)
+09-07 15:18:20.304505  4165  4165 W Settings: Setting adb_enabled has moved from android.provider.Settings.Secure to android.provider.Settings.Global.
+09-07 15:18:20.308048  4165  4165 W Settings: Setting adb_enabled has moved from android.provider.Settings.Secure to android.provider.Settings.Global
+09-07 15:18:20.368667  5709  5712 I adbd    : opening control endpoint /dev/usb-ffs/adb/ep0
+09-07 15:18:20.543663  5709  5712 I adbd    : UsbFfsConnection constructed
+09-07 15:18:20.548215  5709  5736 I ADB_SERVICES: UsbFfs-monitor thread spawning
+09-07 15:18:20.629802  4983  5160 D UsbStatusImpl:  initUEventObserver uEvent:  {SUBSYSTEM=udc, SEQNUM=5306, ACTION=change, USB_UDC_NAME=mtu3, USB_UDC_DRIVER=g1, DRIVER=configfs-gadget, DEVPATH=/devices/platform/musb-hdrc/udc/musb-hdrc}
+09-07 15:18:20.629919  2585  3596 D UsbStatusImpl:  initUEventObserver uEvent:  {SUBSYSTEM=udc, SEQNUM=5306, ACTION=change, USB_UDC_NAME=mtu3, USB_UDC_DRIVER=g1, DRIVER=configfs-gadget, DEVPATH=/devices/platform/musb-hdrc/udc/musb-hdrc}
+09-07 15:18:20.698335  5764  5768 I adbd    : opening control endpoint /dev/usb-ffs/adb/ep0
+09-07 15:18:20.699297  5764  5768 I adbd    : UsbFfsConnection constructed
+09-07 15:18:20.700802  5764  5771 I ADB_SERVICES: UsbFfs-monitor thread spawning
+09-07 15:18:20.703133  5764  5771 I adbd    : USB event: FUNCTIONFS_BIND
+09-07 15:18:20.703549  4983  5160 D UsbStatusImpl:  initUEventObserver uEvent:  {SUBSYSTEM=udc, SEQNUM=5307, ACTION=change, USB_UDC_NAME=mtu3, USB_UDC_DRIVER=g1, DRIVER=configfs-gadget, DEVPATH=/devices/platform/musb-hdrc/udc/musb-hdrc}
+09-07 15:18:20.704268  2585  3596 D UsbStatusImpl:  initUEventObserver uEvent:  {SUBSYSTEM=udc, SEQNUM=5307, ACTION=change, USB_UDC_NAME=mtu3, USB_UDC_DRIVER=g1, DRIVER=configfs-gadget, DEVPATH=/devices/platform/musb-hdrc/udc/musb-hdrc}
+09-07 15:18:21.875029  4983  5160 D UsbStatusImpl:  initUEventObserver uEvent:  {SUBSYSTEM=udc, SEQNUM=5308, ACTION=change, USB_UDC_NAME=mtu3, USB_UDC_DRIVER=g1, DRIVER=configfs-gadget, DEVPATH=/devices/platform/musb-hdrc/udc/musb-hdrc}
+09-07 15:18:21.875224  2585  3596 D UsbStatusImpl:  initUEventObserver uEvent:  {SUBSYSTEM=udc, SEQNUM=5308, ACTION=change, USB_UDC_NAME=mtu3, USB_UDC_DRIVER=g1, DRIVER=configfs-gadget, DEVPATH=/devices/platform/musb-hdrc/udc/musb-hdrc}
+09-07 15:18:21.958141  5805  5807 I adbd    : opening control endpoint /dev/usb-ffs/adb/ep0
+09-07 15:18:21.959385  5805  5807 I adbd    : UsbFfsConnection constructed
+09-07 15:18:21.959813  5805  5808 I ADB_SERVICES: UsbFfs-monitor thread spawning
+09-07 15:18:21.964901  5805  5808 I adbd    : USB event: FUNCTIONFS_BIND
+09-07 15:18:21.964863  4983  5160 D UsbStatusImpl:  initUEventObserver uEvent:  {SUBSYSTEM=udc, SEQNUM=5309, ACTION=change, USB_UDC_NAME=mtu3, USB_UDC_DRIVER=g1, DRIVER=configfs-gadget, DEVPATH=/devices/platform/musb-hdrc/udc/musb-hdrc}
+09-07 15:18:21.965065  2585  3596 D UsbStatusImpl:  initUEventObserver uEvent:  {SUBSYSTEM=udc, SEQNUM=5309, ACTION=change, USB_UDC_NAME=mtu3, USB_UDC_DRIVER=g1, DRIVER=configfs-gadget, DEVPATH=/devices/platform/musb-hdrc/udc/musb-hdrc}
+09-07 15:18:24.555511   471   511 E automotive.vehicle@2.0-impl: VehicleHalManager get value:  property: 0x287000a8
+09-07 15:18:27.003272  3264  3979 D DrAutoByMap: iDrAPInfoPulseImpl : IDrAPInfoImpl{iGyro=null, IPulse=IPulseImpl{Value=0.0, Interval=104, TickTime=75555}, IAcc3d=null, IW4m=null, IMountAngle=null}
+09-07 15:18:29.225555   471   511 E automotive.vehicle@2.0-impl: VehicleHalManager get value:  property: 0x2870026b
+09-07 15:18:49.675555   471   471 E automotive.vehicle@2.0-impl: VehicleHalManager get value:  property: 0x287002e9
+09-07 15:18:54.475555   471   471 E automotive.vehicle@2.0-impl: VehicleHalManager get value:  property: 0x287002e9
+09-07 15:18:54.965555   495   671 W ecarx_avm_SocketCommand: ufi = 0x1090100
+09-07 15:18:59.555542   471   492 I VehicleEmulator_v2_0: parseRxProtoBuf: vp->ap (0x287002bd, 0x8f 0x01 )
+09-07 15:19:01.555583   471   492 I VehicleEmulator_v2_0: parseRxProtoBuf: vp->ap (0x287002bd, 0x8e 0x01 )
+09-07 15:19:03.555527   471   492 I VehicleEmulator_v2_0: parseRxProtoBuf: vp->ap (0x287002bd, 0x8e 0x01 )
+09-07 15:19:06.255556   471   511 E automotive.vehicle@2.0-impl: VehicleHalManager get value:  property: 0x287000a8
+09-07 15:19:12.555514   471   492 W VehicleEmulator_v2_0: read data: 91 10 01 01 1c 00 00 06 f0 00 00 00 db 02 a8 13 32 00 8f 01 00 00 00 00 00 00 fa 00 48 00 00 00 8c 0f 
+09-07 15:19:17.293288   482   569 I hwcomposer: (0) SET job=5555/max=12/fbt=0(OVL)/ui=6/mm=0/del=0/mir=-1/ult=0/flush=0/black=0/PF(fd=36, idx=2778, curr_pf_fd=36,21)  
+09-07 15:19:23.105555  3264  3264 D HMI_MAP_APP: null GlobalContext is null, return Application Context
+09-07 15:19:33.255559   471   511 E automotive.vehicle@2.0-impl: VehicleHalManager get value:  property: 0x287000ec
+09-07 15:19:33.965555   495   671 W ecarx_avm_SocketCommand: ufi = 0x1090200
+09-07 15:19:40.555519  3264  3979 D DrAutoByMap: iDrAPInfoPulseImpl : IDrAPInfoImpl{iGyro=null, IPulse=IPulseImpl{Value=0.0, Interval=107, TickTime=149106}, IAcc3d=null, IW4m=null, IMountAngle=null}
+09-07 15:19:41.255559  1734  3105 E Property.service: setProperty:  propId is 28700300
+09-07 15:19:42.988350  3244  6417 D AlarmPingSender: Register alarmreceiver to MqttService 555555
+09-07 15:19:45.555537  2667  2667 E gocCmService20251209: write:PW1640205050
+09-07 15:19:47.555507   471   471 E automotive.vehicle@2.0-impl: VehicleHalManager get value:  property: 0x2870026a
+09-07 15:19:50.905555   471   471 E automotive.vehicle@2.0-impl: VehicleHalManager get value:  property: 0x287001b0
+09-07 15:19:54.245555   527  3654 D AudioPolicyManagerCustomImpl: hifiAudio_startOutputSamplerate() +output = 19  +samplerate = 48000 mPrimaryOutput = 13 HifiState = 0
+09-07 15:19:56.355553   471   511 E automotive.vehicle@2.0-impl: VehicleHalManager get value:  property: 0x28700281
+09-07 15:19:56.455554  3202  3202 D View    : dispatchTouchEvent: input event: MotionEvent { action=ACTION_MOVE, actionButton=0, id[0]=0, x[0]=475.068, y[0]=138.55463, toolType[0]=TOOL_TYPE_FINGER, buttonState=0, classification=NONE, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=2, eventTime=165002, downTime=164983, deviceId=1, source=0x1002, displayId=0 }, customed by ecarx.settings
+09-07 15:19:57.165555   495   671 W ecarx_avm_SocketCommand: bspThreadLooper -----bsp length = 8, bsp.ufi = 0x1000414
+09-07 15:20:05.555504   471   511 E automotive.vehicle@2.0-impl: VehicleHalManager get value:  property: 0x28700283
+09-07 15:20:06.405555   495   708 E sysmonitor: 2026-09-07 15:20:06.405 ERROR  (sysmonitor) avmsdk asSysMonitorCheckSensorCap sensor:0, fps = 0
+09-07 15:20:11.445555   471   471 E automotive.vehicle@2.0-impl: VehicleHalManager set value:  property: 0x28700300
+09-07 15:20:11.695555   495   671 W ecarx_avm_SocketCommand: bspThreadLooper -----bsp length = 2, bsp.ufi = 0x1030106
+09-07 15:20:43.555556   482   482 I hwcomposer: (0) SET job=9419/max=12/fbt=0(OVL)/ui=4/mm=0/del=0/mir=-1/ult=0/flush=0/black=0/PF(fd=36, idx=4710, curr_pf_fd=36,27)  
+09-07 15:20:50.561369  4165  4165 W Settings: Setting adb_enabled has moved from android.provider.Settings.Secure to android.provider.Settings.Global.
+09-07 15:20:50.562130  4165  4165 W Settings: Setting adb_enabled has moved from android.provider.Settings.Secure to android.provider.Settings.Global
+09-07 15:20:50.649993  4983  5160 D UsbStatusImpl:  initUEventObserver uEvent:  {SUBSYSTEM=udc, SEQNUM=5337, ACTION=change, USB_UDC_NAME=mtu3, USB_UDC_DRIVER=g1, DRIVER=configfs-gadget, DEVPATH=/devices/platform/musb-hdrc/udc/musb-hdrc}
+...truncated...
+
+===== GREP APLog_2026_0907_151750__3/kernel_log_1__2026_0907_152816 =====
+<4>[   37.155555]  (1)[431:vehicleBootServ]1788765468.ns598312#LC00_ECP.W#[hex_array_printk_warn] mcu->mpu  : fe 5a aa a5 10 00 91 06 04 00 04 00 00 00 00 00 50 a5 55 5a 
+<6>[   38.855552]  (0)[431:vehicleBootServ]# ecarx_ecp.W #  1788765470.ns298310 read_one_frame has read : 16...
+<4>[   40.455558]  (5)[431:vehicleBootServ]1788765471.ns898314#LC00_ECP.W#[hex_array_printk_warn] mcu->mpu  : fe 5a aa a5 10 00 91 00 0f 01 1c 01 01 01 14 ed a3 55 12 6d 88 04 00 1f 00 00 00 00 10 55 13 f1 88 00 55 44 00 00 45 9a 00 55 13 f0 88 31 11 0f 07 09 1a 00 00 55 12 f1 88 01 99 00 00 00 00 00 00 55 11 a1 88 8c 19 8d 8d 00 00 00 00 55 11 a2 88 80 05 00 80 f0 06 03 00 55 11 a3 88 ff 18 20 00 00 00 00 00 55 11 a6 88 05 88 01 00 7f 00 20 00 55 11 a7 88 00 7f 00 00 7f 00 00 00 55 11 b0 88 00 20 50 01 00 00 00 00 55 12 e0 88 a1 00 40 10 00 00 88 00 55 11 b2 88 12 00 2c 3f 00 00 00 00 55 12 f7 88 01 00 00 00 00 00 00 00 55 11 24 88 25 d2 83 1f 32 1f c0 2a 55 12 e4 88 55 00 41 00 00 00 00 00 55 11 00 88 00 00 00 00 00 00 00 00 55 13 60 88 4e 50 50 00 00 18 00 00 55 11 71 88 28 00 93 6d 94 01 07 00 55 13 61 88 00 00 00 00 0f 83 27 10 55 13 63 88 00 f2 60 08 0b 06 8b 00 55 10 a8 88 01 2e e0 4e 1f 00 20 00 55 12 cb 88 aa 00 00 01 2e d8 2e d8 55 12 cc 88 24 23 52 35 c6 9e 2e dc 00 00 00 c9 a5 55 5a 
+<6>[   40.955550]  (4)[431:vehicleBootServ]# ecarx_ecp.W #  1788765472.ns398309 read_one_frame block...
+<6>[   40.955557]  (4)[431:vehicleBootServ]# ecarx_ecp.W #  1788765472.ns398315 read_one_frame has read : 16...
+<4>[   43.712802]  (0)[431:vehicleBootServ]1788765475.ns155559#LC00_ECP.W#[hex_array_printk_warn] mcu->mpu  : fe 5a aa a5 11 00 91 10 01 01 1c 00 00 06 f1 00 00 00 dc 02 a9 13 32 00 8e 01 00 00 00 00 00 00 fa 00 48 00 00 00 8c 0f 00 a5 55 5a 
+<4>[   44.912796]  (6)[431:vehicleBootServ]1788765476.ns355552#LC00_ECP.W#[hex_array_printk_warn] mcu->mpu  : fe 5a aa a5 11 00 91 00 04 14 08 00 5d 02 83 02 f3 01 1f 02 44 a5 55 5a 
+<6>[   46.222797]  (4)[431:vehicleBootServ]# ecarx_ecp.W #  1788765477.ns665555 read_one_frame has read : 16...
+<6>[   50.912807]  (1)[431:vehicleBootServ]# ecarx_ecp.W #  1788765482.ns355558 read_one_frame has read : 16...
+<4>[   57.655553]  (0)[431:vehicleBootServ]1788765489.ns98311#LC00_ECP.W#[hex_array_printk_warn] mcu->mpu  : fe 5a aa a5 11 00 91 00 04 14 08 00 5d 02 83 02 f3 01 1f 02 44 a5 55 5a 
+<3>[   64.555504]  (4)[786:CameraImageCode]max9286 ioctl entry
+<14>[   68.872920]  (7)[1:init]init 16: ReapLogF PropSet [persist.sys.usb.config]=[adb]68.869741 Done
+<14>[   68.872935]  (7)[1:init]init 22: processing action (persist.sys.usb.config=*) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:49)
+<14>[   68.876559]  (4)[1:init]init 16: ReapLogF PropSet [sys.usb.config]=[adb]68.871234 [persist.sys.molead.usb.mode]=[adb]68.873782 Done
+<14>[   68.876576]  (4)[1:init]init 22: processing action (sys.usb.config=adb && sys.usb.configfs=1 && vendor.usb.acm_cnt=0) from (/vendor/etc/init/hw/init.emc21b.usb.rc:126)
+<14>[   68.877086]  (5)[1:init]init 16: ReapLogF PropSet [vendor.usb.pid]=[0x201C]68.874551 [sys.usb.config]=[none]68.874693 Done
+<14>[   68.877098]  (5)[1:init]init 22: processing action (sys.usb.config=adb && sys.usb.configfs=1) from (/init.usb.configfs.rc:17)
+<14>[   68.878130]  (5)[1:init]init 22: starting service 'adbd'...
+<14>[   68.889170]  (6)[5709:init]init 21: Created socket '/dev/socket/adbd', mode 660, user 1000, group 1000
+<14>[   68.890959]  (5)[1:init]init 22: processing action (persist.sys.molead.usb.mode=adb) from (/system/etc/init/init.molead.system.rc:7)
+<14>[   69.098587]  (7)[1:init]init 22: Command 'write /sys/devices/platform/otg_iddig/ecarx_mode_switch 0' action=persist.sys.molead.usb.mode=adb (/system/etc/init/init.molead.system.rc:8) took 207ms and succeeded
+<14>[   69.108962]  (7)[1:init]init 16: ReapLogF PropSet [sys.usb.ffs.ready]=[1]69.97089 [persist.sys.usb.config]=[adb]69.105369 [molead.tbox.apn]=[off]69.105588 [sys.usb.config]=[adb]69.105713 [sys.tbox.type]=[13]69.105852 Done
+<14>[   69.108979]  (7)[1:init]init 22: processing action (sys.usb.config=none && sys.usb.configfs=1) from (/vendor/etc/init/hw/init.emc21b.usb.rc:104)
+<14>[   69.111304]  (7)[1:init]init 22: Sending signal 9 to service 'adbd' (pid 5709) process group...
+<7>[   69.111589] -(7)[1:init][signal][1:init]send death sig 9 to[5709:adbd:O]
+<6>[   69.167910]  (1)[1236:kworker/u16:26]mtu3_phone musb-hdrc: gadget (high-speed) pullup D+
+<14>[   69.175578]  (1)[1:init]init 15: Command 'stop adbd' action=sys.usb.config=none && sys.usb.configfs=1 (/vendor/etc/init/hw/init.emc21b.usb.rc:105) took 66ms and succeeded
+<14>[   69.175821]  (1)[1:init]init 15: Service 'adbd' (pid 5709) received signal 9
+<14>[   69.185671]  (3)[1:init]init 15: processing action (sys.usb.config=none && sys.usb.configfs=1) from (/init.usb.configfs.rc:1)
+<6>[   69.186809]  (3)[1:init]gadget_dev_desc_UDC_store write none
+<6>[   69.186823]  (3)[1:init]unregister_gadget
+<6>[   69.187752]  (3)[1:init]mtu3_phone musb-hdrc: mtu3_gadget_pullup (off) for active device
+<6>[   69.187771] -(3)[1:init]mtu3_phone musb-hdrc: gadget (high-speed) pullup D-
+<14>[   69.196329]  (2)[1:init]init 16: ReapLogF PropSet [sys.usb.ffs.ready]=[0]69.186322 [sys.usb.state]=[adb]69.191426 Done
+<14>[   69.196433]  (2)[1:init]init 15: processing action (sys.usb.config=adb && sys.usb.configfs=1 && sys.usb.ffs.ready=1 && vendor.usb.acm_enable=0) from (/vendor/etc/init/hw/init.emc21b.usb.rc:160)
+<6>[   69.201633]  (0)[310:init]usb_get_function usb_function name=Function FS Gadget
+<6>[   69.202640]  (6)[310:init]gadget_dev_desc_UDC_store write musb-hdrc
+<6>[   69.202651]  (6)[310:init]usb_gadget_probe_driver musb-hdrc musb-hdrc
+<6>[   69.202702]  (6)[310:init]configfs-gadget gadget: adding 'Function FS Gadget'/0000000023af7ce9 to config 'b'/00000000fee71695
+<6>[   69.202706]  (6)[310:init]configfs-gadget gadget: adding 'Function FS Gadget'/0000000023af7ce9 --> -19
+<3>[   69.202730]  (6)[310:init]configfs-gadget musb-hdrc: failed to start g1: -19
+<14>[   69.203193]  (2)[1:init]init 15: Command 'write /config/usb_gadget/g1/UDC ${vendor.usb.controller}' action=sys.usb.config=adb && sys.usb.configfs=1 && sys.usb.ffs.ready=1 && vendor.usb.acm_enable=0 (/vendor/etc/init/hw/init.emc21b.usb.rc:164) took 1ms and failed: Unable to write to file '/config/usb_gadget/g1/UDC': Unable to write file contents: No such device
+<14>[   69.205627]  (4)[1:init]init 16: ReapLogF PropSet [sys.usb.state]=[adb]69.202939 Done
+<14>[   69.205653]  (4)[1:init]init 15: processing action (sys.usb.ffs.ready=1) from (/vendor/etc/init/hw/init.emc21b.usb.rc:775)
+<14>[   69.206814]  (2)[1:init]init 15: processing action (sys.usb.config=adb && sys.usb.configfs=1 && sys.usb.ffs.ready=1) from (/init.usb.configfs.rc:20)
+<6>[   69.209672]  (2)[1:init]gadget_dev_desc_UDC_store write musb-hdrc
+<6>[   69.209684]  (2)[1:init]usb_gadget_probe_driver musb-hdrc musb-hdrc
+<6>[   69.209722]  (2)[1:init]configfs-gadget gadget: adding 'Function FS Gadget'/0000000023af7ce9 to config 'b'/00000000fee71695
+<6>[   69.209728]  (2)[1:init]configfs-gadget gadget: adding 'Function FS Gadget'/0000000023af7ce9 --> -19
+<3>[   69.209751]  (2)[1:init]configfs-gadget musb-hdrc: failed to start g1: -19
+<14>[   69.209866]  (2)[1:init]init 15: Command 'write /config/usb_gadget/g1/UDC ${sys.usb.controller}' action=sys.usb.config=adb && sys.usb.configfs=1 && sys.usb.ffs.ready=1 (/init.usb.configfs.rc:23) took 0ms and failed: Unable to write to file '/config/usb_gadget/g1/UDC': Unable to write file contents: No such device
+<14>[   69.210824]  (2)[1:init]init 16: ReapLogF PropSet [sys.usb.state]=[adb]69.207710 Done
+<14>[   69.210843]  (2)[1:init]init 15: processing action (persist.sys.usb.config=*) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:49)
+<14>[   69.213108]  (5)[1:init]init 21: ReapLogF PropSet [sys.usb.config]=[adb]69.210218 Done
+<14>[   69.217339]  (7)[1:init]init 16: processing action (sys.usb.config=adb && sys.usb.configfs=1 && vendor.usb.acm_cnt=0) from (/vendor/etc/init/hw/init.emc21b.usb.rc:126)
+<14>[   69.218223]  (1)[1:init]init 16: processing action (sys.usb.config=adb && sys.usb.configfs=1) from (/init.usb.configfs.rc:17)
+<14>[   69.218313]  (1)[1:init]init 16: starting service 'adbd'...
+<14>[   69.225226]  (1)[1:init]init 16: processing action (init.svc.adbd=stopped) from (/init.usb.configfs.rc:14)
+<14>[   69.226224]  (1)[1:init]init 21: ReapLogF PropSet [sys.usb.ffs.ready]=[0]69.223080 Done
+<14>[   69.226244]  (1)[1:init]init 16: processing action (init.svc.adbd=stopped) from (/init.usb.configfs.rc:14)
+...truncated...
+
+===== GREP APLog_2026_0907_151750__3/sys_log_6__2026_0907_153307 =====
+09-07 15:18:15.055559   999   999 V SettingsProvider: Notifying for 0: content://settings/global/energy_other_power_consumption
+09-07 15:18:20.309579   999   999 V SettingsProvider: Notifying for 0: content://settings/global/adb_enabled
+09-07 15:18:21.984653   999  1173 W Looper  : Slow delivery took 1672ms android.fg h=com.android.server.adb.AdbDebuggingManager$AdbDebuggingHandler c=null m=1
+09-07 15:20:50.563635   999   999 V SettingsProvider: Notifying for 0: content://settings/global/adb_enabled
+09-07 15:20:50.649331   999  5809 W AdbDebuggingManager: Read failed with count -1
+09-07 15:20:50.650245   999  5809 E AdbDebuggingManager: Caught an exception opening the socket: java.io.IOException: Connection refused
+09-07 15:20:52.210185   999  1173 W Looper  : Slow delivery took 1646ms android.fg h=com.android.server.adb.AdbDebuggingManager$AdbDebuggingHandler c=null m=2
+09-07 15:20:52.555556   999  1647 W NetworkIdentity: Active mobile network without subscriber! ni = [type: TBox[TBOX_APN], state: CONNECTED/CONNECTED, reason: (unspecified), extra: b2:d6:4b:b6:57:b5, failover: false, available: true, roaming: false]
+09-07 15:21:02.021281   999   999 V SettingsProvider: Notifying for 0: content://settings/global/adb_enabled
+09-07 15:21:02.351914   999  1173 W Looper  : Slow delivery took 329ms android.fg h=com.android.server.adb.AdbDebuggingManager$AdbDebuggingHandler c=null m=1
+09-07 15:25:22.835555   999  1179 D Watchdog: **SWT loop wait start**491390
+09-07 15:25:37.090166   999   999 V SettingsProvider: Notifying for 0: content://settings/global/adb_enabled
+09-07 15:25:37.182358   999  6961 W AdbDebuggingManager: Read failed with count -1
+09-07 15:25:37.182983   999  6961 E AdbDebuggingManager: Caught an exception opening the socket: java.io.IOException: Connection refused
+09-07 15:25:38.735069   999  1173 W Looper  : Slow delivery took 1644ms android.fg h=com.android.server.adb.AdbDebuggingManager$AdbDebuggingHandler c=null m=2
+09-07 15:26:14.005458   999   999 V SettingsProvider: Notifying for 0: content://settings/global/adb_enabled
+09-07 15:26:15.852903   999  1173 W Looper  : Slow delivery took 1846ms android.fg h=com.android.server.adb.AdbDebuggingManager$AdbDebuggingHandler c=null m=1
+09-07 15:27:02.922952   999   999 V SettingsProvider: Notifying for 0: content://settings/global/adb_enabled
+09-07 15:27:03.008230   999  8939 W AdbDebuggingManager: Read failed with count -1
+09-07 15:27:03.009374   999  8939 E AdbDebuggingManager: Caught an exception opening the socket: java.io.IOException: Connection refused
+09-07 15:27:04.567992   999  1173 W Looper  : Slow delivery took 1645ms android.fg h=com.android.server.adb.AdbDebuggingManager$AdbDebuggingHandler c=null m=2
+09-07 15:27:22.919044   999   999 V SettingsProvider: Notifying for 0: content://settings/global/adb_enabled
+09-07 15:27:24.761417   999  1173 W Looper  : Slow delivery took 1841ms android.fg h=com.android.server.adb.AdbDebuggingManager$AdbDebuggingHandler c=null m=1
+09-07 15:32:37.705066   999   999 V SettingsProvider: Notifying for 0: content://settings/global/adb_enabled
+09-07 15:32:37.791312   999  9483 W AdbDebuggingManager: Read failed with count -1
+09-07 15:32:37.792690   999  9483 E AdbDebuggingManager: Caught an exception opening the socket: java.io.IOException: Connection refused
+09-07 15:32:39.348727   999  1173 W Looper  : Slow delivery took 1643ms android.fg h=com.android.server.adb.AdbDebuggingManager$AdbDebuggingHandler c=null m=2
+
+===== GREP APLog_2026_0907_151750__3/main_log_3__2026_0907_153307 =====
+09-07 15:29:09.458270   482   482 I hwcomposer: (0) SET job=31109/max=12/fbt=0(OVL)/ui=4/mm=0/del=0/mir=-1/ult=0/flush=0/black=0/PF(fd=36, idx=15555, curr_pf_fd=36,27)  
+09-07 15:29:30.555546   482   643 D hwcomposer: (0:1) Layer+ (mva=0x0/sec=0/prot=0/alpha=1:0xff/blend=0002/dim=0/fmt=4868/range=1(20000000)/x=0 y=0 w=1920 h=112 s=1920,112 -> x=0 y=968 w=1920 h=112/layer_type=0 s3d=0 ext_layer=-1 ds=0 fbdc=0) =
+09-07 15:29:30.555579   482   643 D hwcomposer: (0:2) Layer+ (mva=0x0/sec=0/prot=0/alpha=1:0xff/blend=0002/dim=0/fmt=4868/range=1(20000000)/x=0 y=0 w=1920 h=72 s=1920,72 -> x=0 y=0 w=1920 h=72/layer_type=0 s3d=0 ext_layer=-1 ds=0 fbdc=0) =
+09-07 15:29:32.555541  3264  4733 I NMASystemListener: onHeartBeatResult: 33
+09-07 15:29:32.555553  3264  4735 I NMAGuidanceThriftListenerImpl: onHeartBeatResult 33
+09-07 15:29:32.555553  3264  4725 I NMARouteThriftListenerImpl: onHeartBeatResult 33 CallBack Count:40
+09-07 15:29:47.185555   495   671 W ecarx_avm_SocketCommand: bspThreadLooper -----start processWheelPulse 
+09-07 15:29:52.955554   471   471 E automotive.vehicle@2.0-impl: VehicleHalManager get value:  property: 0x2870026c
+09-07 15:30:15.435555   950  5958 I nng-nanomq: [1249] WARN  posix_resolv_gai.c:182 resolv_task: Resolve geea3-overseas-apac.geely.com 443 failed! getaddrinfo 7!
+09-07 15:30:16.655550   471   511 W VehicleEmulator_v2_0: write data: 11 11 0f 01 00 14 00 00 01 00 01 3d a9 8b b3 00 c7 9e fc 02 01 01 87 72 00 00 00 
+09-07 15:30:27.006326  3264  3979 D DrAutoByMap: iDrAPInfoPulseImpl : IDrAPInfoImpl{iGyro=null, IPulse=IPulseImpl{Value=0.0, Interval=108, TickTime=795555}, IAcc3d=null, IW4m=null, IMountAngle=null}
+09-07 15:30:39.355557   533   598 I BufferQueueProducer: [#1](this:0x7d69d89000,id:10,api:1,p:2542,c:533) queueBuffer: fps=19.91 dur=1004.51 max=52.59 min=47.24
+09-07 15:30:59.663463   482   482 I hwcomposer: (0) SET job=35555/max=12/fbt=0(OVL)/ui=4/mm=0/del=0/mir=-1/ult=0/flush=0/black=0/PF(fd=36, idx=17778, curr_pf_fd=36,26)  
+09-07 15:31:04.155559   950  1300 I nng-nanomq: [1253] WARN  tls_common.c:193 tls_dialer_dial: tls tcp dialer is started
+09-07 15:31:06.135555  3264  3264 D HMI_MAP_APP: null GlobalContext is null, return Application Context
+09-07 15:31:12.555597  2667  2667 E gocCmService20251209: BT state init:5
+09-07 15:31:14.855555   471   471 E automotive.vehicle@2.0-impl: VehicleHalManager get value:  property: 0x28700281
+09-07 15:31:25.555577   482   482 I hwcomposer: (1) SET job=36604/max=1/fbt=1(OVL)/ui=0/mm=0/del=0/mir=-1/ult=0/flush=0/black=0/PF(fd=100, idx=9148, curr_pf_fd=100,48)  
+09-07 15:31:30.155557   471   471 E automotive.vehicle@2.0-impl: VehicleHalManager get value:  property: 0x287001b0
+09-07 15:31:32.055555   471   471 E automotive.vehicle@2.0-impl: VehicleHalManager get value:  property: 0x287001b0
+09-07 15:31:39.795555   495   671 W ecarx_avm_SocketCommand: bspThreadLooper -----bsp length = 2, bsp.ufi = 0x1030106
+09-07 15:31:46.605555   471   511 E automotive.vehicle@2.0-impl: VehicleHalManager get value:  property: 0x28700283
+09-07 15:32:02.155555   860   941 D agps    : [agps] WARNING: [CP] cp2_fd_1_req_sim_num_timeout
+09-07 15:32:05.155552  3264  3264 I GPS-NMEA: $GNTXT,INSTALL,864284,0.0,-15.5,-90.0,1,0.0,-15.5,-90.0,1*14
+09-07 15:32:16.555552   471   511 E automotive.vehicle@2.0-impl: VehicleHalManager get value:  property: 0x2870026a
+09-07 15:32:22.715555  5245  5245 V InputMethodManager: onViewDetachedFromWindow: view=android.widget.FrameLayout{afdec7b V.E...... .......D 0,0-832,242 #1020002 android:id/content},focus=false,windowFocus=true,autofillUiShowing=false,window=android.view.ViewRootImpl$W@7e9b7f5,displayId=0,temporaryDetach=false mServedView=null
+09-07 15:32:22.755555  4165  4165 E TestMain: no such class com.ecarx.sdk.ECarXAPIBase found
+09-07 15:32:23.855555   471   511 E automotive.vehicle@2.0-impl: VehicleHalManager get value:  property: 0x2870026b
+09-07 15:32:31.555503   471   492 I VehicleEmulator_v2_0: parseRxProtoBuf: vp->ap (0x28700313, 0x02 0x01 0x14 0x6a 0xbe 0x55 0x11 0x70 0x88 0x00 0x00 0x00 0x00 0x00 0x01 0xf0 0x60 0x55 0x11 0x76 0x88 0x8e 0x15 0x00 0x52 0x01 0x00 0x01 0x00 0x55 0x12 0x20 0x88 0x0b 0x3e 0x0d 0xf4 0x4f 0x10 0x05 0x00 0x55 0x12 0x21 0x88 0x4e 0x00 0x00 0x00 0x00 0x00 0x00 0x01 0x55 0x12 0x22 0x88 0x00 0x00 0x00 0xff 0xf8 0x00 0x00 0x00 0x55 0x10 0xb0 0x88 0x30 0x00 0x03 0x00 0x08 0x00 0x00 0x00 0x55 0x11 0x60 0x88 0x00 0x00 0xd1 0xe1 0x40 0x00 0x00 0x00 0x55 0x13 0xf2 0x88 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x55 )
+09-07 15:32:33.555543   471   492 I VehicleEmulator_v2_0: parseRxProtoBuf: vp->ap (0x28700313, 0x02 0x01 0x14 0x7a 0x4d 0x55 0x11 0x70 0x88 0x00 0x00 0x00 0x00 0x00 0x01 0xf0 0x60 0x55 0x11 0x76 0x88 0x8e 0x15 0x00 0x52 0x01 0x00 0x01 0x00 0x55 0x12 0x20 0x88 0x0b 0x3e 0x0d 0xf4 0x4f 0x10 0x09 0x00 0x55 0x12 0x21 0x88 0x4e 0x00 0x00 0x00 0x00 0x00 0x00 0x01 0x55 0x12 0x22 0x88 0x00 0x00 0x00 0xff 0xf8 0x00 0x00 0x00 0x55 0x10 0xb0 0x88 0x30 0x00 0x03 0x00 0x08 0x00 0x00 0x00 0x55 0x11 0x60 0x88 0x00 0x00 0xd1 0xe1 0x40 0x00 0x00 0x00 0x55 0x13 0xf2 0x88 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x55 )
+09-07 15:32:34.055553   471   492 W VehicleEmulator_v2_0: read data: 91 03 04 00 04 00 00 00 00 00 
+09-07 15:32:35.155551  3264  3264 D HMI_MAP_APP: null GlobalContext is null, return Application Context
+09-07 15:32:37.703299  4165  4165 W Settings: Setting adb_enabled has moved from android.provider.Settings.Secure to android.provider.Settings.Global.
+09-07 15:32:37.703996  4165  4165 W Settings: Setting adb_enabled has moved from android.provider.Settings.Secure to android.provider.Settings.Global
+09-07 15:32:37.791053  4983  5160 D UsbStatusImpl:  initUEventObserver uEvent:  {SUBSYSTEM=udc, SEQNUM=5641, ACTION=change, USB_UDC_NAME=mtu3, USB_UDC_DRIVER=g1, DRIVER=configfs-gadget, DEVPATH=/devices/platform/musb-hdrc/udc/musb-hdrc}
+09-07 15:32:37.791405  2585  3596 D UsbStatusImpl:  initUEventObserver uEvent:  {SUBSYSTEM=udc, SEQNUM=5641, ACTION=change, USB_UDC_NAME=mtu3, USB_UDC_DRIVER=g1, DRIVER=configfs-gadget, DEVPATH=/devices/platform/musb-hdrc/udc/musb-hdrc}
+09-07 15:32:39.317277  4983  5160 D UsbStatusImpl:  initUEventObserver uEvent:  {SUBSYSTEM=udc, SEQNUM=5663, ACTION=change, USB_UDC_NAME=mtu3, USB_UDC_DRIVER=g1, DRIVER=configfs-gadget, DEVPATH=/devices/platform/musb-hdrc/udc/musb-hdrc}
+09-07 15:32:39.317716  2585  3596 D UsbStatusImpl:  initUEventObserver uEvent:  {SUBSYSTEM=udc, SEQNUM=5663, ACTION=change, USB_UDC_NAME=mtu3, USB_UDC_DRIVER=g1, DRIVER=configfs-gadget, DEVPATH=/devices/platform/musb-hdrc/udc/musb-hdrc}
+09-07 15:32:40.407549  3244 11506 D AlarmPingSender: Register alarmreceiver to MqttService 555555
+09-07 15:32:48.285555   471   471 E automotive.vehicle@2.0-impl: VehicleHalManager get value:  property: 0x2870026b
+09-07 15:32:48.555552   471   471 E automotive.vehicle@2.0-impl: VehicleHalManager get value:  property: 0x287002c1
+
+===== GREP APLog_2026_0907_151750__3/bsp_log_9__2026_0907_153307 =====
+            init-1     [007] dn.2    69.111595: signal_generate: sig=9 errno=0 code=0 comm=adbd pid=5709 grp=1 res=0
+           <...>-5736  [003] ....    69.111654: sched_process_exit: comm=UsbFfs-monitor pid=5736 prio=120
+            init-1     [007] d..2    69.117501: signal_generate: sig=9 errno=0 code=0 comm=adbd pid=5709 grp=1 res=2
+           <...>-5709  [007] ....    69.171248: sched_process_exit: comm=adbd pid=5709 prio=120
+            init-1     [001] d..2    70.388607: signal_generate: sig=9 errno=0 code=0 comm=adbd pid=5764 grp=1 res=0
+           <...>-5764  [000] ....    70.389000: sched_process_exit: comm=adbd pid=5764 prio=120
+            init-1     [001] d..2    70.393936: signal_generate: sig=9 errno=0 code=0 comm=adbd pid=5764 grp=1 res=2
+           <...>-5771  [006] ....    70.431293: sched_process_exit: comm=UsbFfs-monitor pid=5771 prio=120
+           <...>-960   [006] d..1    75.955556: signal_generate: sig=23 errno=0 code=-6 comm=sdv-flow pid=1008 grp=0 res=0
+           <...>-4968  [003] ....   103.335555: sched_process_exit: comm=OkHttp Dispatch pid=4968 prio=120
+           <...>-6399  [003] ....   149.555576: sched_process_exit: comm=netd pid=6399 prio=120
+            init-1     [007] dn.2   219.163074: signal_generate: sig=9 errno=0 code=0 comm=adbd pid=5805 grp=1 res=0
+           <...>-5805  [000] ....   219.163538: sched_process_exit: comm=adbd pid=5805 prio=120
+            init-1     [001] d..2   219.169042: signal_generate: sig=9 errno=0 code=0 comm=adbd pid=5805 grp=1 res=2
+           <...>-5808  [002] ....   219.205226: sched_process_exit: comm=UsbFfs-monitor pid=5808 prio=120
+           <...>-5809  [007] d..1   220.207835: signal_generate: sig=11 errno=0 code=1 comm=AdbDebuggingMan pid=5809 grp=0 res=0
+           <...>-6807  [007] d..1   220.855557: signal_deliver: sig=17 errno=0 code=1 sa_handler=6253cf9970 sa_flags=0
+           <...>-5809  [002] ....   221.208947: sched_process_exit: comm=AdbDebuggingMan pid=5809 prio=120
+            init-1     [004] d..2   230.824109: signal_generate: sig=9 errno=0 code=0 comm=adbd pid=6944 grp=1 res=0
+           <...>-6944  [007] ....   230.824774: sched_process_exit: comm=adbd pid=6944 prio=120
+            init-1     [004] d..2   230.829354: signal_generate: sig=9 errno=0 code=0 comm=adbd pid=6944 grp=1 res=2
+           <...>-960   [001] d..1   257.355557: signal_generate: sig=23 errno=0 code=-6 comm=sdv-flow pid=5958 grp=0 res=0
+           <...>-7777  [005] ....   374.385555: sched_process_exit: comm=netd pid=7777 prio=120
+           <...>-8210  [007] d..2   446.655552: signal_generate: sig=17 errno=0 code=1 comm=.malaysia.media pid=3598 grp=1 res=1
+            init-1     [003] d..2   505.690340: signal_generate: sig=9 errno=0 code=0 comm=adbd pid=6950 grp=1 res=0
+           <...>-6955  [002] ....   505.690555: sched_process_exit: comm=UsbFfs-monitor pid=6955 prio=120
+            init-1     [006] d..2   505.696052: signal_generate: sig=9 errno=0 code=0 comm=adbd pid=6950 grp=1 res=2
+           <...>-6950  [006] ....   505.739196: sched_process_exit: comm=adbd pid=6950 prio=120
+           <...>-6961  [000] d..1   506.740495: signal_generate: sig=11 errno=0 code=1 comm=AdbDebuggingMan pid=6961 grp=0 res=0
+           <...>-6961  [004] ....   507.741495: sched_process_exit: comm=AdbDebuggingMan pid=6961 prio=120
+           <...>-8850  [001] ....   534.455558: sched_process_exit: comm=Thread-1225 pid=8850 prio=120
+            init-1     [007] d..2   542.809640: signal_generate: sig=9 errno=0 code=0 comm=adbd pid=8914 grp=1 res=0
+           <...>-8914  [005] ....   542.809785: sched_process_exit: comm=adbd pid=8914 prio=120
+            init-1     [007] d..2   542.814859: signal_generate: sig=9 errno=0 code=0 comm=adbd pid=8914 grp=1 res=2
+            init-1     [004] d..2   544.308327: signal_generate: sig=9 errno=0 code=0 comm=adbd pid=8918 grp=1 res=0
+           <...>-8922  [005] ....   544.308708: sched_process_exit: comm=UsbFfs-monitor pid=8922 prio=120
+            init-1     [005] d..2   544.314489: signal_generate: sig=9 errno=0 code=0 comm=adbd pid=8918 grp=1 res=2
+           <...>-8918  [005] ....   544.344542: sched_process_exit: comm=adbd pid=8918 prio=120
+            init-1     [004] d..2   591.519652: signal_generate: sig=9 errno=0 code=0 comm=adbd pid=8936 grp=1 res=0
+           <...>-8938  [003] ....   591.519756: sched_process_exit: comm=UsbFfs-monitor pid=8938 prio=120
+            init-1     [004] d..2   591.524976: signal_generate: sig=9 errno=0 code=0 comm=adbd pid=8936 grp=1 res=2
+           <...>-8936  [000] ....   591.564221: sched_process_exit: comm=adbd pid=8936 prio=120
+           <...>-8939  [001] d..1   592.567115: signal_generate: sig=11 errno=0 code=1 comm=AdbDebuggingMan pid=8939 grp=0 res=0
+           <...>-8939  [005] ....   593.568159: sched_process_exit: comm=AdbDebuggingMan pid=8939 prio=120
+           <...>-9393  [005] ....   601.855555: sched_process_exit: comm=netd pid=9393 prio=120
+            init-1     [001] d..2   611.721009: signal_generate: sig=9 errno=0 code=0 comm=adbd pid=9455 grp=1 res=0
+           <...>-9455  [007] ....   611.721148: sched_process_exit: comm=adbd pid=9455 prio=120
+            init-1     [001] d..2   611.726327: signal_generate: sig=9 errno=0 code=0 comm=adbd pid=9455 grp=1 res=2
+            init-1     [002] d..2   613.216554: signal_generate: sig=9 errno=0 code=0 comm=adbd pid=9458 grp=1 res=0
+           <...>-9462  [003] ....   613.216631: sched_process_exit: comm=UsbFfs-monitor pid=9462 prio=120
+           <...>-9458  [005] ....   613.216835: sched_process_exit: comm=adbd pid=9458 prio=120
+            init-1     [002] d..2   613.222001: signal_generate: sig=9 errno=0 code=0 comm=adbd pid=9458 grp=1 res=2
+           <...>-11240 [007] ....   902.755552: sched_process_exit: comm=netd pid=11240 prio=120
+            init-1     [001] dn.2   926.305691: signal_generate: sig=9 errno=0 code=0 comm=adbd pid=9480 grp=1 res=0
+           <...>-9482  [005] ....   926.305787: sched_process_exit: comm=UsbFfs-monitor pid=9482 prio=120
+            init-1     [000] d..2   926.312661: signal_generate: sig=9 errno=0 code=0 comm=adbd pid=9480 grp=1 res=2
+           <...>-9480  [004] ....   926.347239: sched_process_exit: comm=adbd pid=9480 prio=120
+           <...>-9483  [004] d..1   927.350455: signal_generate: sig=11 errno=0 code=1 comm=AdbDebuggingMan pid=9483 grp=0 res=0
+           <...>-9483  [002] ....   928.356967: sched_process_exit: comm=AdbDebuggingMan pid=9483 prio=120
+           <...>-962   [006] d..1   942.155558: signal_generate: sig=23 errno=0 code=-6 comm=sdv-flow pid=1299 grp=0 res=0
+...truncated...
+
+===== GREP APLog_2026_0907_151239__1/kernel_log_2026_0907_151239.curf =====
+<6>[   47.375555]  (6)[445:vehicleBootServ]# ecarx_ecp.W #  1788765174.ns318647 read_one_frame has read : 16...
+<6>[   52.745555]  (1)[445:vehicleBootServ]# ecarx_ecp.W #  1788765179.ns688648 read_one_frame block...
+<6>[   53.855555]  (7)[1366:kworker/u16:9]mt635x-auxadc mt635x-auxadc: name:VGPU_TEMP, channel=4, adc_out=0x5a5, adc_result=635
+<3>[   57.835555]  (1)[1511:disp_queue_E3][DDP/OVL]error:L0 layout not match: cur=-1, in=0
+<3>[   58.355552]  (6)[888:CameraImageCode]max9286 ioctl entry
+<6>[   58.975555]  (6)[1380:kworker/u16:23]mt635x-auxadc mt635x-auxadc: name:VGPU_TEMP, channel=4, adc_out=0x5a5, adc_result=635
+<6>[   60.612500]  (2)[445:vehicleBootServ]# ecarx_ecp.W #  1788765187.ns555588 read_one_frame has read : 16...
+<3>[   61.455555]  (5)[888:CameraImageCode]max9286 ioctl entry
+<4>[   77.950791] -(3)[0:swapper/3][name:spm&][VcoreFS] TOTAL_EMI(level 1/2): 0/0 (bwst: 0x15555114, bwvl: 0x706)
+<3>[   85.555590]  (1)[1511:disp_queue_E3][DDP/OVL]error:L0 layout not match: cur=-1, in=0
+<3>[   94.255555]  (0)[888:CameraImageCode]max9286 ioctl entry
+<6>[  101.782461]  (6)[445:vehicleBootServ]# ecarx_ecp.W #  1788765228.ns725555 read_one_frame block...
+
+===== GREP APLog_2026_0907_151239__1/main_log_2026_0907_151239.curf =====
+09-07 15:12:41.223045  2788  2788 D [202606251644] Android Auto A3 trunk 4.5 >>> VehicleStatus: onSensorValueChanged---i=1048832--v=0.78055555
+09-07 15:12:41.223300  2788  2788 D Sensor  : checkSensorValueAndEvent : onSensorValueChanged 100100 = 0.78055555
+09-07 15:12:41.224533  3255  3255 D CarSettingLogs: VehicleFunctionManager--> onSensorValueChanged: sensor = 1048832-----value = 0.78055555
+09-07 15:12:41.224851  3255  3255 D Sensor  : checkSensorValueAndEvent : onSensorValueChanged 100100 = 0.78055555
+09-07 15:12:42.552137  3255  3255 D CarSettingLogs: VehicleFunctionManager--> onSensorValueChanged: sensor = 1048832-----value = 1.1555556
+09-07 15:12:42.552173  3255  3255 D Sensor  : checkSensorValueAndEvent : onSensorValueChanged 100100 = 1.1555556
+09-07 15:12:42.552890  2788  2788 D [202606251644] Android Auto A3 trunk 4.5 >>> VehicleStatus: onSensorValueChanged---i=1048832--v=1.1555556
+09-07 15:12:42.553060  2788  2788 D Sensor  : checkSensorValueAndEvent : onSensorValueChanged 100100 = 1.1555556
+09-07 15:12:43.055555  3255  3255 D CarSettingLogs: NegativeOneScreenWidgetManager--> onSensorValueChanged : valueInt = 0 , isLastSpeed = 0
+09-07 15:12:45.055550   518   518 D avas    : [avas_arbitration_change_avas_mode--561]:avas_debug===usg_mode_sts: 13, car_mode: 0, source_type: 0, STR: 0, brake= 0
+09-07 15:12:45.055554   518   518 D avas    : [avas_arbitration_change_avas_mode--581]: 1111111start play avas!!!!
+09-07 15:12:45.144634  3255  3255 D CarSettingLogs: VehicleFunctionManager--> onSensorValueChanged: sensor = 1048832-----value = 2.4055555
+09-07 15:12:45.144650  3255  3255 D Sensor  : checkSensorValueAndEvent : onSensorValueChanged 100100 = 2.4055555
+09-07 15:12:45.151440  2788  2788 D [202606251644] Android Auto A3 trunk 4.5 >>> VehicleStatus: onSensorValueChanged---i=1048832--v=2.4055555
+09-07 15:12:45.151656  2788  2788 D Sensor  : checkSensorValueAndEvent : onSensorValueChanged 100100 = 2.4055555
+09-07 15:12:47.151964  3255  3255 D CarSettingLogs: VehicleFunctionManager--> onSensorValueChanged: sensor = 1048832-----value = 2.4055555
+09-07 15:12:47.151981  3255  3255 D Sensor  : checkSensorValueAndEvent : onSensorValueChanged 100100 = 2.4055555
+09-07 15:12:47.160376  2788  2788 D [202606251644] Android Auto A3 trunk 4.5 >>> VehicleStatus: onSensorValueChanged---i=1048832--v=2.4055555
+09-07 15:12:47.160759  2788  2788 D Sensor  : checkSensorValueAndEvent : onSensorValueChanged 100100 = 2.4055555
+09-07 15:12:47.644885  3255  3255 D CarSettingLogs: VehicleFunctionManager--> onSensorValueChanged: sensor = 1048832-----value = 2.2805555
+09-07 15:12:47.644907  3255  3255 D Sensor  : checkSensorValueAndEvent : onSensorValueChanged 100100 = 2.2805555
+09-07 15:12:47.650186  2788  2788 D [202606251644] Android Auto A3 trunk 4.5 >>> VehicleStatus: onSensorValueChanged---i=1048832--v=2.2805555
+09-07 15:12:47.650738  2788  2788 D Sensor  : checkSensorValueAndEvent : onSensorValueChanged 100100 = 2.2805555
+09-07 15:12:49.055557   476   507 I DefaultVehicleHal_v2_0: subscribe propId: 0x287002c2, sampleRate: 0.000000
+09-07 15:12:49.157737  3255  3255 D CarSettingLogs: VehicleFunctionManager--> onSensorValueChanged: sensor = 1048832-----value = 2.2805555
+09-07 15:12:49.157776  3255  3255 D Sensor  : checkSensorValueAndEvent : onSensorValueChanged 100100 = 2.2805555
+09-07 15:12:49.162040  2788  2788 D [202606251644] Android Auto A3 trunk 4.5 >>> VehicleStatus: onSensorValueChanged---i=1048832--v=2.2805555
+09-07 15:12:49.162895  2788  2788 D Sensor  : checkSensorValueAndEvent : onSensorValueChanged 100100 = 2.2805555
+09-07 15:12:50.555557   522   575 D ecarx_core_server: vehicledata----callback-mModelSpeed = 370.799988
+09-07 15:12:51.038669  3255  3255 D CarSettingLogs: VehicleFunctionManager--> onSensorValueChanged: sensor = 1048832-----value = 2.4055555
+09-07 15:12:51.038683  3255  3255 D Sensor  : checkSensorValueAndEvent : onSensorValueChanged 100100 = 2.4055555
+09-07 15:12:51.040246  2788  2788 D [202606251644] Android Auto A3 trunk 4.5 >>> VehicleStatus: onSensorValueChanged---i=1048832--v=2.4055555
+09-07 15:12:51.040306  2788  2788 D Sensor  : checkSensorValueAndEvent : onSensorValueChanged 100100 = 2.4055555
+09-07 15:12:51.237711  3255  3255 D CarSettingLogs: VehicleFunctionManager--> onSensorValueChanged: sensor = 1048832-----value = 2.4055555
+09-07 15:12:51.237726  3255  3255 D Sensor  : checkSensorValueAndEvent : onSensorValueChanged 100100 = 2.4055555
+09-07 15:12:51.240300  2788  2788 D [202606251644] Android Auto A3 trunk 4.5 >>> VehicleStatus: onSensorValueChanged---i=1048832--v=2.4055555
+09-07 15:12:51.240382  2788  2788 D Sensor  : checkSensorValueAndEvent : onSensorValueChanged 100100 = 2.4055555
+09-07 15:12:55.725555   502   653 W ecarx_avm_SocketCommand: wheelpulse.rl_low   is  =117
+09-07 15:12:58.687739  3255  3255 D CarSettingLogs: VehicleFunctionManager--> onSensorValueChanged: sensor = 1048832-----value = 0.40555555
+09-07 15:12:58.687755  3255  3255 D Sensor  : checkSensorValueAndEvent : onSensorValueChanged 100100 = 0.40555555
+09-07 15:12:58.692890  2788  2788 D [202606251644] Android Auto A3 trunk 4.5 >>> VehicleStatus: onSensorValueChanged---i=1048832--v=0.40555555
+09-07 15:12:58.692987  2788  2788 D Sensor  : checkSensorValueAndEvent : onSensorValueChanged 100100 = 0.40555555
+09-07 15:12:58.886837  3255  3255 D CarSettingLogs: VehicleFunctionManager--> onSensorValueChanged: sensor = 1048832-----value = 0.53055555
+09-07 15:12:58.886854  3255  3255 D Sensor  : checkSensorValueAndEvent : onSensorValueChanged 100100 = 0.53055555
+09-07 15:12:58.891372  2788  2788 D [202606251644] Android Auto A3 trunk 4.5 >>> VehicleStatus: onSensorValueChanged---i=1048832--v=0.53055555
+09-07 15:12:58.891848  2788  2788 D Sensor  : checkSensorValueAndEvent : onSensorValueChanged 100100 = 0.53055555
+09-07 15:12:59.018264  3255  3255 D CarSettingLogs: VehicleFunctionManager--> onSensorValueChanged: sensor = 1048832-----value = 0.65555555
+09-07 15:12:59.018308  3255  3255 D Sensor  : checkSensorValueAndEvent : onSensorValueChanged 100100 = 0.65555555
+09-07 15:12:59.022348  2788  2788 D [202606251644] Android Auto A3 trunk 4.5 >>> VehicleStatus: onSensorValueChanged---i=1048832--v=0.65555555
+09-07 15:12:59.022463  2788  2788 D Sensor  : checkSensorValueAndEvent : onSensorValueChanged 100100 = 0.65555555
+09-07 15:12:59.581394  3255  3255 D CarSettingLogs: VehicleFunctionManager--> onSensorValueChanged: sensor = 1048832-----value = 0.78055555
+09-07 15:12:59.581416  3255  3255 D Sensor  : checkSensorValueAndEvent : onSensorValueChanged 100100 = 0.78055555
+09-07 15:12:59.586454  2788  2788 D [202606251644] Android Auto A3 trunk 4.5 >>> VehicleStatus: onSensorValueChanged---i=1048832--v=0.78055555
+09-07 15:12:59.586651  2788  2788 D Sensor  : checkSensorValueAndEvent : onSensorValueChanged 100100 = 0.78055555
+09-07 15:13:02.055562  3255  3255 D CarSettingLogs: VehicleFunctionManager--> onSensorValueChanged: sensor = 1048832-----value = 0.78055555
+09-07 15:13:02.055581  3255  3255 D Sensor  : checkSensorValueAndEvent : onSensorValueChanged 100100 = 0.78055555
+09-07 15:13:02.059154  2788  2788 D [202606251644] Android Auto A3 trunk 4.5 >>> VehicleStatus: onSensorValueChanged---i=1048832--v=0.78055555
+09-07 15:13:02.059289  2788  2788 D Sensor  : checkSensorValueAndEvent : onSensorValueChanged 100100 = 0.78055555
+09-07 15:13:02.346611  3255  3255 D CarSettingLogs: VehicleFunctionManager--> onSensorValueChanged: sensor = 1048832-----value = 0.65555555
+09-07 15:13:02.346670  3255  3255 D Sensor  : checkSensorValueAndEvent : onSensorValueChanged 100100 = 0.65555555
+...truncated...
+
+===== GREP APLog_2026_0907_151239__1/bsp_log_2026_0907_151239.curf =====
+           <...>-5555  [005] .n..    40.574456: sched_process_exit: comm=SharedPreferenc pid=5555 prio=120
+           <...>-5668  [000] ....    41.555522: sched_process_exit: comm=Thread-5 pid=5668 prio=120
+
+===== GREP APLog_2026_0907_151239__1/sys_log_2026_0907_151239.curf =====
+
+===== GREP APLog_2026_0907_151239__1/boot__normal/kernel_log_6__2026_0907_151239 =====
+<3>[    0.555501]  (5)[1:swapper/0]gpio_init : pinctrl err, cam4_ldo_vcamd_0
+<3>[    0.555504]  (5)[1:swapper/0]gpio_init : pinctrl err, cam4_ldo_vcamio_1
+<3>[    0.555506]  (5)[1:swapper/0]gpio_init : pinctrl err, cam4_ldo_vcamio_0
+<3>[    0.555509]  (5)[1:swapper/0]gpio_init : pinctrl err, cam5_pnd1
+<3>[    0.555511]  (5)[1:swapper/0]gpio_init : pinctrl err, cam5_pnd0
+<3>[    0.555514]  (5)[1:swapper/0]gpio_init : pinctrl err, cam5_rst1
+<3>[    0.555516]  (5)[1:swapper/0]gpio_init : pinctrl err, cam5_rst0
+<3>[    0.555519]  (5)[1:swapper/0]gpio_init : pinctrl err, cam5_ldo_vcama_1
+<3>[    0.555522]  (5)[1:swapper/0]gpio_init : pinctrl err, cam5_ldo_vcama_0
+<3>[    0.555524]  (5)[1:swapper/0]gpio_init : pinctrl err, cam5_ldo_vcamd_1
+<3>[    0.555527]  (5)[1:swapper/0]gpio_init : pinctrl err, cam5_ldo_vcamd_0
+<3>[    0.555530]  (5)[1:swapper/0]gpio_init : pinctrl err, cam5_ldo_vcamio_1
+<3>[    0.555532]  (5)[1:swapper/0]gpio_init : pinctrl err, cam5_ldo_vcamio_0
+<14>[    1.648012]  (5)[1:init]init 3: ReapLogC PropSet [persist.device_config.runtime_native.usap_pool_enabled]=[false]1.645581 [persist.molead.gesture.enable]=[true]1.645652 [persist.molead.threefinger.step]=[35]1.645659 [persist.molead.twofinger.step]=[10]1.645667 [persist.radio.multisim.config]=[ss]1.645675 [persist.spm.sdk_service]=[1]1.645682 [persist.sys.country]=[MY]1.645689 [persist.sys.dalvik.vm.lib.2]=[libart.so]1.645699 [persist.sys.dataSwitch]=[on]1.645706 [persist.sys.language]=[en]1.645714 [persist.sys.molead.usb.mode]=[host]1.645722 [persist.sys.timezone]=[Asia/Kuala_Lumpur]1.645730 [persist.sys.usb.config]=[none]1.645738 [persist.tbox.debugable]=[1]1.645745 [persist.vendor.camera3.pipeline.bufnum.base.imgo]=[5]1.645758 [persist.vendor.camera3.pipeline.bufnum.base.lcso]=[5]1.645768 Done
+<14>[    1.675215]  (5)[1:init]init 3: ReapLogF PropSet [sys.usb.controller]=[musb-hdrc]1.672835 Done
+<6>[    3.121505]  (7)[318:init]gadgets_make name=g1
+<14>[    4.134642]  (4)[1:init]init 19: ReapLogF PropSet [sys.usb.configfs]=[0]4.131861 Done
+<14>[    4.135657]  (4)[1:init]init 15: processing action (persist.sys.usb.config=* && boot) from (/init.usb.rc:102)
+<14>[    4.136236]  (4)[1:init]init 21: ReapLogF PropSet [sys.usb.config]=[none]4.133625 Done
+<14>[    4.353121]  (7)[1:init]init 21: ReapLogF PropSet [sys.usb.configfs]=[1]4.342165 [sys.ecarx.local_config]=[0502ea940590800064799001e421701043820c35082005060000700ae00070000000627fbdf70000]4.342385 [sys.usb.ffs.aio_compat]=[1]4.343493 [vendor.service.nvram_init]=[Ready]4.343730 [vendor.usb.controller]=[musb-hdrc]4.344197 [sys.carplay.bin.starttimes]=[0]4.344564 [vendor.usb.acm_cnt]=[0]4.347393 [vendor.usb.acm_port0]=[]4.347590 [vendor.usb.acm_port1]=[]4.347661 [vendor.usb.acm_enable]=[0]4.347759 Done
+<14>[    4.481838]  (7)[1:init]init 15: processing action (ro.debuggable=0) from (/init.rc:860)
+<14>[    4.483799]  (7)[1:init]init 16: processing action (sys.usb.config=none && sys.usb.configfs=1) from (/vendor/etc/init/hw/init.emc21b.usb.rc:104)
+<14>[    4.485161]  (7)[1:init]init 16: processing action (sys.usb.config=none && sys.usb.configfs=1) from (/init.usb.configfs.rc:1)
+<6>[    4.485496]  (7)[1:init]gadget_dev_desc_UDC_store write none
+<14>[    4.485547]  (7)[1:init]init 16: Command 'write /config/usb_gadget/g1/UDC none' action=sys.usb.config=none && sys.usb.configfs=1 (/init.usb.configfs.rc:2) took 0ms and failed: Unable to write to file '/config/usb_gadget/g1/UDC': Unable to write file contents: No such device
+<14>[    4.487146]  (7)[1:init]init 15: ReapLogF PropSet [sys.usb.ffs.ready]=[0]4.483687 [sys.usb.state]=[none]4.484861 Done
+<14>[    4.487153]  (7)[1:init]init 16: processing action (persist.sys.molead.usb.mode=host) from (/system/etc/init/init.molead.system.rc:2)
+<14>[    4.514453]  (5)[1:init]init 15: ReapLogF PropSet [persist.sys.usb.config]=[iAP2,uac2]4.512052 [sys.usb.config]=[iAP2,uac2]4.512192 Done
+<3>[    5.005555]  (3)[548:surfaceflinger][ION]ION_IOC_FREE handle is invalid. handle = 0, ret = 0.
+<14>[    5.312243]  (3)[1:init]init 19: processing action (persist.sys.usb.config=*) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:49)
+<14>[    5.313661]  (3)[1:init]init 15: ReapLogF PropSet [sys.usb.config]=[iAP2,uac2]5.310922 Done
+<14>[    5.688817]  (5)[1:init]init 16: processing action (init.svc.adbd=stopped) from (/init.usb.configfs.rc:14)
+<14>[    5.690490]  (5)[1:init]init 15: ReapLogF PropSet [sys.usb.ffs.ready]=[0]5.686772 [vendor.radio.fm.am.range]=[{"fm":{"min":87500,"max":108000,"step":100},"am":{"min":531,"max":1602,"step":9}}]5.687387 Done
+<14>[    5.690503]  (5)[1:init]init 16: processing action (init.svc.adbd=stopped) from (/init.usb.configfs.rc:14)
+<14>[    5.690773]  (5)[1:init]init 15: ReapLogF PropSet [sys.usb.ffs.ready]=[0]5.688434 Done
+<14>[    5.691602]  (5)[1:init]init 16: processing action (sys.usb.ffs.ready=0) from (/vendor/etc/init/hw/init.emc21b.usb.rc:773)
+<14>[    5.697972]  (5)[1:init]init 21: processing action (persist.sys.usb.config=*) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:49)
+<14>[    5.698362]  (5)[1:init]init 15: ReapLogF PropSet [sys.usb.config]=[iAP2,uac2]5.696051 Done
+<14>[    5.698879]  (5)[1:init]init 21: processing action (sys.usb.config=iAP2,uac2 && sys.usb.configfs=1) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:59)
+<14>[    5.703912]  (5)[1:init]init 21: processing action (sys.usb.config=iAP2,uac2 && sys.usb.configfs=1) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:64)
+<6>[    5.790070]  (6)[318:init]gadget_dev_desc_UDC_store write musb-hdrc
+<6>[    5.790081]  (6)[318:init]usb_gadget_probe_driver musb-hdrc musb-hdrc
+<3>[    5.790121]  (6)[318:init]configfs-gadget musb-hdrc: failed to start g1: -22
+<14>[    5.790357]  (6)[1:init]init 21: Command 'write /config/usb_gadget/g1/UDC ${sys.usb.controller}' action=sys.usb.config=iAP2,uac2 && sys.usb.configfs=1 (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:71) took 0ms and failed: Unable to write to file '/config/usb_gadget/g1/UDC': Unable to write file contents: Invalid argument
+<14>[    5.791647]  (6)[1:init]init 16: ReapLogF PropSet [sys.usb.state]=[iAP2,uac2]5.788455 Done
+<14>[    5.791660]  (6)[1:init]init 21: processing action (sys.usb.config=iAP2,uac2 && sys.usb.configfs=1) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:59)
+<14>[    5.793161]  (6)[1:init]init 21: processing action (sys.usb.config=iAP2,uac2 && sys.usb.configfs=1) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:64)
+<6>[    5.795633]  (6)[318:init]gadget_dev_desc_UDC_store write musb-hdrc
+<6>[    5.795643]  (6)[318:init]usb_gadget_probe_driver musb-hdrc musb-hdrc
+<3>[    5.795682]  (6)[318:init]configfs-gadget musb-hdrc: failed to start g1: -22
+<14>[    5.795829]  (6)[1:init]init 21: Command 'write /config/usb_gadget/g1/UDC ${sys.usb.controller}' action=sys.usb.config=iAP2,uac2 && sys.usb.configfs=1 (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:71) took 0ms and failed: Unable to write to file '/config/usb_gadget/g1/UDC': Unable to write file contents: Invalid argument
+<14>[    5.809547]  (6)[1:init]init 16: ReapLogF PropSet [sys.usb.state]=[iAP2,uac2]5.793799 Done
+<14>[    5.881986]  (3)[1:init]init 15: processing action (sys.usb.ffs.ready=0) from (/vendor/etc/init/hw/init.emc21b.usb.rc:773)
+<14>[    5.884660]  (3)[1:init]init 15: processing action (sys.usb.ffs.ready=0) from (/vendor/etc/init/hw/init.emc21b.usb.rc:773)
+<14>[    6.320990]  (7)[1:init]init 21: processing action (sys.usb.config=iAP2,uac2 && sys.usb.configfs=1) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:59)
+<14>[    6.341636]  (4)[1:init]init 21: processing action (sys.usb.config=iAP2,uac2 && sys.usb.configfs=1) from (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:64)
+<6>[    6.355813]  (5)[318:init]gadget_dev_desc_UDC_store write musb-hdrc
+<6>[    6.355824]  (5)[318:init]usb_gadget_probe_driver musb-hdrc musb-hdrc
+<3>[    6.355869]  (5)[318:init]configfs-gadget musb-hdrc: failed to start g1: -22
+<14>[    6.356085]  (5)[1:init]init 21: Command 'write /config/usb_gadget/g1/UDC ${sys.usb.controller}' action=sys.usb.config=iAP2,uac2 && sys.usb.configfs=1 (/vendor/etc/init/vendor.molead.hardware.applecore@1.0-service.rc:71) took 0ms and failed: Unable to write to file '/config/usb_gadget/g1/UDC': Unable to write file contents: Invalid argument
+...truncated...
+
+===== GREP APLog_2026_0907_151239__1/boot__normal/sys_log_4__2026_0907_151239 =====
+09-07 15:12:21.853565  1111  1111 I UsbDeviceManager: USB GADGET HAL not present in the device
+09-07 15:12:21.853565  1111  1111 I UsbDeviceManager: 	at android.hardware.usb.gadget.V1_0.IUsbGadget.getService(IUsbGadget.java:55)
+09-07 15:12:21.853565  1111  1111 I UsbDeviceManager: 	at android.hardware.usb.gadget.V1_0.IUsbGadget.getService(IUsbGadget.java:62)
+09-07 15:12:22.555537   337  1741 D vold    : Found matching PID 786
+09-07 15:12:22.555597   337  1741 W vold    : Skipping due to root namespace
+09-07 15:12:22.695555   337  1741 D vold    : Found matching PID 488
+09-07 15:12:23.065555   337  1741 D vold    : Found matching PID 501
+09-07 15:12:23.255555   337  1915 D vold    : Found matching PID 484
+09-07 15:12:25.255551   337  1915 D vold    : Found matching PID 488
+09-07 15:12:27.787758  1111  1111 V SettingsProvider: Notifying for 0: content://settings/global/adb_enabled
+09-07 15:12:29.655555  1111  1135 W ActivityManager: Slow operation: 337ms so far, now at startProcess: done updating pids map
+
+===== GREP APLog_2026_0907_151239__1/boot__normal/main_log_1__2026_0907_151239 =====
+09-07 15:12:12.406367   333   333 I hwservicemanager: getTransport: Cannot find entry android.hardware.usb.gadget@1.0::IUsbGadget/default in either framework or device manifest.
+09-07 15:12:16.805555   475  1506 D AudioALSAPlaybackHandlerNormal: setScreenState(), flag = 2, rate = 1024, mInterrupt = 0.021333, mode = 1, sample_rate(target) = 48000, buffer_size = 4096, channel = 2, format = 4, reduceInterruptSize = 1024
+09-07 15:12:21.852953   333   333 I hwservicemanager: getTransport: Cannot find entry android.hardware.usb.gadget@1.0::IUsbGadget/default in either framework or device manifest.
+09-07 15:12:22.525555  1674  1674 D CarLocationService: constructed
+09-07 15:12:24.255551   397   443 E avm_service: ecarx_avm.cpp(1582):updateAvmStatus propid=VEHICLE_ID_RADAR_REAR_STOP(0x8327) value=0x00
+09-07 15:12:27.255556   397   443 E avm_service_adatper: InternalAvm.cpp(39):updateInternalAvmStatus cmd_id=0x28 state=0x00
+09-07 15:12:28.754023  1047  2772 E goc     : CsrBtCmDmHciReadBdAddrCompleteHandler 35 CsrBtCmDmLocalQueueHandler
+09-07 15:12:28.755557  1047  2772 E goc     : rfc_register_req
+09-07 15:12:28.759104  1047  2772 E goc     : CsrBtCmDmHciReadBdAddrCompleteHandler 35 CsrBtCmDmLocalQueueHandler
+09-07 15:12:28.760031  1047  2772 E goc     : CsrBtCmDmHciReadBdAddrCompleteHandler 35 CsrBtCmDmLocalQueueHandler
+09-07 15:12:30.055553  2969  2969 D ViewRootImpl[]: hardware acceleration = true , fakeHwAccelerated = false, sRendererDisabled = false, forceHwAccelerated = false, sSystemRendererDisabled = false
+09-07 15:12:33.555500   548   995 D BufferQueueProducer: [BootAnimation#0](this:0x797ede2000,id:2,api:3,p:750,c:-1) cancelBuffer: slot 4
+09-07 15:12:33.555584   548   995 E BufferQueueProducer: [BootAnimation#0](this:0x797ede2000,id:2,api:3,p:750,c:-1) cancelBuffer: BufferQueue has been abandoned
+09-07 15:12:34.963299  3424  3997 D AlarmPingSender: Register alarmreceiver to MqttService 555555
+09-07 15:12:35.555566   520   555 D vendor.molead.hardware.radiospi@1.0-service: transfer   length 2  write :(89,00,)
+09-07 15:12:37.555592  2798  3662 D SrSolution: uploadDict  arg1= {"grm":[{"dictname":"app","dictcontant":[{"name":"闲聊","id":0},{"name":"Home3","id":1},{"name":"Android Auto A3 trunk 4.5","id":2},{"name":"Apple CarPlay","id":3},{"name":"Energy Center","id":4},{"name":"360 Camera","id":5},{"name":"Settings","id":6},{"name":"A-Store","id":7},{"name":"Phone","id":8},{"name":"Calendar","id":9},{"name":"Gallery","id":10},{"name":"JOOX","id":11},{"name":"Media","id":12},{"name":"Member Center","id":13},{"name":"Network Diagnostic","id":14},{"name":"Spotify","id":15},{"name":"Theme","id":16},{"name":"Weather","id":17},{"name":"Map","id":18},{"name":"TikTok","id":19}]}]}
+09-07 15:12:37.565555  2798  4234 I issms_log: [2026-09-07 15:12:37 565][30620][INF][P0xaee][T0x108a][issmsImpl.cpp][CallBackMsgWithFullLog][548] VAMSImpl::m_pfnMSMsgCallback pUsrArg=0x2816,nSRInstIndex=1,uMsg=20001,wParam=0,lParam=app
+
+===== GREP APLog_2026_0907_151239__1/boot__normal/bsp_log_7__2026_0907_151239 =====

@@ -1,32 +1,71 @@
-# 6-char IHU password used by About IHU WLAN long-press
-# and by debugtools USB-downgrade button.
+# 6-char IHU Rolling Password Generator for Proton e.MAS 5 (IHU801P)
 # Usage:
-#   .\hu-password.ps1 -IhuId "YOUR_IHU_ID"
-# IHU ID is shown on the same About IHU screen.
+#   .\hu-password.ps1
+#   .\hu-password.ps1 -IhuId "021600000000000000000000"
+#   .\hu-password.ps1 -Watch
 
 param(
-    [Parameter(Mandatory = $true)][string]$IhuId,
-    [ValidateSet("wlan", "downgrade")][string]$Kind = "wlan"
+    [string]$IhuId = "021600000000000000000000",
+    [switch]$Watch
 )
 
-$salt = if ($Kind -eq "wlan") { "universal168" } else { "clE1o60h" }
+function Get-IhuPassword($id, $salt, $dateSlot) {
+    $md5 = [Security.Cryptography.MD5]::Create()
+    $hex = -join ($md5.ComputeHash([Text.Encoding]::UTF8.GetBytes($dateSlot + $id + $salt)) | ForEach-Object { $_.ToString("x2") })
+    $dec = [bigint]::Parse("0" + $hex, [Globalization.NumberStyles]::AllowHexSpecifier)
+    $chars = $dec.ToString().ToCharArray()
+    [array]::Reverse($chars)
+    $odd = -join (0..($chars.Length - 1) | Where-Object { $_ % 2 -eq 0 } | ForEach-Object { $chars[$_] })
+    return $odd.Substring(0, [Math]::Min(6, $odd.Length))
+}
 
-$tz = [TimeZoneInfo]::FindSystemTimeZoneById("Singapore Standard Time")
-$now = [TimeZoneInfo]::ConvertTimeFromUtc([datetime]::UtcNow, $tz)
-$s = $now.ToString("yyyyMMddHHmm")
-$last = [int]$s.Substring($s.Length - 1, 1)
-if ($last -lt 5) { $last = 0 } elseif ($last -gt 5) { $last = 5 }
-$date = $s.Substring(0, $s.Length - 1) + "$last"
+function Show-Codes {
+    $tz = [TimeZoneInfo]::FindSystemTimeZoneById("Singapore Standard Time")
+    $now = [TimeZoneInfo]::ConvertTimeFromUtc([datetime]::UtcNow, $tz)
+    $s = $now.ToString("yyyyMMddHHmm")
+    $last = [int]$s.Substring($s.Length - 1, 1)
+    $lastSlot = if ($last -lt 5) { 0 } else { 5 }
+    $slot = $s.Substring(0, $s.Length - 1) + "$lastSlot"
 
-$md5 = [Security.Cryptography.MD5]::Create()
-$hex = -join ($md5.ComputeHash([Text.Encoding]::UTF8.GetBytes($date + $IhuId + $salt)) | ForEach-Object { $_.ToString("x2") })
-$dec = [bigint]::Parse("0" + $hex, [Globalization.NumberStyles]::AllowHexSpecifier)
-$chars = $dec.ToString().ToCharArray()
-[array]::Reverse($chars)
-$odd = -join (0..($chars.Length - 1) | Where-Object { $_ % 2 -eq 0 } | ForEach-Object { $chars[$_] })
-$code = $odd.Substring(0, [Math]::Min(6, $odd.Length))
+    $min = $now.Minute
+    $sec = $now.Second
+    $inSlot = ($min % 5) * 60 + $sec
+    $left = 300 - $inSlot
 
-Write-Host "kind=$Kind  dateSlot=$date (GMT+8, 5-min window)"
-Write-Host "code=$code"
-Write-Host "alt static (if engineer_local is not disable): BX9527"
-Write-Host "alt date (if engineer_local is not disable): $($now.ToString('yyyyMMdd'))aco"
+    $codeAtlas = Get-IhuPassword $IhuId "atlas666" $slot
+    $codeWlan = Get-IhuPassword $IhuId "universal168" $slot
+    $codeDown = Get-IhuPassword $IhuId "clE1o60h" $slot
+
+    Clear-Host
+    Write-Host "============================================================" -ForegroundColor Cyan
+    Write-Host "       IHU801P ROLLING CODE GENERATOR (Proton e.MAS 5)       " -ForegroundColor Yellow
+    Write-Host "============================================================" -ForegroundColor Cyan
+    Write-Host " Waktu Sekarang : $($now.ToString('yyyy-MM-dd HH:mm:ss')) (GMT+8)"
+    Write-Host " Slot Semasa    : $slot  (Baki masa: ${left}s)" -ForegroundColor Green
+    Write-Host " IHU ID         : $IhuId"
+    Write-Host "------------------------------------------------------------"
+    Write-Host " [1] ATLAS OS / e.MAS 5 : " -NoNewline
+    Write-Host "$codeAtlas" -ForegroundColor Yellow -NoNewline
+    Write-Host "  (Disyorkan untuk e.MAS 5)"
+    Write-Host " [2] WLAN Long-Press   : " -NoNewline
+    Write-Host "$codeWlan" -ForegroundColor White
+    Write-Host " [3] USB Downgrade     : " -NoNewline
+    Write-Host "$codeDown" -ForegroundColor White
+    Write-Host "------------------------------------------------------------"
+    Write-Host " Kata Laluan Pintas Statik (Master Bypass):"
+    Write-Host "  * Kod Statik 1       : BX9527" -ForegroundColor Magenta
+    Write-Host "  * Kod Statik 2       : $($now.ToString('yyyyMMdd'))aco" -ForegroundColor Magenta
+    Write-Host "============================================================" -ForegroundColor Cyan
+    if ($Watch) {
+        Write-Host " [Mod Pantau Aktif] Mengemas kini setiap saat... (Tekan Ctrl+C untuk henti)" -ForegroundColor Gray
+    }
+}
+
+if ($Watch) {
+    while ($true) {
+        Show-Codes
+        Start-Sleep -Seconds 1
+    }
+} else {
+    Show-Codes
+}

@@ -1,28 +1,79 @@
-# Huge binaries - do NOT commit
+# =======================================================
+# Proton e.MAS 5 OTA - Git Ignore File
+# Prevents uploading massive binaries and logs to GitHub
+# =======================================================
+
+# Large Archive & Disk Image Files
+# Large Archive & Disk Image Files
 *.zip
 *.tar.gz
 *.img
+*.bin
 *.apk
 *.dex
 *.odex
 *.vdex
+*.pcm
+*.wav
+*.exe
+*.so
+
+
+# Partitions & Payload Extractions
+parts/
+patched_parts/
+extract/
+decompile/
+full_backup_car/
 payload.bin
 pdg.zip
 pdg.tar.gz
 jadx.zip
-bin/
-lib/
-parts/
-extract/
-decompile/
+test_data.bin
+NUL
+
+# Build Output & System Images (Heavy Dumps)
+workspace_injection/output/
+workspace_injection/sys_build/
+workspace_injection/patched_system/
+workspace_injection/patched_build/
+workspace_injection/_scratch/
+workspace_injection/_scratch2/
+workspace_injection/_boot_orig/
+workspace_injection/_boot_pat/
+workspace_injection/candidate_hook/
+workspace_injection/old_output/
+workspace_injection/revert_package/
+
+# Log Dumps (Car Diagnostics)
+latest_car_log/
+logs_backup/
+_logs/
+log_analysis_1604/
+*.log
+launch_log.txt
+
+# Screenshots / UI Dumps
+*.png
+*.xml
+
+# Python & Environment
+__pycache__/
+*.pyc
+.venv/
+.venv*/
+
+# Java classes
+*.class
+
+# JADX decompilations
 jadx_out/
 jadx_em/
 jadx_dbg_manifest/
-META-INF/
-__MACOSX/
+jadx_dbg_res/
+jadx_upgradeservice/
 
-# Keep only research docs & scripts
-!RESEARCH-README.md
-!hu_password.py
-!hu-password.ps1
-!NOTES-*.md
+# Temporary directories
+New folder/
+temp_settings/
+META-INF/
