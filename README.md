@@ -11,6 +11,16 @@ Sila rujuk panduan langkah demi langkah penuh di:
 
 ---
 
+## 🌐 Alat Web Dalam Talian (Online Password Generator)
+
+Bagi menjana kod kalkulator 6-digit rolling password secara pantas tanpa perlu memasang sebarang perisian:
+👉 **[https://ihucode.netlify.app](https://ihucode.netlify.app)**
+
+* *Menjana kod 6-digit untuk slot 5-minit secara masa nyata (GMT+8).*
+* *Menyimpan nombor siri IHU dalam `localStorage` pelayar peranti anda supaya tidak perlu diisi berulang kali.*
+
+---
+
 ## 🎯 Ciri-Ciri & Modifikasi yang Disokong
 
 1. **Akses Debug & Root ADB:**

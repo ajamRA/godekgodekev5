@@ -15,7 +15,19 @@ Panduan teknikal komprehensif merangkumi proses pembongkaran sistem, perolehan a
 
 ---
 
-## 2. Struktur Root & Wi-Fi TCP ADB Kekal (Persistent Root ADB)
+## 2. Pengaktifan Engineering Menu & Kalkulator Kata Laluan Dinamik
+
+Bagi mengakses menu ujian kilang atau mengaktifkan fungsi diagnostik/ADB:
+1. Masuk ke **Settings (Tetapan)** ➡️ **System (Sistem)** ➡️ **About (Tentang IHU)**.
+2. Tekan berulang kali (atau tekan lama) pada **WLAN MAC Address** sehingga kotak dialog kod laluan (password) dipaparkan.
+3. Salin nombor **IHUID / Serial No** kenderaan anda yang terpapar pada skrin tersebut.
+4. Buka kalkulator web masa nyata untuk mendapatkan 6-digit rolling code (luput setiap 5 minit mengikut waktu GMT+8):
+   👉 **[https://ihucode.netlify.app](https://ihucode.netlify.app)**
+   *(Pilih mod **Geely EX2 (atlas666)** atau gunakan master code yang dipaparkan jika disokong).*
+
+---
+
+## 3. Struktur Root & Wi-Fi TCP ADB Kekal (Persistent Root ADB)
 
 Bagi membolehkan capaian terminal tanpa kabel dan akses penuh `root`, satu init script telah disuntik terus ke dalam `/system/etc/init/zzz_adbtcp.rc`:
 
@@ -53,7 +65,7 @@ on property:init.svc.adbd=stopped
 
 ---
 
-## 3. Rahsia & Mekanisme Whitelist Bypass Launcher Geely
+## 4. Rahsia & Mekanisme Whitelist Bypass Launcher Geely
 
 ### Masalah Sekatan Asal
 Launcher kilang OEM Geely (`Launcher3 / ecarx.launcher`) mengandungi *hardcoded whitelist package*. Jika aplikasi biasa seperti Netflix dipasang melalui `pm install` ke dalam `/data/app/`, launcher akan menyembunyikan ikon aplikasi tersebut sepenuhnya daripada skrin dan app drawer.
@@ -71,7 +83,7 @@ PackageManagerService (PMS) akan mengimbas manifest aplikasi baru dan mendaftark
 
 ---
 
-## 4. Pelaksanaan Autostart Kekal (Boot Persistence)
+## 5. Pelaksanaan Autostart Kekal (Boot Persistence)
 
 Oleh kerana perintah `mount -o bind` biasa di dalam kernel Linux akan hilang setiap kali kereta dimatikan (*cold reboot*), integrasi kekal dibuat menggunakan dua komponen:
 
@@ -107,7 +119,7 @@ on property:sys.boot_completed=1
 
 ---
 
-## 5. Ringkasan Pengubahsuaian AVAS (Acoustic Vehicle Alerting System)
+## 6. Ringkasan Pengubahsuaian AVAS (Acoustic Vehicle Alerting System)
 
 Sistem amaran pejalan kaki Geely EX2 dikawal oleh daemon perkakasan `/vendor/bin/hw/vendor.molead.hardware.avas_service@1.0-service` bersama konfigurasi di `/vendor/etc/avas/`:
 * **Slot 1 (Galactic Note):** `sound_type_1/yinheyinfu.wav` (Factory sound)
@@ -118,7 +130,7 @@ Sistem amaran pejalan kaki Geely EX2 dikawal oleh daemon perkakasan `/vendor/bin
 
 ---
 
-## 6. Struktur Direktori Projek (Repository Layout)
+## 7. Struktur Direktori Projek (Repository Layout)
 
 ```
 D:\apps\ex2-ota/
