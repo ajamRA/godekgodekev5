@@ -1,4 +1,4 @@
-# 6-char IHU Rolling Password Generator for Geely EX2 (IHU801P)
+# 6-char IHU Rolling Password Generator for Geely EX2 (EX2-HU)
 # Usage:
 #   .\hu-password.ps1
 #   .\hu-password.ps1 -IhuId "021600000000000000000000"
@@ -38,7 +38,7 @@ function Show-Codes {
 
     Clear-Host
     Write-Host "============================================================" -ForegroundColor Cyan
-    Write-Host "       IHU801P ROLLING CODE GENERATOR (Geely EX2)       " -ForegroundColor Yellow
+    Write-Host "       EX2-HU ROLLING CODE GENERATOR (Geely EX2)       " -ForegroundColor Yellow
     Write-Host "============================================================" -ForegroundColor Cyan
     Write-Host " Waktu Sekarang : $($now.ToString('yyyy-MM-dd HH:mm:ss')) (GMT+8)"
     Write-Host " Slot Semasa    : $slot  (Baki masa: ${left}s)" -ForegroundColor Green

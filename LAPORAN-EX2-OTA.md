@@ -1,4 +1,4 @@
-# LAPORAN TEKNIKAL — Geely EX2 (IHU801P) OTA Injection / ADB-over-Wi-Fi
+# LAPORAN TEKNIKAL — Geely EX2 (EX2-HU) OTA Injection / ADB-over-Wi-Fi
 Tarikh: 12 Sept 2026
 Status: **GAGAL dari segi strategi suntikan. Flash berjaya, ADB tak hidup. Cause of failure = salah faham Android 10 SAR.**
 
@@ -21,7 +21,7 @@ ADB langsung tak hidup.
 
 ## 2. PUNCA SEBENAR (kenapa suntikan tak jadi) — ini bahagian paling penting
 
-Boot image IHU801P ialah **recovery-style ramdisk + `androidboot.force_normal_boot=1`**. Dalam Android 10 **System-as-Root (SAR)**:
+Boot image EX2-HU ialah **recovery-style ramdisk + `androidboot.force_normal_boot=1`**. Dalam Android 10 **System-as-Root (SAR)**:
 
 1. First stage: init dari **ramdisk** jalan, mount partition system, lepas tu `switch_root`.
 2. Second stage: init **di-`exec` dari partition `system`** (`/system/bin/init` milik kereta), dan init itu baca `/init.rc`, `/init.usb.rc`, `/init.environ.rc`, `/system/etc/init/*.rc` **semuanya dari partition system** — bukan dari ramdisk kita.

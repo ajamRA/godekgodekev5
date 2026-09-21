@@ -1,8 +1,8 @@
-# DOKUMEN HANDOFF TEKNIKAL — Geely EX2 (IHU801P) OTA INJECTION
+# DOKUMEN HANDOFF TEKNIKAL — Geely EX2 (EX2-HU) OTA INJECTION
 
 **Status:** Pakej OTA FINAL siap & disahkan (SHA-256 boot `08f9e860…`). Laluan USB sah berjaya applyPayload.
 **Tarikh:** 2026-09-12
-**Peranti:** Geely EX2, IHU801P, MediaTek MT6771 (`emc21b`), Android 10, build 785/625, A/B
+**Peranti:** Geely EX2, EX2-HU, MediaTek MT6771 (`emc21b`), Android 10, build 785/625, A/B
 
 ---
 
@@ -180,9 +180,9 @@ Build final kita (`output/update.zip`, SHA-256 boot `08f9e860…`) direka untuk 
 
 1. **Sediakan Pendrive:**
    - Format pendrive dalam format **FAT32**.
-   - Salin fail dari `D:\apps\emas-ota\workspace_injection\output\update.zip` terus ke punca utama pendrive (`[USB]:\update.zip`).
+   - Salin fail dari `D:\apps\ex2-ota\workspace_injection\output\update.zip` terus ke punca utama pendrive (`[USB]:\update.zip`).
 2. **Cucuk ke Kenderaan:**
-   - Pasang pendrive pada port USB konsol depan IHU801P.
+   - Pasang pendrive pada port USB konsol depan EX2-HU.
 3. **Picu Kemas Kini Melalui AcoXDebugTools:**
    - Buka aplikasi **AcoXDebugTools** pada skrin kereta.
    - Pergi ke bahagian kemas kini sistem / T-Box.

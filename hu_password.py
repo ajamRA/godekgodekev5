@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-e.MAS 5 / IHU801P — rolling 6-digit engineer password generator.
+Geely EX2 / EX2-HU — rolling 6-digit engineer password generator.
 
 The About-IHU dialog (Settings -> My Vehicle -> About IHU, long-press the
 software version) accepts the code computed as:

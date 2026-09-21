@@ -11,7 +11,7 @@
 
 | Item | Value |
 |---|---|
-| Head unit | **IHU801P** (MediaTek `alps` board — *NOT* the Brazil EX2's IHU629G) |
+| Head unit | **EX2-HU** (MediaTek `alps` board — *NOT* the Brazil EX2's IHU629G) |
 | OS | ATLAS OS (ECARX) over Android 10 (QP1A.190711.020) |
 | Build | `SWE22HR0807H0AEJ.00785` (incremental `785`, **test-keys**) |
 | Security patch | 2021-09-05 |
@@ -21,7 +21,7 @@
 Key properties (from `properties` dump / build.props):
 
 ```
-ro.build.flavor=IHU801P-user
+ro.build.flavor=EX2-HU-user
 ro.adb.secure=1          # adb requires RSA auth (user build)
 ro.debuggable=0
 init.svc.adbd=stopped    # adbd not running by default

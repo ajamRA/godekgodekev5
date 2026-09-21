@@ -1,4 +1,4 @@
-# Rolling Code Generator for Geely EX2 (IHU801P)
+# Rolling Code Generator for Geely EX2 (EX2-HU)
 import sys, hashlib, datetime, time
 
 def get_code(ihuid, salt, slot):
@@ -26,7 +26,7 @@ def display():
     if watch:
         sys.stdout.write('\033[H\033[J')
     print('=' * 60)
-    print('       IHU801P ROLLING CODE GENERATOR (Geely EX2)      ')
+    print('       EX2-HU ROLLING CODE GENERATOR (Geely EX2)      ')
     print('=' * 60)
     print(f' Waktu Sekarang : {now.strftime("%Y-%m-%d %H:%M:%S")} (GMT+8)')
     print(f' Slot Masa      : {slot}  (Baki masa: {left}s)')

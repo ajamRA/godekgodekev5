@@ -1,8 +1,8 @@
-# IHU801P Wi-Fi ADB — progress and reproducibility
+# EX2-HU Wi-Fi ADB — progress and reproducibility
 
 ## Scope and status
 
-Geely EX2 IHU801P, Android 10, A/B OTA. Goal: persistent Wi-Fi ADB on TCP 5555, without changing system/vendor partitions or USB host mode.
+Geely EX2 EX2-HU, Android 10, A/B OTA. Goal: persistent Wi-Fi ADB on TCP 5555, without changing system/vendor partitions or USB host mode.
 
 **Experimental candidate built; vehicle test pending. Not a proven installation guide.** Local package validation is not vehicle acceptance, successful mounting, or working ADB. No GitHub upload/commit/push has been performed as part of this documentation update.
 
@@ -23,7 +23,7 @@ Geely EX2 IHU801P, Android 10, A/B OTA. Goal: persistent Wi-Fi ADB on TCP 5555, 
 
 ## Candidate identity (recorded build output)
 
-Workspace: `D:/apps/emas-ota/workspace_injection`
+Workspace: `D:/apps/ex2-ota/workspace_injection`
 
 | Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |

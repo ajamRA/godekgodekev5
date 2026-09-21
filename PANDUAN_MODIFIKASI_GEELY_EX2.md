@@ -7,7 +7,7 @@ Panduan teknikal komprehensif merangkumi proses pembongkaran sistem, perolehan a
 ## 1. Spesifikasi Perkakasan & Sistem (Hardware & System Specs)
 
 * **Kenderaan:** Geely EX2 (Geometry Platform Architecture)
-* **Unit Infotainment (IHU):** IHU801P / EMC21B Automotive Head Unit
+* **Unit Infotainment (IHU):** EX2-HU / EMC21B Automotive Head Unit
 * **Pemproses (SoC):** MediaTek MT2712 / MT8666 Automotive ARM64
 * **Sistem Operasi:** Android 10 (API level 29), Automotif AOSP fork (ECARX / Molead)
 * **Sistem Partisi:** A/B Dynamic Partitions (Super partition: `system_a/b`, `vendor_a/b`, `product_a/b`)
@@ -121,7 +121,7 @@ Sistem amaran pejalan kaki Geely EX2 dikawal oleh daemon perkakasan `/vendor/bin
 ## 6. Struktur Direktori Projek (Repository Layout)
 
 ```
-D:\apps\emas-ota/
+D:\apps\ex2-ota/
 ├── PANDUAN_MODIFIKASI_GEELY_EX2.md   # Panduan teknikal ini
 ├── README.md                            # Penerangan projek
 ├── workspace_injection/                 # Skrip pembina payload & patcher OTA
