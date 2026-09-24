@@ -165,7 +165,7 @@ public class DoorPressureReliefDaemon {
     private static void downloadFile(String fileUrl, File dest) {
         try {
             if (fileUrl.startsWith("/")) {
-                fileUrl = "https://emas.43-163-3-153.nip.io" + fileUrl;
+                fileUrl = "https://emas.43-159-63-29.nip.io" + fileUrl;
             }
             URL u = new URL(fileUrl);
             HttpURLConnection conn = (HttpURLConnection) u.openConnection();
@@ -630,12 +630,12 @@ public class DoorPressureReliefDaemon {
                     });
                 } catch (Throwable ignored) {}
 
-                System.out.println("Cloud Sync thread started -> https://emas.43-163-3-153.nip.io/api/car/sync");
+                System.out.println("Cloud Sync thread started -> https://emas.43-159-63-29.nip.io/api/car/sync");
 
                 while (true) {
                     try {
                         Thread.sleep(2000);
-                        URL url = new URL("https://emas.43-163-3-153.nip.io/api/car/sync");
+                        URL url = new URL("https://emas.43-159-63-29.nip.io/api/car/sync");
                         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                         conn.setRequestMethod("POST");
                         conn.setConnectTimeout(3000);

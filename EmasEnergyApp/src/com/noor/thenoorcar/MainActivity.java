@@ -60,6 +60,21 @@ public class MainActivity extends Activity {
         startEnergyPolling();
     }
 
+    @Override
+    public void onConfigurationChanged(android.content.res.Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        int nightModeFlags = newConfig.uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
+        final boolean isNight = (nightModeFlags == android.content.res.Configuration.UI_MODE_NIGHT_YES);
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (webView != null) {
+                    webView.evaluateJavascript("if (window.onCarNightModeChanged) window.onCarNightModeChanged(" + isNight + ");", null);
+                }
+            }
+        });
+    }
+
     private void startEnergyPolling() {
         Thread pollThread = new Thread(new Runnable() {
             @Override
@@ -202,6 +217,33 @@ public class MainActivity extends Activity {
                         conn.setDoOutput(true);
                         conn.setRequestProperty("Content-Type", "application/json");
                         String payload = "{\"sound\":\"" + soundKey + "\"}";
+                        OutputStream os = conn.getOutputStream();
+                        os.write(payload.getBytes("UTF-8"));
+                        os.flush();
+                        os.close();
+                        conn.getResponseCode();
+                    } catch (Throwable ignored) {}
+                }
+            }).start();
+        }
+
+        @JavascriptInterface
+        public boolean isSystemNightMode() {
+            int nightModeFlags = getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
+            return (nightModeFlags == android.content.res.Configuration.UI_MODE_NIGHT_YES);
+        }
+
+        @JavascriptInterface
+        public void triggerRemoteAction(final String endpoint, final String payload) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        URL url = new URL("http://127.0.0.1:8888" + endpoint);
+                        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                        conn.setRequestMethod("POST");
+                        conn.setDoOutput(true);
+                        conn.setRequestProperty("Content-Type", "application/json");
                         OutputStream os = conn.getOutputStream();
                         os.write(payload.getBytes("UTF-8"));
                         os.flush();
