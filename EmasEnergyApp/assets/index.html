@@ -923,7 +923,7 @@
           <p style="font-size: 12px; color: var(--muted);">Dengar sampel dan tekan "Guna" untuk menukar bunyi kunci kereta secara serta-merta.</p>
         </div>
         <div style="font-size: 12px; font-weight: 700; color: var(--cyan); background: rgba(6,182,212,0.1); padding: 4px 12px; border-radius: 20px;">
-          Aktif Sekarang: <b id="lblActiveToneName">Tamatlah Sudah</b>
+          Aktif Sekarang: <b id="lblActiveToneName">Anime Wow (2.0s)</b>
         </div>
       </div>
 
@@ -943,18 +943,33 @@
           </div>
         </div>
 
-        <!-- 2. Tamatlah Sudah -->
-        <div class="card lock-card active" id="cardLock_tamatlah">
+        <!-- 2. Anime Wow -->
+        <div class="card lock-card active" id="cardLock_animewow">
           <div class="lock-card-head">
-            <div class="lock-icon-box">🎵</div>
+            <div class="lock-icon-box">✨</div>
             <div>
-              <div class="lock-card-name">Tamatlah Sudah</div>
-              <div class="lock-card-desc">Melodi lagu klasik nostalgia</div>
+              <div class="lock-card-name">Anime Wow (2.0s)</div>
+              <div class="lock-card-desc">Kesan bunyi anime wow ikonik</div>
             </div>
           </div>
           <div class="lock-btn-row">
-            <button class="btn-preview" onclick="previewTone('tamatlah')">▶ Dengar</button>
-            <button class="btn-apply active" id="btnApply_tamatlah" onclick="applyTone('tamatlah', 'Tamatlah Sudah')">✓ Sedang Diguna</button>
+            <button class="btn-preview" onclick="previewTone('animewow')">▶ Dengar</button>
+            <button class="btn-apply active" id="btnApply_animewow" onclick="applyTone('animewow', 'Anime Wow (2.0s)')">✓ Sedang Diguna</button>
+          </div>
+        </div>
+
+        <!-- 3. FAHHHH! -->
+        <div class="card lock-card" id="cardLock_fah">
+          <div class="lock-card-head">
+            <div class="lock-icon-box">💥</div>
+            <div>
+              <div class="lock-card-name">FAHHHH! (2.0s)</div>
+              <div class="lock-card-desc">Jeritan Faahhhh bertenaga</div>
+            </div>
+          </div>
+          <div class="lock-btn-row">
+            <button class="btn-preview" onclick="previewTone('fah')">▶ Dengar</button>
+            <button class="btn-apply" id="btnApply_fah" onclick="applyTone('fah', 'FAHHHH! (2.0s)')">✓ Guna</button>
           </div>
         </div>
 
@@ -1369,6 +1384,51 @@
 
       } catch (err) {
         console.error('Error in onEnergyUpdate:', err);
+      }
+    };
+
+    // Lock Tone Preview and Apply Functions
+    let currentAudio = null;
+    window.previewTone = function(key) {
+      try {
+        if (currentAudio) {
+          currentAudio.pause();
+          currentAudio = null;
+        }
+        currentAudio = new Audio('file:///data/local/window/locksounds/lock_' + key + '.wav');
+        currentAudio.play().catch(function(e) {
+          console.log('Audio play error: ' + e);
+        });
+      } catch (err) {
+        console.error('previewTone err:', err);
+      }
+    };
+
+    window.applyTone = function(key, name) {
+      try {
+        fetch('http://127.0.0.1:8888/api/locksound', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({sound: key})
+        }).then(function(r) { return r.json(); }).then(function(res) {
+          if (res.ok) {
+            document.getElementById('lblActiveToneName').textContent = name;
+            document.querySelectorAll('.lock-card').forEach(function(c) { c.classList.remove('active'); });
+            document.querySelectorAll('.btn-apply').forEach(function(b) {
+              b.classList.remove('active');
+              b.textContent = '✓ Guna';
+            });
+            let card = document.getElementById('cardLock_' + key);
+            if (card) card.classList.add('active');
+            let btn = document.getElementById('btnApply_' + key);
+            if (btn) {
+              btn.classList.add('active');
+              btn.textContent = '✓ Sedang Diguna';
+            }
+          }
+        }).catch(function(e) { console.error('applyTone fetch err:', e); });
+      } catch (err) {
+        console.error('applyTone err:', err);
       }
     };
 
