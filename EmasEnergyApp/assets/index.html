@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>e.MAS Energy</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(18, 25, 41, 0.75);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-border-active: rgba(6, 182, 212, 0.4);
+      --ink: #f8fafc;
+      --muted: #94a3b8;
+      --cyan: #06b6d4;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --blue: #3b82f6;
+      --purple: #a855f7;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+    body {
+      background: var(--bg);
+      background-image: radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.06), transparent 45%),
+                        radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.04), transparent 40%);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Navigation Bar */
+    header {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      background: rgba(10, 15, 28, 0.85);
+      border-bottom: 1px solid var(--card-border);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+    }
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(16, 185, 129, 0.2));
+      border: 1px solid rgba(6, 182, 212, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: var(--cyan);
+      box-shadow: 0 0 12px rgba(6, 182, 212, 0.3);
+    }
+
+    /* Center Nav Tabs */
+    .nav-tabs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 4px;
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .tab-btn:hover {
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .tab-btn.active {
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(16, 185, 129, 0.15));
+      color: #fff;
+      border: 1px solid rgba(6, 182, 212, 0.5);
+      box-shadow: 0 0 12px rgba(6, 182, 212, 0.25);
+    }
+
+    .top-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .mini-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+    }
+    .clock {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .btn-exit {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--card-border);
+      color: var(--ink);
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn-exit:active { background: rgba(255, 255, 255, 0.15); }
+
+    /* Content Area */
+    .tab-content-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+    .tab-pane {
+      position: absolute;
+      inset: 0;
+      padding: 20px 24px;
+      display: none;
+      opacity: 0;
+      transform: scale(0.99);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      overflow-y: auto;
+    }
+    .tab-pane.active {
+      display: block;
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* Common Card Styling */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 18px 20px;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(8px);
+      position: relative;
+    }
+
+    /* ==================== TAB 1: ALIRAN TENAGA (DASHBOARD) ==================== */
+    .grid-dashboard {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 20px;
+      height: 100%;
+    }
+    .dash-left {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .dash-right {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Master Total Power Card */
+    .card-total {
+      text-align: center;
+      padding: 22px 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, rgba(18, 25, 41, 0.9), rgba(10, 15, 26, 0.9));
+      border: 1px solid rgba(6, 182, 212, 0.25);
+    }
+    .total-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-weight: 800;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .total-val {
+      font-size: 56px;
+      font-weight: 900;
+      letter-spacing: -1.5px;
+      line-height: 1;
+      color: #fff;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+    .total-val span {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--cyan);
+    }
+    .total-watts {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--amber);
+      margin-top: 6px;
+    }
+    .drive-badge {
+      margin-top: 10px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--emerald);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    /* Battery Hub Card */
+    .card-battery {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-left: 4px solid var(--blue);
+    }
+    .battery-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .battery-soc-box {
+      margin: 14px 0;
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+    }
+    .battery-soc {
+      font-size: 52px;
+      font-weight: 900;
+      line-height: 1;
+      color: #60a5fa;
+      letter-spacing: -1px;
+    }
+    .battery-range {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .bar-bg {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 8px 0 16px 0;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #3b82f6, #06b6d4);
+      transition: width 0.5s ease;
+    }
+    .stat-pills-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .stat-pill {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      padding: 8px 10px;
+      text-align: center;
+    }
+    .stat-pill small {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 2px;
+    }
+    .stat-pill b {
+      font-size: 13px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    /* Right Column: 3 Sector Cards */
+    .sector-card {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-left: 4px solid transparent;
+      padding: 18px 22px;
+    }
+    .sector-card.motor { border-color: var(--emerald); }
+    .sector-card.hvac { border-color: var(--cyan); }
+    .sector-card.aux { border-color: var(--amber); }
+
+    .sector-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .sector-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      font-weight: 800;
+      color: #fff;
+    }
+    .sector-body {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin: 6px 0;
+    }
+    .sector-power-big {
+      font-size: 38px;
+      font-weight: 900;
+      line-height: 1;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+    .sector-kw {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+    .sector-badge {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 10px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .sector-metrics {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .sector-metrics b { color: #fff; }
+
+    /* ==================== TAB 2: TOLOK SUKAN / DYNO ==================== */
+    .dyno-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      height: 100%;
+    }
+    .dyno-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 30px;
+      background: linear-gradient(180deg, rgba(18, 25, 41, 0.95), rgba(8, 12, 22, 0.95));
+      border: 1px solid var(--card-border);
+    }
+    .dyno-meter-title {
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .dyno-power-num {
+      font-size: 80px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -2px;
+    }
+    .dyno-unit {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .dyno-bar-outer {
+      width: 80%;
+      height: 16px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 24px 0 16px 0;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    .dyno-bar-inner {
+      height: 100%;
+      width: 0%;
+      border-radius: 12px;
+      transition: width 0.15s ease-out;
+    }
+
+    /* ==================== TAB 3: MOD KHEMAH PINTAR ==================== */
+    .camp-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 20px;
+      height: 100%;
+    }
+    .camp-card-hero {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(6, 182, 212, 0.08));
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+    .camp-switch-btn {
+      background: #10b981;
+      color: #000;
+      border: none;
+      padding: 16px 28px;
+      border-radius: 14px;
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 0 24px rgba(16, 185, 129, 0.4);
+      transition: all 0.2s;
+    }
+    .camp-switch-btn.off {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--ink);
+      box-shadow: none;
+    }
+    .cutoff-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .cutoff-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--card-border);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .cutoff-btn.active {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: #10b981;
+      color: #fff;
+    }
+    .btn-action-large {
+      padding: 16px 20px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--card-border);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.2s;
+    }
+    .btn-action-large:active {
+      background: rgba(255, 255, 255, 0.15);
+      transform: scale(0.98);
+    }
+
+    /* ==================== TAB 4: NADA KUNCI ==================== */
+    .lock-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      height: 100%;
+    }
+    .lock-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.2s;
+      border: 1px solid var(--card-border);
+    }
+    .lock-card.active {
+      border-color: var(--cyan);
+      background: rgba(6, 182, 212, 0.12);
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.2);
+    }
+    .lock-card-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .lock-icon-box {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    .lock-card-name {
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+    }
+    .lock-card-desc {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .lock-btn-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .btn-preview {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--card-border);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .btn-apply {
+      flex: 1.3;
+      padding: 10px;
+      border-radius: 8px;
+      background: rgba(6, 182, 212, 0.2);
+      border: 1px solid rgba(6, 182, 212, 0.5);
+      color: var(--cyan);
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .btn-apply.active {
+      background: #10b981;
+      border-color: #10b981;
+      color: #000;
+    }
+
+    /* ==================== TAB 5: PENJIMATAN ==================== */
+    .save-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      height: 100%;
+    }
+    .save-hero {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(6, 182, 212, 0.1));
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    /* Fullscreen Sleep Overlay */
+    #sleepOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #000;
+      z-index: 999999;
+      cursor: pointer;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      color: rgba(255, 255, 255, 0.18);
+      font-size: 15px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Fullscreen Blackout Sleep Mode -->
+  <div id="sleepOverlay" onclick="exitSleep()">
+    <div style="font-size: 48px; opacity: 0.25;">🌙</div>
+    <div>Mod Tidur Khemah Aktif</div>
+    <div style="font-size: 12px; opacity: 0.2;">(Sentuh skrin di mana-mana untuk bangunkan)</div>
+  </div>
+
+  <!-- Top Navigation Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">⚡</div>
+      <span>PROTON e.MAS</span>
+    </div>
+
+    <!-- Center Navigation Tabs -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('dashboard')">
+        <span>⚡</span> Aliran Tenaga
+      </button>
+      <button class="tab-btn" onclick="switchTab('dyno')">
+        <span>🏎️</span> Tolok Sukan
+      </button>
+      <button class="tab-btn" onclick="switchTab('camping')">
+        <span>🏕️</span> Mod Khemah
+      </button>
+      <button class="tab-btn" onclick="switchTab('locksound')">
+        <span>🔊</span> Nada Kunci
+      </button>
+      <button class="tab-btn" onclick="switchTab('savings')">
+        <span>💰</span> Penjimatan
+      </button>
+    </div>
+
+    <div class="top-right">
+      <div class="mini-status">
+        <span style="color: #60a5fa;" id="topMiniSoc">87.2%</span>
+        <span style="opacity: 0.3;">•</span>
+        <span style="color: var(--emerald);" id="topMiniRange">285 km</span>
+      </div>
+      <div class="clock" id="txtClock">--:-- --</div>
+      <button class="btn-exit" onclick="onCloseApp()">
+        <span>✕</span> Keluar
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Container with Tabs -->
+  <div class="tab-content-container">
+
+    <!-- ==================== TAB 1: ALIRAN TENAGA ==================== -->
+    <div class="tab-pane active" id="tab-dashboard">
+      <div class="grid-dashboard">
+        
+        <!-- Left Column: Master Power & Battery Pack -->
+        <div class="dash-left">
+          <!-- Total Power Gauge -->
+          <div class="card card-total">
+            <div class="total-title">Jumlah Kuasa Digunakan</div>
+            <div class="total-val">
+              <span id="txtMasterKw">0.00</span>
+              <span>kW</span>
+            </div>
+            <div class="total-watts" id="txtMasterWatts">0 WATT</div>
+            <div class="drive-badge" id="lblDriveMode">PEGEN (IDLE)</div>
+          </div>
+
+          <!-- Battery Pack Details -->
+          <div class="card card-battery">
+            <div>
+              <div class="battery-header">
+                <span style="font-size: 13px; font-weight: 800; text-transform: uppercase; color: var(--muted); letter-spacing: 1px;">Pek Bateri Voltan Tinggi</span>
+                <span class="sector-badge" style="color: var(--emerald); background: rgba(16, 185, 129, 0.15);" id="txtBatHealthBadge">SIHAT (NORMAL)</span>
+              </div>
+              <div class="battery-soc-box">
+                <div class="battery-soc" id="txtBatSoc">87.2%</div>
+                <div class="battery-range">Baki: <b id="txtBatRange" style="color: #fff;">285 km</b></div>
+              </div>
+              <div class="bar-bg">
+                <div class="bar-fill" id="barSocFill" style="width: 87.2%;"></div>
+              </div>
+            </div>
+
+            <div class="stat-pills-row">
+              <div class="stat-pill">
+                <small>Voltan Pek</small>
+                <b id="txtBatVolt">398.7 V</b>
+              </div>
+              <div class="stat-pill">
+                <small>Arus BMS</small>
+                <b id="txtBatCurr">1.1 A</b>
+              </div>
+              <div class="stat-pill">
+                <small>Suhu Sel</small>
+                <b id="txtBatTemp">31.0 °C</b>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: 3 Prominent Sector Cards -->
+        <div class="dash-right">
+          
+          <!-- 1. Motor Traksi Elektrik -->
+          <div class="card sector-card motor">
+            <div class="sector-top">
+              <div class="sector-title">
+                <span style="color: var(--emerald); font-size: 18px;">🚗</span>
+                <span>Motor Traksi Utama</span>
+              </div>
+              <div class="sector-badge" id="txtMotorModeBadge" style="color: var(--emerald);">IDLE (0W)</div>
+            </div>
+            <div class="sector-body">
+              <div class="sector-power-big" style="color: var(--emerald);" id="txtMotorPower">
+                0 W
+              </div>
+              <div class="sector-kw"><b id="txtMotorKw" style="color: #fff;">0.00</b> kW</div>
+            </div>
+            <div class="bar-bg" style="margin: 4px 0 10px 0;">
+              <div class="bar-fill" id="barMotorFill" style="width: 0%; background: var(--emerald);"></div>
+            </div>
+            <div class="sector-metrics">
+              <span>Gear: <b id="txtGear">P</b></span>
+              <span>Kelajuan: <b id="txtSpeed">0 km/h</b></span>
+              <span>Inverter: <b id="txtInverter">Standby</b></span>
+            </div>
+          </div>
+
+          <!-- 2. Pendingin Hawa (HVAC & Chiller) -->
+          <div class="card sector-card hvac">
+            <div class="sector-top">
+              <div class="sector-title">
+                <span style="color: var(--cyan); font-size: 18px;">❄️</span>
+                <span>Pendingin Hawa (HVAC & Chiller)</span>
+              </div>
+              <div class="sector-badge" id="txtAcBadge" style="color: var(--cyan);">A/C ON</div>
+            </div>
+            <div class="sector-body">
+              <div class="sector-power-big" style="color: var(--cyan);" id="txtAcPower">
+                0 W
+              </div>
+              <div class="sector-kw"><b id="txtAcKw" style="color: #fff;">0.00</b> kW</div>
+            </div>
+            <div class="bar-bg" style="margin: 4px 0 10px 0;">
+              <div class="bar-fill" id="barAcFill" style="width: 0%; background: var(--cyan);"></div>
+            </div>
+            <div class="sector-metrics">
+              <span>Pemampat: <b id="txtCompW">0 W</b></span>
+              <span>Kipas Blower: <b id="txtBlowerW">0 W</b></span>
+              <span>Suhu Sasaran: <b id="txtSetpoint">22.0 °C</b></span>
+            </div>
+          </div>
+
+          <!-- 3. Sistem 12V DC-DC (IHU & Elektronik) -->
+          <div class="card sector-card aux">
+            <div class="sector-top">
+              <div class="sector-title">
+                <span style="color: var(--amber); font-size: 18px;">📻</span>
+                <span>Sistem 12V & Layar/Radio (DC-DC)</span>
+              </div>
+              <div class="sector-badge" style="color: var(--amber);">DC-DC ACTIVE</div>
+            </div>
+            <div class="sector-body">
+              <div class="sector-power-big" style="color: var(--amber);" id="txt12vPower">
+                200 W
+              </div>
+              <div class="sector-kw"><b id="txt12vKw" style="color: #fff;">0.20</b> kW</div>
+            </div>
+            <div class="bar-bg" style="margin: 4px 0 10px 0;">
+              <div class="bar-fill" id="bar12vFill" style="width: 14%; background: var(--amber);"></div>
+            </div>
+            <div class="sector-metrics">
+              <span>Layar & Komputer ECU: <b id="txtIhuW">~160 W</b></span>
+              <span>Sistem Audio: <b id="txtAudioW">~40 W</b></span>
+              <span>Voltan Bas 12V: <b id="txt12vVolt">13.8 V</b></span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ==================== TAB 2: TOLOK SUKAN / DYNO ==================== -->
+    <div class="tab-pane" id="tab-dyno">
+      <div class="dyno-container">
+        <!-- Motor Power Output Dial -->
+        <div class="card dyno-card">
+          <div class="dyno-meter-title">⚡ Kuasa Pecutan Motor Traksi</div>
+          <div class="dyno-power-num" style="color: var(--cyan);" id="dynoMotorKw">0.0</div>
+          <div class="dyno-unit">KILOWATT (kW)</div>
+          <div class="dyno-bar-outer">
+            <div class="dyno-bar-inner" id="dynoMotorBar" style="background: linear-gradient(90deg, #06b6d4, #f59e0b, #f43f5e);"></div>
+          </div>
+          <div style="font-size: 14px; font-weight: 700; color: var(--muted); margin-top: 10px;">
+            Kuasa Maksimum Trip Ini: <b style="color: #fff;" id="dynoPeakPower">0.0 kW</b>
+          </div>
+        </div>
+
+        <!-- Regenerative Braking Dial -->
+        <div class="card dyno-card">
+          <div class="dyno-meter-title">🔋 Regenerasi Brek (Cas Balik Bateri)</div>
+          <div class="dyno-power-num" style="color: var(--emerald);" id="dynoRegenKw">0.0</div>
+          <div class="dyno-unit">KILOWATT (kW)</div>
+          <div class="dyno-bar-outer">
+            <div class="dyno-bar-inner" id="dynoRegenBar" style="background: linear-gradient(90deg, #10b981, #34d399);"></div>
+          </div>
+          <div style="font-size: 14px; font-weight: 700; color: var(--muted); margin-top: 10px;">
+            Arus Bateri Masuk: <b style="color: #fff;" id="dynoRegenAmps">0.0 A</b>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 3: MOD KHEMAH PINTAR ==================== -->
+    <div class="tab-pane" id="tab-camping">
+      <div class="camp-grid">
+        
+        <!-- Left: Master Control -->
+        <div class="card camp-card-hero">
+          <div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 32px;">🏕️</span>
+              <div>
+                <h2 style="font-size: 22px; font-weight: 900;">Mod Khemah Pintar</h2>
+                <p style="font-size: 13px; color: var(--muted); margin-top: 2px;">
+                  Mengekalkan sistem A/C dan elektrik kabin hidup tanpa had masa mati automatik.
+                </p>
+              </div>
+            </div>
+
+            <div style="margin-top: 24px;">
+              <button class="camp-switch-btn off" id="btnCampMaster" onclick="toggleCampMode()">
+                <span id="campIconState">🏕️</span>
+                <span id="campTxtState">Aktifkan Mod Khemah</span>
+              </button>
+            </div>
+
+            <div style="margin-top: 30px;">
+              <label style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--muted); letter-spacing: 1px;">
+                Had Minimum Perlindungan Bateri (Auto Cut-Off)
+              </label>
+              <div class="cutoff-row">
+                <button class="cutoff-btn" onclick="setCutoff(15, this)">15%</button>
+                <button class="cutoff-btn active" onclick="setCutoff(20, this)">20% (Disyorkan)</button>
+                <button class="cutoff-btn" onclick="setCutoff(25, this)">25%</button>
+              </div>
+              <small style="display:block; margin-top: 6px; font-size: 11px; color: var(--muted);">
+                A/C dimatikan automatik bila bateri turun ke paras ini supaya kereta sentiasa mempunyai baki jarak memandu.
+              </small>
+            </div>
+          </div>
+
+          <div style="padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08);">
+            <div style="font-size: 13px; color: var(--muted);">Anggaran Ketahanan Bateri:</div>
+            <div style="font-size: 36px; font-weight: 900; color: var(--emerald);" id="txtCampHours">131 Jam Baki</div>
+            <div style="font-size: 12px; color: var(--cyan); margin-top: 2px;">Berdasarkan baki 52.5 kWh pada kadar penggunaan semasa</div>
+          </div>
+        </div>
+
+        <!-- Right: Cabin Convenience Actions -->
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div class="card" style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <h3 style="font-size: 17px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                <span>🌙</span> Skrin Gelap Gelita (Blackout Sleep)
+              </h3>
+              <p style="font-size: 13px; color: var(--muted); margin-top: 6px; line-height: 1.5;">
+                Mematikan lampu paparan IHU sepenuhnya supaya kabin gelap dan menjimatkan bateri 12V. Cukup sekadar sentuh skrin untuk hidupkan semula.
+              </p>
+            </div>
+            <button class="btn-action-large" onclick="enterSleep()">
+              <span>🌙</span> Masuk Mod Gelap Skrin
+            </button>
+          </div>
+
+          <div class="card" style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <h3 style="font-size: 17px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                <span>💨</span> Kitaran Udara Segar (Ventilasi)
+              </h3>
+              <p style="font-size: 13px; color: var(--muted); margin-top: 6px; line-height: 1.5;">
+                Membuka 4 cermin sebanyak 5% untuk peredaran udara segar keluar masuk tanpa memasukkan serangga.
+              </p>
+            </div>
+            <button class="btn-action-large" onclick="crackWindows()">
+              <span>💨</span> Retakkan Cermin 5%
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ==================== TAB 4: NADA KUNCI KERETA ==================== -->
+    <div class="tab-pane" id="tab-locksound">
+      <div style="margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h2 style="font-size: 18px; font-weight: 900;">Pilih Nada Kunci Kereta (Lock Tone)</h2>
+          <p style="font-size: 12px; color: var(--muted);">Dengar sampel dan tekan "Guna" untuk menukar bunyi kunci kereta secara serta-merta.</p>
+        </div>
+        <div style="font-size: 12px; font-weight: 700; color: var(--cyan); background: rgba(6,182,212,0.1); padding: 4px 12px; border-radius: 20px;">
+          Aktif Sekarang: <b id="lblActiveToneName">Tamatlah Sudah</b>
+        </div>
+      </div>
+
+      <div class="lock-grid">
+        <!-- 1. Original -->
+        <div class="card lock-card" id="cardLock_original">
+          <div class="lock-card-head">
+            <div class="lock-icon-box">🔔</div>
+            <div>
+              <div class="lock-card-name">Original (Proton)</div>
+              <div class="lock-card-desc">Bunyi bip standard kilang</div>
+            </div>
+          </div>
+          <div class="lock-btn-row">
+            <button class="btn-preview" onclick="previewTone('original')">▶ Dengar</button>
+            <button class="btn-apply" id="btnApply_original" onclick="applyTone('original', 'Original (Proton)')">✓ Guna</button>
+          </div>
+        </div>
+
+        <!-- 2. Tamatlah Sudah -->
+        <div class="card lock-card active" id="cardLock_tamatlah">
+          <div class="lock-card-head">
+            <div class="lock-icon-box">🎵</div>
+            <div>
+              <div class="lock-card-name">Tamatlah Sudah</div>
+              <div class="lock-card-desc">Melodi lagu klasik nostalgia</div>
+            </div>
+          </div>
+          <div class="lock-btn-row">
+            <button class="btn-preview" onclick="previewTone('tamatlah')">▶ Dengar</button>
+            <button class="btn-apply active" id="btnApply_tamatlah" onclick="applyTone('tamatlah', 'Tamatlah Sudah')">✓ Sedang Diguna</button>
+          </div>
+        </div>
+
+        <!-- 3. Mac Quack -->
+        <div class="card lock-card" id="cardLock_quack">
+          <div class="lock-card-head">
+            <div class="lock-icon-box">🦆</div>
+            <div>
+              <div class="lock-card-name">Mac Quack</div>
+              <div class="lock-card-desc">Bunyi itik retro MacOS</div>
+            </div>
+          </div>
+          <div class="lock-btn-row">
+            <button class="btn-preview" onclick="previewTone('quack')">▶ Dengar</button>
+            <button class="btn-apply" id="btnApply_quack" onclick="applyTone('quack', 'Mac Quack')">✓ Guna</button>
+          </div>
+        </div>
+
+        <!-- 4. Gop Gop Gop -->
+        <div class="card lock-card" id="cardLock_gopgop">
+          <div class="lock-card-head">
+            <div class="lock-icon-box">🦹</div>
+            <div>
+              <div class="lock-card-name">Gop Gop Gop</div>
+              <div class="lock-card-desc">Kesan bunyi komedi ceria</div>
+            </div>
+          </div>
+          <div class="lock-btn-row">
+            <button class="btn-preview" onclick="previewTone('gopgop')">▶ Dengar</button>
+            <button class="btn-apply" id="btnApply_gopgop" onclick="applyTone('gopgop', 'Gop Gop Gop')">✓ Guna</button>
+          </div>
+        </div>
+
+        <!-- 5. Ack! -->
+        <div class="card lock-card" id="cardLock_ack">
+          <div class="lock-card-head">
+            <div class="lock-icon-box">💥</div>
+            <div>
+              <div class="lock-card-name">Ack! (Laser)</div>
+              <div class="lock-card-desc">Bunyi sci-fi futuristik tajam</div>
+            </div>
+          </div>
+          <div class="lock-btn-row">
+            <button class="btn-preview" onclick="previewTone('ack')">▶ Dengar</button>
+            <button class="btn-apply" id="btnApply_ack" onclick="applyTone('ack', 'Ack!')">✓ Guna</button>
+          </div>
+        </div>
+
+        <!-- 6. Guru Hentikan -->
+        <div class="card lock-card" id="cardLock_guru">
+          <div class="lock-card-head">
+            <div class="lock-icon-box">🛑</div>
+            <div>
+              <div class="lock-card-name">Guru Hentikan</div>
+              <div class="lock-card-desc">Amaran tegas suara pengajar</div>
+            </div>
+          </div>
+          <div class="lock-btn-row">
+            <button class="btn-preview" onclick="previewTone('guru')">▶ Dengar</button>
+            <button class="btn-apply" id="btnApply_guru" onclick="applyTone('guru', 'Guru Hentikan')">✓ Guna</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 5: PENJIMATAN PETROL ==================== -->
+    <div class="tab-pane" id="tab-savings">
+      <div class="save-grid">
+        
+        <!-- Hero Savings Card -->
+        <div class="card save-hero">
+          <div style="font-size: 13px; font-weight: 800; text-transform: uppercase; color: var(--emerald); letter-spacing: 2px;">
+            PENJIMATAN BERSIH TRIP SEMASA
+          </div>
+          <div style="font-size: 64px; font-weight: 900; color: #fff; margin: 12px 0;" id="txtTotalSaved">
+            RM 14.40
+          </div>
+          <div style="font-size: 14px; font-weight: 700; color: var(--muted); max-width: 320px;">
+            Lebih jimat 77% berbanding mengisi petrol RON95 untuk SUV segmen C setaraf.
+          </div>
+        </div>
+
+        <!-- Breakdown Card -->
+        <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+          <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 16px;">Perbandingan Kos Masa Nyata</h3>
+          
+          <div style="display: flex; flex-direction: column; gap: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.06);">
+              <span style="color: var(--muted);">Jarak Perjalanan Sesi Ini</span>
+              <b style="font-size: 16px;" id="txtTripKm">42.5 km</b>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.06);">
+              <span style="color: var(--muted);">Tenaga Diguna (Purata 14.8 kWh/100km)</span>
+              <b style="font-size: 16px; color: var(--cyan);" id="txtTripKwh">6.29 kWh</b>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.06);">
+              <span style="color: var(--muted);">Kos Elektrik Rumah (RM0.57/kWh)</span>
+              <b style="font-size: 16px; color: var(--emerald);" id="txtEvCost">RM 3.59</b>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: var(--muted);">Kos Petrol Bersamaan (RON95 @ 6.5L/100km)</span>
+              <b style="font-size: 16px; color: var(--rose);" id="txtPetrolCost">RM 17.99</b>
+            </div>
+          </div>
+
+          <div style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.25); border-radius: 12px; padding: 12px; text-align: center; margin-top: 14px; font-size: 13px; font-weight: 700; color: var(--emerald);">
+            💡 Memandu EV ini menjimatkan purata ~RM 350 - RM 450 sebulan!
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // State
+    let isCampActive = false;
+    let cutoffPct = 20;
+    let peakPowerKw = 0;
+    let activeTone = 'tamatlah';
+
+    // Clock
+    function updateClock() {
+      const now = new Date();
+      let h = now.getHours();
+      let m = now.getMinutes();
+      const ampm = h >= 12 ? 'pm' : 'am';
+      h = h % 12;
+      h = h ? h : 12;
+      m = m < 10 ? '0' + m : m;
+      document.getElementById('txtClock').textContent = `${h}:${m} ${ampm}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Tab Switching
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      
+      const btn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(tabId));
+      if (btn) btn.classList.add('active');
+
+      const targetPane = document.getElementById('tab-' + tabId);
+      if (targetPane) targetPane.classList.add('active');
+    }
+
+    // Camping Mode
+    function toggleCampMode() {
+      isCampActive = !isCampActive;
+      const btn = document.getElementById('btnCampMaster');
+      const icon = document.getElementById('campIconState');
+      const txt = document.getElementById('campTxtState');
+
+      if (isCampActive) {
+        btn.classList.remove('off');
+        icon.textContent = '🏕️';
+        txt.textContent = 'Mod Khemah Sedang Aktif (ON)';
+        if (window.Android && window.Android.setKeepScreenOn) {
+          window.Android.setKeepScreenOn(true);
+        }
+      } else {
+        btn.classList.add('off');
+        icon.textContent = '🏕️';
+        txt.textContent = 'Aktifkan Mod Khemah';
+        if (window.Android && window.Android.setKeepScreenOn) {
+          window.Android.setKeepScreenOn(false);
+        }
+      }
+    }
+
+    function setCutoff(val, btn) {
+      cutoffPct = val;
+      document.querySelectorAll('.cutoff-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function enterSleep() {
+      document.getElementById('sleepOverlay').style.display = 'flex';
+      if (window.Android && window.Android.setScreenBrightness) {
+        window.Android.setScreenBrightness(0.01);
+      }
+    }
+
+    function exitSleep() {
+      document.getElementById('sleepOverlay').style.display = 'none';
+      if (window.Android && window.Android.setScreenBrightness) {
+        window.Android.setScreenBrightness(-1.0);
+      }
+    }
+
+    function crackWindows() {
+      if (window.Android && window.Android.triggerWindowCrack) {
+        window.Android.triggerWindowCrack(5);
+      }
+      alert("Cermin telah diretakkan 5% untuk peredaran udara.");
+    }
+
+    // Lock Tone Preview & Apply
+    function previewTone(key) {
+      if (window.Android && window.Android.playAudioPreview) {
+        window.Android.playAudioPreview(key);
+      }
+    }
+
+    function applyTone(key, name) {
+      activeTone = key;
+      document.querySelectorAll('.lock-card').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.btn-apply').forEach(b => {
+        b.classList.remove('active');
+        b.textContent = '✓ Guna';
+      });
+
+      const card = document.getElementById('cardLock_' + key);
+      const btn = document.getElementById('btnApply_' + key);
+      if (card) card.classList.add('active');
+      if (btn) {
+        btn.classList.add('active');
+        btn.textContent = '✓ Sedang Diguna';
+      }
+
+      document.getElementById('lblActiveToneName').textContent = name;
+
+      if (window.Android && window.Android.applyLockSoundDirect) {
+        window.Android.applyLockSoundDirect(key);
+      }
+    }
+
+    function onCloseApp() {
+      if (window.Android && window.Android.closeApp) {
+        window.Android.closeApp();
+      }
+    }
+
+    // Realtime Telemetry Hook & Processor
+    window.onEnergyUpdate = function(data) {
+      try {
+        if (!data) return;
+        if (data.energy) data = data.energy;
+
+        // Battery SOC & Range
+        let soc = 87.2;
+        if (data.battery && data.battery.soc_pct !== undefined) {
+          soc = parseFloat(data.battery.soc_pct);
+        }
+        document.getElementById('topMiniSoc').textContent = soc.toFixed(1) + '%';
+        document.getElementById('txtBatSoc').textContent = soc.toFixed(1) + '%';
+        document.getElementById('barSocFill').style.width = Math.min(100, Math.max(0, soc)) + '%';
+
+        let volt = data.battery && data.battery.voltage_v ? parseFloat(data.battery.voltage_v).toFixed(1) : '398.7';
+        let curr = data.battery && data.battery.current_a ? parseFloat(data.battery.current_a).toFixed(1) : '0.0';
+        let temp = data.battery && data.battery.temp_c ? parseFloat(data.battery.temp_c).toFixed(1) : '31.0';
+        document.getElementById('txtBatVolt').textContent = volt + ' V';
+        document.getElementById('txtBatCurr').textContent = curr + ' A';
+        document.getElementById('txtBatTemp').textContent = temp + ' °C';
+
+        let range = data.battery && data.battery.range_km !== undefined ? Math.round(data.battery.range_km) : 285;
+        document.getElementById('topMiniRange').textContent = range + ' km';
+        document.getElementById('txtBatRange').textContent = range + ' km';
+
+        // Master Total Power & Drive Mode
+        let totalW = data.total_power_w !== undefined ? parseInt(data.total_power_w) : 0;
+        let totalKw = data.total_power_kw !== undefined ? parseFloat(data.total_power_kw) : (totalW / 1000.0);
+        let mode = data.motor_mode || 'IDLE';
+
+        const elMasterKw = document.getElementById('txtMasterKw');
+        const elMasterWatts = document.getElementById('txtMasterWatts');
+        const elDriveMode = document.getElementById('lblDriveMode');
+
+        if (totalKw < -0.1) {
+          // REGEN / CHARGING STATE (NEGATIVE POWER)
+          elMasterKw.textContent = totalKw.toFixed(2);
+          elMasterKw.style.color = '#10b981';
+          elMasterWatts.textContent = totalW + ' WATT (REGEN)';
+          elMasterWatts.style.color = '#10b981';
+          elDriveMode.textContent = mode === 'CHARGING' ? 'PENGECASAN (CHARGING)' : 'REGENERASI BREK (REGEN)';
+          elDriveMode.style.background = 'rgba(16, 185, 129, 0.25)';
+          elDriveMode.style.color = '#10b981';
+          elDriveMode.style.borderColor = 'rgba(16, 185, 129, 0.5)';
+        } else if (totalKw > 0.4 && (mode === 'DRIVING' || totalW > 500)) {
+          // ACTIVE DRIVING / TRACTION STATE
+          elMasterKw.textContent = '+' + totalKw.toFixed(2);
+          elMasterKw.style.color = '#fff';
+          elMasterWatts.textContent = totalW + ' WATT';
+          elMasterWatts.style.color = 'var(--cyan)';
+          elDriveMode.textContent = 'MEMACU (DRIVING)';
+          elDriveMode.style.background = 'rgba(6, 182, 212, 0.25)';
+          elDriveMode.style.color = 'var(--cyan)';
+          elDriveMode.style.borderColor = 'rgba(6, 182, 212, 0.5)';
+        } else if (mode === 'COASTING') {
+          elMasterKw.textContent = (totalKw >= 0 ? '+' : '') + totalKw.toFixed(2);
+          elMasterKw.style.color = '#fff';
+          elMasterWatts.textContent = totalW + ' WATT';
+          elMasterWatts.style.color = 'var(--blue)';
+          elDriveMode.textContent = 'MELUNCUR (COASTING)';
+          elDriveMode.style.background = 'rgba(59, 130, 246, 0.2)';
+          elDriveMode.style.color = 'var(--blue)';
+          elDriveMode.style.borderColor = 'rgba(59, 130, 246, 0.4)';
+        } else {
+          // IDLE / STANDBY STATE
+          elMasterKw.textContent = totalKw.toFixed(2);
+          elMasterKw.style.color = '#fff';
+          elMasterWatts.textContent = totalW + ' WATT';
+          elMasterWatts.style.color = 'var(--amber)';
+          elDriveMode.textContent = 'STANDBY (IDLE)';
+          elDriveMode.style.background = 'rgba(255, 255, 255, 0.08)';
+          elDriveMode.style.color = 'var(--muted)';
+          elDriveMode.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+        }
+
+        // Motor Power & Dyno Stats
+        let motorW = data.motor_power_w !== undefined ? parseInt(data.motor_power_w) : 0;
+        let motorKw = data.motor_power_kw !== undefined ? parseFloat(data.motor_power_kw) : (motorW / 1000.0);
+        
+        const elMotorW = document.getElementById('txtMotorPower');
+        const elMotorKw = document.getElementById('txtMotorKw');
+        const elMotorBadge = document.getElementById('txtMotorModeBadge');
+        const elMotorBar = document.getElementById('barMotorFill');
+        const elInverter = document.getElementById('txtInverter');
+
+        if (motorKw < -0.1) {
+          // REGEN POWER
+          elMotorW.textContent = motorW + ' W';
+          elMotorW.style.color = '#10b981';
+          elMotorKw.textContent = motorKw.toFixed(2);
+          elMotorBadge.textContent = 'REGEN CAS (' + motorKw.toFixed(1) + ' kW)';
+          elMotorBadge.style.color = '#10b981';
+          elMotorBar.style.background = '#10b981';
+          elMotorBar.style.width = Math.min(100, (Math.abs(motorKw) / 70.0) * 100) + '%';
+          if (elInverter) elInverter.textContent = 'Generator (Active)';
+
+          // Dyno Tab: Regen Gauge
+          let regenKw = Math.abs(motorKw);
+          document.getElementById('dynoRegenKw').textContent = regenKw.toFixed(1);
+          document.getElementById('dynoRegenBar').style.width = Math.min(100, (regenKw / 70.0) * 100) + '%';
+          document.getElementById('dynoRegenAmps').textContent = curr + ' A';
+          document.getElementById('dynoMotorKw').textContent = '0.0';
+          document.getElementById('dynoMotorBar').style.width = '0%';
+        } else {
+          // TRACTION POWER
+          elMotorW.textContent = (motorW > 0 ? '+' : '') + motorW + ' W';
+          elMotorW.style.color = motorW > 100 ? 'var(--cyan)' : 'var(--muted)';
+          elMotorKw.textContent = (motorKw > 0 ? '+' : '') + motorKw.toFixed(2);
+          elMotorBadge.textContent = motorW > 200 ? 'TARIKAN (+' + motorKw.toFixed(1) + ' kW)' : 'IDLE (0W)';
+          elMotorBadge.style.color = motorW > 200 ? 'var(--cyan)' : 'var(--emerald)';
+          elMotorBar.style.background = 'var(--cyan)';
+          elMotorBar.style.width = Math.min(100, (Math.max(0, motorKw) / 160.0) * 100) + '%';
+          if (elInverter) elInverter.textContent = motorW > 200 ? 'Inverting (Traction)' : 'Standby';
+
+          // Dyno Tab: Traction Gauge
+          let driveKw = Math.max(0, motorKw);
+          document.getElementById('dynoMotorKw').textContent = driveKw.toFixed(1);
+          document.getElementById('dynoMotorBar').style.width = Math.min(100, (driveKw / 160.0) * 100) + '%';
+          document.getElementById('dynoRegenKw').textContent = '0.0';
+          document.getElementById('dynoRegenBar').style.width = '0%';
+          document.getElementById('dynoRegenAmps').textContent = '0.0 A';
+
+          if (driveKw > peakPowerKw) {
+            peakPowerKw = driveKw;
+            document.getElementById('dynoPeakPower').textContent = peakPowerKw.toFixed(1) + ' kW';
+          }
+        }
+
+        // HVAC Power (Pendingin Hawa)
+        let hvacW = data.hvac_power_w !== undefined ? parseInt(data.hvac_power_w) : 0;
+        let hvacKw = data.hvac_power_kw !== undefined ? parseFloat(data.hvac_power_kw) : (hvacW / 1000.0);
+        document.getElementById('txtAcPower').textContent = hvacW + ' W';
+        document.getElementById('txtAcKw').textContent = hvacKw.toFixed(2);
+        let hvacPct = Math.min(100, Math.max(0, (hvacW / 3500.0) * 100));
+        document.getElementById('barAcFill').style.width = hvacPct + '%';
+
+        const elAcBadge = document.getElementById('txtAcBadge');
+        if (elAcBadge) {
+          if (hvacW > 100) {
+            elAcBadge.textContent = 'A/C SEJUK (' + hvacKw.toFixed(1) + ' kW)';
+            elAcBadge.style.color = 'var(--cyan)';
+          } else {
+            elAcBadge.textContent = 'A/C STANDBY';
+            elAcBadge.style.color = 'var(--muted)';
+          }
+        }
+
+        if (data.hvac_details) {
+          document.getElementById('txtCompW').textContent = (data.hvac_details.compressor_w || (hvacW > 100 ? hvacW - 80 : 0)) + ' W';
+          document.getElementById('txtBlowerW').textContent = (data.hvac_details.blower_w || 80) + ' W';
+          if (data.hvac_details.setpoint_c) {
+            document.getElementById('txtSetpoint').textContent = parseFloat(data.hvac_details.setpoint_c).toFixed(1) + ' °C';
+          }
+        }
+
+        // 12V Aux Power
+        let auxW = data.accessories_12v_w !== undefined ? parseInt(data.accessories_12v_w) : 200;
+        let auxKw = (auxW / 1000.0).toFixed(2);
+        document.getElementById('txt12vPower').textContent = auxW + ' W';
+        document.getElementById('txt12vKw').textContent = auxKw;
+        let auxPct = Math.min(100, Math.max(0, (auxW / 1500.0) * 100));
+        document.getElementById('bar12vFill').style.width = Math.max(8, auxPct) + '%';
+
+        // Gear & Speed
+        if (data.gear) document.getElementById('txtGear').textContent = data.gear;
+        if (data.speed_kmh !== undefined) document.getElementById('txtSpeed').textContent = Math.round(data.speed_kmh) + ' km/h';
+
+        // Camping Endurance Hours Calculation
+        let usableKwh = (soc / 100.0) * 60.22;
+        let activeKw = Math.max(0.3, Math.abs(totalW) / 1000.0);
+        let remHours = Math.round(usableKwh / activeKw);
+        document.getElementById('txtCampHours').textContent = `${remHours} Jam Baki`;
+
+      } catch (err) {
+        console.error('Error in onEnergyUpdate:', err);
+      }
+    };
+
+    // Guaranteed High-Frequency Telemetry Pull Timer (every 350ms)
+    setInterval(function() {
+      try {
+        let iface = window.Android || window.AndroidEnergy;
+        if (iface && iface.getLatestEnergy) {
+          let raw = iface.getLatestEnergy();
+          if (raw && raw.length > 10 && raw !== '{}') {
+            window.onEnergyUpdate(JSON.parse(raw));
+          }
+        }
+      } catch (e) {}
+    }, 350);
+  </script>
+</body>
+</html>

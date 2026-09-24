@@ -85,8 +85,25 @@ jadx_dbg_manifest/
 jadx_dbg_res/
 jadx_upgradeservice/
 
-# Temporary directories
+# Temporary directories & dumps
 New folder/
 temp_settings/
 META-INF/
-
+_ru_inspect/
+jadx_energy/
+jadx_pms/
+bedah apk/
+backup_before_rumble/
+drive_assist_repo/
+*.mp4
+*.bmp
+*.xz
+*.sym
+ecarx_avm
+ecarx_reverse_display
+ecarx_reverse_radar_pulled
+litecamdev
+litecamrvcdev
+calib_front.bmp
+*.idsig
+*.txt
