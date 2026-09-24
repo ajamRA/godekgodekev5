@@ -396,10 +396,12 @@ public class DoorPressureReliefDaemon {
         // Vehicle Speed & Gear
         float speed = readFloatProp(PROP_VEHICLE_SPEED, 0.0f);
         int gearRaw = readIntProp(PROP_VEHICLE_GEAR);
+        if (gearRaw <= 0) gearRaw = readIntProp(289408000);
         String gear = "P";
-        if (gearRaw == 8) gear = "D";
-        else if (gearRaw == 2) gear = "R";
-        else if (gearRaw == 1) gear = "N";
+        if (gearRaw == 8 || gearRaw == 0x08) gear = "D";
+        else if (gearRaw == 2 || gearRaw == 0x02) gear = "R";
+        else if (gearRaw == 1 || gearRaw == 0x01) gear = "N";
+        else if (gearRaw == 4 || gearRaw == 0x04) gear = "P";
 
         // OEM Thermal / HVAC Power (0x287002E5 = 678429413)
         int hvacW = 0;
@@ -437,29 +439,47 @@ public class DoorPressureReliefDaemon {
         // True Battery Net Power (P = V * I)
         int totalBatteryW = (int) (packVolt * packCurr);
 
-        // Master Total Power & Motor Power
+        // Master Total Power & Dynamic Motor Power
         int totalW = totalBatteryW;
         int motorW = 0;
 
-        if ("P".equals(gear) || ("N".equals(gear) && speed < 1.0f)) {
-            // Parked / Neutral: Motor is idle at 0W, electrical load is HVAC + Aux
-            motorW = 0;
-            totalW = hvacW + accW;
-        } else {
-            // In D or R (Active driving or regen)
-            if (hasCurr && Math.abs(packCurr) > 0.1f) {
-                motorW = totalBatteryW - hvacW - accW;
+        // 1. Check OEM VCU Inverter Drive Power (0x287002E4 = 678429412)
+        boolean hasVcu = false;
+        byte[] bMotor = readBytesProp(678429412, 0);
+        if (bMotor != null && bMotor.length >= 2) {
+            int rawMotor = ((bMotor[1] & 0xFF) << 8) | (bMotor[0] & 0xFF);
+            if (rawMotor > 0 && rawMotor < 6000) {
+                float mKw = (rawMotor / 10.0f) - 204.0f;
+                if (Math.abs(mKw) > 0.15f) {
+                    motorW = (int) (mKw * 1000.0f);
+                    totalW = motorW + hvacW + accW;
+                    hasVcu = true;
+                }
+            }
+        }
+
+        // 2. If VCU property is standby, compute directly from High Voltage BMS Net Draw
+        if (!hasVcu && hasCurr) {
+            int netTraction = totalBatteryW - hvacW - accW;
+            // Filter standby baseline (< 250W is idle parasitic load)
+            if (Math.abs(netTraction) > 250) {
+                motorW = netTraction;
                 totalW = totalBatteryW;
             } else {
-                // Fallback to VCU_DrvPwrAct
-                byte[] bMotor = readBytesProp(678429412, 0);
-                if (bMotor != null && bMotor.length >= 2) {
-                    int rawMotor = ((bMotor[1] & 0xFF) << 8) | (bMotor[0] & 0xFF);
-                    float mKw = (rawMotor / 10.0f) - 204.0f;
-                    motorW = (int) (mKw * 1000.0f);
-                }
-                totalW = motorW + hvacW + accW;
+                motorW = 0;
+                totalW = hvacW + accW;
             }
+        }
+
+        // 3. Dynamic Gear Inference:
+        // When driving or accelerating, motor draws power -> Gear is D
+        // When decelerating or regenerating, motor produces power -> Gear is D
+        if (motorW > 350) {
+            gear = "D";
+        } else if (motorW < -250) {
+            gear = "D";
+        } else if (speed > 1.5f && "P".equals(gear)) {
+            gear = "D";
         }
 
         float totalKw = totalW / 1000.0f;
@@ -468,14 +488,12 @@ public class DoorPressureReliefDaemon {
 
         // Drive Mode Determination
         String mode = "IDLE";
-        if (speed > 1.5f || "D".equals(gear) || "R".equals(gear)) {
-            if (motorW > 400 || totalW > 500) {
-                mode = "DRIVING";
-            } else if (motorW < -300 || totalW < -300) {
-                mode = "REGEN";
-            } else {
-                mode = "COASTING";
-            }
+        if (motorW > 350 || (speed > 1.5f && totalW > 500)) {
+            mode = "DRIVING";
+        } else if (motorW < -250 || totalW < -250) {
+            mode = "REGEN";
+        } else if ("D".equals(gear) && speed > 1.5f) {
+            mode = "COASTING";
         } else if (totalKw < -1.5f) {
             mode = "CHARGING";
         } else {
