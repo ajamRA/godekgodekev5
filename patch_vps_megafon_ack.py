@@ -18,7 +18,7 @@ speak_replace = """    car_megaphone_pending = {
     }
     car_megaphone_switch["enabled"] = True
     car_megaphone_switch["updated_at"] = int(time.time())
-    car_megaphone_switch["expires_at"] = int(time.time()) + 300"""
+    car_megaphone_switch["expires_at"] = int(time.time()) + 120"""
 
 if speak_target in c:
     c = c.replace(speak_target, speak_replace)
@@ -41,7 +41,7 @@ upload_replace = """    car_megaphone_pending = {
     }
     car_megaphone_switch["enabled"] = True
     car_megaphone_switch["updated_at"] = int(time.time())
-    car_megaphone_switch["expires_at"] = int(time.time()) + 300"""
+    car_megaphone_switch["expires_at"] = int(time.time()) + 120"""
 
 if upload_target in c:
     c = c.replace(upload_target, upload_replace)
