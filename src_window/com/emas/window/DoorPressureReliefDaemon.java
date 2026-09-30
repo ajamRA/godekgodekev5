@@ -4,25 +4,22 @@ import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.*;
-import android.media.AudioAttributes;
-import android.media.AudioFormat;
-import android.media.AudioTrack;
 
 /**
- * Dedicated, Lightweight Cabin Pressure Relief & Welcome Sound Daemon for Proton e.MAS 5 (IHU801P).
+ * Dedicated, Standalone Cabin Door Pressure Relief Daemon for Proton e.MAS 5 (IHU801P).
  * 
- * Features:
- * 1. Door Pressure Relief: drops window to crackPercent (default 7%) when door opens,
- *    and closes it when door closes.
+ * Single Responsibility:
+ * 1. Door Pressure Relief: drops window to crackPercent (default 7%) when any door opens,
+ *    and closes it back to 0% when that door closes.
  * 2. Dynamic Config: reads /data/local/window/config.json (on/off toggle, crack percentage).
- * 3. Welcome / Unlock Audio: plays custom WAV via AudioTrack on unlock/entry.
+ * 3. Ventilation Mode: opens all 4 windows to crackPercent for a configurable duration.
  * 4. Lightweight HTTP status on port 8885 (zero collision with TelemetryDaemon on 8888).
- * 5. Strictly ZERO Drive Mode enforcement and ZERO ABRP bloat.
+ * 5. Strictly ZERO Drive Mode tampering, ZERO audio bloat, ZERO ABRP bloat.
  */
 public class DoorPressureReliefDaemon {
 
     static final String CONFIG_PATH = "/data/local/window/config.json";
-    static final int HTTP_PORT = 8885; // Distinct port; never collides with 8888
+    static final int HTTP_PORT = 8885; // Never collides with Telemetry (8888), Megaphone (8890), or AVAS (8889)
 
     // Door sensor prop IDs (1 = CLOSED, 0 = OPEN)
     static final int PROP_DOOR_FL = 678428815; // 0x2870008F
@@ -42,16 +39,6 @@ public class DoorPressureReliefDaemon {
     static final int PROP_WRITE_RL = 678428831; // 0x2870009F
     static final int PROP_WRITE_RR = 678428832; // 0x287000A0
 
-    // Door Lock prop IDs (1 = LOCKED, 0 = UNLOCKED)
-    static final int PROP_LOCK_FL = 678428821; // 0x28700095
-    static final int PROP_LOCK_FR = 678428822; // 0x28700096
-    static final int PROP_LOCK_RL = 678428823; // 0x28700097
-    static final int PROP_LOCK_RR = 678428824; // 0x28700098
-
-    // Gear detection for Doa Naik Kenderaan
-    static final int PROP_VEHICLE_GEAR = 289408001;
-    static final int PROP_GEAR_MCU     = 678428908; // 0x287000EC (5=P, 2=D, 3=N, 4=R)
-
     static final int[] DOOR_PROPS = {PROP_DOOR_FL, PROP_DOOR_FR, PROP_DOOR_RL, PROP_DOOR_RR};
     static final int[] WIN_READ_PROPS = {PROP_READ_FL, PROP_READ_FR, PROP_READ_RL, PROP_READ_RR};
     static final int[] WIN_WRITE_PROPS = {PROP_WRITE_FL, PROP_WRITE_FR, PROP_WRITE_RL, PROP_WRITE_RR};
@@ -64,14 +51,6 @@ public class DoorPressureReliefDaemon {
     public volatile int ventilationDurationMin = 30;
     public volatile long ventilationStartTime = 0;
 
-    // Welcome / Unlock sound settings
-    public volatile boolean unlockSoundEnabled = true;
-    public volatile String unlockSoundPath = "/data/local/window/locksounds/unlock_active.wav";
-    private static volatile boolean carWasLocked = false;
-    private static volatile boolean unlockEventPending = false;
-    private static volatile long unlockTimestamp = 0;
-    private static volatile boolean hasPlayedDoaThisSession = false;
-
     private Object propService;
     private Method getPropMethod;
     private Method setPropMethod;
@@ -79,7 +58,7 @@ public class DoorPressureReliefDaemon {
     private long lastConfigMtime = 0;
 
     public static void main(String[] args) {
-        System.out.println("=== EMAS DEDICATED DOOR PRESSURE RELIEF DAEMON v3.0 ===");
+        System.out.println("=== EMAS DEDICATED DOOR PRESSURE RELIEF DAEMON v3.1 (CLEAN) ===");
         DoorPressureReliefDaemon daemon = new DoorPressureReliefDaemon();
         daemon.loadConfig();
         daemon.startHttpServer();
@@ -115,20 +94,11 @@ public class DoorPressureReliefDaemon {
             if (json.contains("\"ventilation_mode\"")) {
                 ventilationMode = json.contains("\"ventilation_mode\":true") || json.contains("\"ventilation_mode\": true");
             }
-            if (json.contains("\"unlock_sound_enabled\"")) {
-                unlockSoundEnabled = json.contains("\"unlock_sound_enabled\":true") || json.contains("\"unlock_sound_enabled\": true");
-            }
             lastConfigMtime = f.lastModified();
             System.out.println("[CONFIG] Loaded: enabled=" + enabled + ", crackPercent=" + crackPercent + "%");
         } catch (Throwable t) {
             System.err.println("loadConfig error: " + t.getMessage());
         }
-    }
-
-    public synchronized boolean isCarLocked() {
-        int lFL = readIntProp(PROP_LOCK_FL, 0, -1);
-        int lFR = readIntProp(PROP_LOCK_FR, 0, -1);
-        return (lFL == 1 && lFR == 1);
     }
 
     private void connectCarService() {
@@ -162,18 +132,6 @@ public class DoorPressureReliefDaemon {
         } catch (Throwable t) {
             System.err.println("connectCarService error: " + t.getMessage());
         }
-    }
-
-    protected byte[] readBytesProp(int propId, int area) {
-        if (propService == null || getPropMethod == null) return null;
-        try {
-            Object cpv = getPropMethod.invoke(propService, propId, area);
-            if (cpv != null) {
-                Object val = cpv.getClass().getMethod("getValue").invoke(cpv);
-                if (val instanceof byte[]) return (byte[]) val;
-            }
-        } catch (Throwable ignored) {}
-        return null;
     }
 
     public int readIntProp(int propId, int area, int fallback) {
@@ -236,64 +194,6 @@ public class DoorPressureReliefDaemon {
         ventilationStartTime = 0;
         System.out.println("[VENTILATION] Stopped. Closing all windows.");
         writeAllWindows(0);
-    }
-
-    // Audio playback for Welcome Sound and Doa
-    public static void playWavFile(String path) {
-        new Thread(() -> {
-            try {
-                File f = new File(path);
-                if (!f.exists() || f.length() < 44) return;
-                byte[] fileBytes = new byte[(int) f.length()];
-                try (FileInputStream fis = new FileInputStream(f)) {
-                    int read = 0;
-                    while (read < fileBytes.length) {
-                        int r = fis.read(fileBytes, read, fileBytes.length - read);
-                        if (r < 0) break;
-                        read += r;
-                    }
-                }
-                playWavBytes(fileBytes);
-            } catch (Throwable t) {
-                System.err.println("[AUDIO] Play error: " + t.getMessage());
-            }
-        }).start();
-    }
-
-    private static void playWavBytes(byte[] fileBytes) {
-        try {
-            if (fileBytes.length < 44) return;
-            int sampleRate = (fileBytes[24] & 0xFF) | ((fileBytes[25] & 0xFF) << 8) | ((fileBytes[26] & 0xFF) << 16) | ((fileBytes[27] & 0xFF) << 24);
-            short channels = (short) ((fileBytes[22] & 0xFF) | ((fileBytes[23] & 0xFF) << 8));
-            short bits = (short) ((fileBytes[34] & 0xFF) | ((fileBytes[35] & 0xFF) << 8));
-            int dataPos = 44;
-            int dataLen = fileBytes.length - 44;
-
-            int channelConfig = (channels == 1) ? AudioFormat.CHANNEL_OUT_MONO : AudioFormat.CHANNEL_OUT_STEREO;
-            int audioFormat = (bits == 8) ? AudioFormat.ENCODING_PCM_8BIT : AudioFormat.ENCODING_PCM_16BIT;
-
-            int minBuf = AudioTrack.getMinBufferSize(sampleRate, channelConfig, audioFormat);
-            AudioTrack track = new AudioTrack.Builder()
-                .setAudioAttributes(new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build())
-                .setAudioFormat(new AudioFormat.Builder()
-                    .setEncoding(audioFormat)
-                    .setSampleRate(sampleRate)
-                    .setChannelMask(channelConfig)
-                    .build())
-                .setBufferSizeInBytes(Math.max(minBuf, 32768))
-                .setTransferMode(AudioTrack.MODE_STREAM)
-                .build();
-
-            track.setVolume(1.0f);
-            track.play();
-            track.write(fileBytes, dataPos, dataLen);
-            Thread.sleep(Math.max(100, (dataLen * 1000L) / (sampleRate * channels * (bits / 8)) + 50));
-            track.stop();
-            track.release();
-        } catch (Throwable ignored) {}
     }
 
     private void startHttpServer() {
@@ -365,32 +265,7 @@ public class DoorPressureReliefDaemon {
                     }
                 }
 
-                // Lock/Unlock detection for welcome sound
-                boolean currentlyLocked = isCarLocked();
-                if (currentlyLocked) {
-                    if (!carWasLocked) {
-                        carWasLocked = true;
-                        unlockEventPending = false;
-                        hasPlayedDoaThisSession = false;
-                    }
-                } else {
-                    if (carWasLocked) {
-                        carWasLocked = false;
-                        unlockEventPending = true;
-                        unlockTimestamp = System.currentTimeMillis();
-                        hasPlayedDoaThisSession = false;
-                        if (unlockSoundEnabled) {
-                            playWavFile(unlockSoundPath);
-                        }
-                    }
-                }
-
-                // Expire unlock event after 60s
-                if (unlockEventPending && (System.currentTimeMillis() - unlockTimestamp > 60000)) {
-                    unlockEventPending = false;
-                }
-
-                // 4 Doors Monitoring
+                // 4 Doors Monitoring for automatic pressure relief
                 for (int i = 0; i < 4; i++) {
                     int current = readIntProp(DOOR_PROPS[i]);
                     if (current == -1) {
