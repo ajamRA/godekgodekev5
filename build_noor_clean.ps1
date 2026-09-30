@@ -15,49 +15,17 @@ Write-Host "=== BUILDING NOOR ENERGY MONITOR APK ===" -ForegroundColor Cyan
 $srcPkgDir = "$APP_DIR\src\com\noor\thenoorcar"
 if (!(Test-Path $srcPkgDir)) { New-Item -ItemType Directory -Path $srcPkgDir -Force | Out-Null }
 
-# Copy MainActivity with package com.noor.thenoorcar (UTF-8 without BOM)
-$javaContent = Get-Content "$APP_DIR\src\com\emas\energy\MainActivity.java" -Raw
-$javaContent = $javaContent -replace "package com.emas.energy;", "package com.noor.thenoorcar;"
-[System.IO.File]::WriteAllText("$srcPkgDir\MainActivity.java", $javaContent, $utf8NoBom)
+# Ensure MainActivity exists in package com.noor.thenoorcar
+if (!(Test-Path "$srcPkgDir\MainActivity.java")) {
+    $javaContent = Get-Content "$APP_DIR\src\com\emas\energy\MainActivity.java" -Raw
+    $javaContent = $javaContent -replace "package com.emas.energy;", "package com.noor.thenoorcar;"
+    [System.IO.File]::WriteAllText("$srcPkgDir\MainActivity.java", $javaContent, $utf8NoBom)
+}
 
 # Prepare Manifest in build directory named AndroidManifest.xml
 $buildDir = "$APP_DIR\build"
 if (!(Test-Path $buildDir)) { New-Item -ItemType Directory -Path $buildDir -Force | Out-Null }
-
-$manifestContent = @"
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.noor.thenoorcar"
-    android:versionCode="1"
-    android:versionName="1.0.0">
-
-    <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="29" />
-
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-
-    <application
-        android:label="e.MAS Energy"
-        android:icon="@drawable/ic_launcher"
-        android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
-        android:usesCleartextTraffic="true"
-        android:hardwareAccelerated="true">
-
-        <activity
-            android:name=".MainActivity"
-            android:exported="true"
-            android:screenOrientation="landscape"
-            android:configChanges="orientation|screenSize|keyboardHidden">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-    </application>
-</manifest>
-"@
-[System.IO.File]::WriteAllText("$buildDir\AndroidManifest.xml", $manifestContent, $utf8NoBom)
+Copy-Item "$APP_DIR\AndroidManifest_Noor.xml" "$buildDir\AndroidManifest.xml" -Force
 
 # 2. Compile Java
 Write-Host "1. Compiling Java..." -ForegroundColor Yellow
@@ -65,7 +33,19 @@ $outDir = "$APP_DIR\build\classes"
 if (Test-Path $outDir) { Remove-Item -Recurse -Force $outDir }
 New-Item -ItemType Directory -Path $outDir -Force | Out-Null
 
-& $JAVAC -source 1.8 -target 1.8 -cp $ANDROID_JAR -d $outDir "$srcPkgDir\MainActivity.java"
+foreach ($f in (Get-ChildItem $srcPkgDir -Filter *.java)) {
+    $bytes = [System.IO.File]::ReadAllBytes($f.FullName)
+    if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xef -and $bytes[1] -eq 0xbb -and $bytes[2] -eq 0xbf) {
+        $noBom = New-Object byte[] ($bytes.Length - 3)
+        [System.Array]::Copy($bytes, 3, $noBom, 0, $bytes.Length - 3)
+        [System.IO.File]::WriteAllBytes($f.FullName, $noBom)
+        Write-Host "  Stripped UTF-8 BOM from $($f.Name)" -ForegroundColor Magenta
+    }
+}
+
+$javaFiles = Get-ChildItem $srcPkgDir -Filter *.java | ForEach-Object { $_.FullName }
+& $JAVAC -encoding UTF-8 -source 1.8 -target 1.8 -cp $ANDROID_JAR -d $outDir $javaFiles
+if ($LASTEXITCODE -ne 0) { throw "Java compilation failed with exit code $LASTEXITCODE" }
 
 # 3. Compile DEX with D8
 Write-Host "2. Compiling classes.dex..." -ForegroundColor Yellow
@@ -75,6 +55,7 @@ New-Item -ItemType Directory -Path $dexOut -Force | Out-Null
 
 $classFiles = Get-ChildItem $outDir -Recurse -Filter *.class | ForEach-Object { $_.FullName }
 & $JAVA -cp $R8_JAR com.android.tools.r8.D8 --min-api 24 --lib $ANDROID_JAR --output $dexOut $classFiles
+if ($LASTEXITCODE -ne 0) { throw "D8 compilation failed with exit code $LASTEXITCODE" }
 
 # 4. Package resources and assets with AAPT
 Write-Host "3. Packaging with AAPT..." -ForegroundColor Yellow

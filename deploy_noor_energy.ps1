@@ -1,6 +1,8 @@
-$ErrorActionPreference = "Stop"
+param (
+    [string]$CAR_IP = "192.168.0.101:5555"
+)
 
-$CAR_IP = "192.168.1.18:5555"
+$ErrorActionPreference = "Stop"
 $APK_PATH = "D:\apps\emas-ota\NoorEnergy_clean.apk"
 
 Write-Host "==========================================" -ForegroundColor Cyan
@@ -17,66 +19,52 @@ Write-Host "`n1. Menyambung ke kereta ($CAR_IP)..." -ForegroundColor Yellow
 Start-Sleep -Seconds 2
 
 # Check connected
-$devices = & adb devices
-if ($devices -notmatch "192.168.1.18:5555\s+device") {
-    Write-Host "Kereta belum bersambung. Sila pastikan kereta ON dan WiFi aktif." -ForegroundColor Red
-    exit 1
+$devStr = (& adb devices | Out-String)
+$escapedIp = [regex]::Escape($CAR_IP)
+if ($devStr -notmatch "$escapedIp\s+device") {
+    # Check if any device is connected
+    $lines = (& adb devices) | Where-Object { $_ -match "\bdevice\b" -and $_ -notmatch "attached" -and $_ -notmatch "69:5555" }
+    if ($lines) {
+        $firstLine = if ($lines -is [array]) { $lines[0] } else { $lines }
+        $CAR_IP = ($firstLine -split "\s+")[0].Trim()
+        Write-Host "Menggunakan peranti aktif: $CAR_IP" -ForegroundColor Cyan
+    } else {
+        Write-Host "Kereta belum bersambung ($CAR_IP). Sila pastikan kereta ON dan WiFi aktif." -ForegroundColor Red
+        exit 1
+    }
 }
-Write-Host "   Tersambung ke kereta!" -ForegroundColor Green
+Write-Host "   Tersambung ke kereta ($CAR_IP)!" -ForegroundColor Green
 
 Write-Host "`n2. Mengesahkan akses root..." -ForegroundColor Yellow
-& adb root
+& adb -s $CAR_IP root
 Start-Sleep -Seconds 1
 & adb connect $CAR_IP | Out-Null
 
-Write-Host "`n3. Menyediakan direktori sistem..." -ForegroundColor Yellow
-# Remount /system rw
-& adb shell "mount -o remount,rw /system 2>/dev/null || mount -o remount,rw / 2>/dev/null"
-& adb shell "mkdir -p /system/app/Noor"
+Write-Host "`n3. Memasang APK terus ke sistem..." -ForegroundColor Yellow
+& adb -s $CAR_IP install -r $APK_PATH
 
-Write-Host "`n4. Memuat naik APK ke /system/app/Noor/Noor.apk..." -ForegroundColor Yellow
-& adb push $APK_PATH /system/app/Noor/Noor.apk
+Write-Host "`n4. Menyediakan direktori sistem dan persistensi Noor.apk..." -ForegroundColor Yellow
+& adb -s $CAR_IP shell "mount -o remount,rw /system 2>/dev/null || mount -o remount,rw / 2>/dev/null"
+& adb -s $CAR_IP shell "mkdir -p /system/app/Noor /data/local/custom_apps/Noor /data/local/window /data/local/avas"
+& adb -s $CAR_IP push $APK_PATH /system/app/Noor/Noor.apk
+& adb -s $CAR_IP push $APK_PATH /data/local/custom_apps/Noor/Noor.apk
+& adb -s $CAR_IP shell "chmod 755 /system/app/Noor; chmod 644 /system/app/Noor/Noor.apk /data/local/custom_apps/Noor/Noor.apk"
 
-Write-Host "`n5. Menetapkan kebenaran fail (chmod 644)..." -ForegroundColor Yellow
-& adb shell "chmod 755 /system/app/Noor"
-& adb shell "chmod 644 /system/app/Noor/Noor.apk"
-& adb shell "chown -R root:root /system/app/Noor"
+Write-Host "`n5. Mengemaskini daemon latar belakang dan skrip auto-buka semasa start kereta..." -ForegroundColor Yellow
+& adb -s $CAR_IP push "D:\apps\emas-ota\door_pressure_relief.jar" "/data/local/window/door_pressure_relief.jar"
+& adb -s $CAR_IP push "D:\apps\emas-ota\start_pressure_relief.sh" "/data/local/window/start_pressure_relief.sh"
+& adb -s $CAR_IP push "D:\apps\emas-ota\avas_boot.sh" "/data/local/avas/avas_boot.sh"
+& adb -s $CAR_IP shell "chmod 755 /data/local/window/start_pressure_relief.sh /data/local/avas/avas_boot.sh"
 
-# Juga sediakan dalam /data/local/custom_apps/Noor sekiranya bind-mount diperlukan
-& adb shell "mkdir -p /data/local/custom_apps/Noor"
-& adb shell "cp /system/app/Noor/Noor.apk /data/local/custom_apps/Noor/Noor.apk"
-& adb shell "chmod 644 /data/local/custom_apps/Noor/Noor.apk"
+Write-Host "`n6. Memulakan semula daemon sistem..." -ForegroundColor Yellow
+& adb -s $CAR_IP shell "sh /data/local/window/start_pressure_relief.sh"
 
-Write-Host "`n6. Memastikan daemon pembaca tenaga aktif..." -ForegroundColor Yellow
-$daemonRunning = & adb shell "ps -ef | grep door_pressure_relief | grep -v grep"
-if ([string]::IsNullOrWhiteSpace($daemonRunning)) {
-    Write-Host "   Memulakan daemon tenaga (port 8888)..." -ForegroundColor Cyan
-    & adb shell "sh /data/local/window/start_pressure_relief.sh &"
-    Start-Sleep -Seconds 2
-} else {
-    Write-Host "   Daemon tenaga sedang berjalan." -ForegroundColor Green
-}
-
-Write-Host "`n7. Mengimbas semula aplikasi sistem..." -ForegroundColor Yellow
-# Restart Android runtime (system_server) so PackageManagerService scans new /system/app/Noor
-Write-Host "   Memulakan semula system_server (skrin IHU akan refresh dalam 10-15 saat)..." -ForegroundColor Cyan
-& adb shell "killall system_server"
-
-Write-Host "`nMenunggu sistem IHU sedia semula..." -ForegroundColor Yellow
-Start-Sleep -Seconds 12
-
-# Wait for boot completion
-for ($i = 0; $i -lt 30; $i++) {
-    $booted = & adb shell "getprop sys.boot_completed"
-    if ($booted -match "1") {
-        Write-Host "   Sistem IHU sudah sedia!" -ForegroundColor Green
-        break
-    }
-    Start-Sleep -Seconds 2
-}
+Write-Host "`n7. Memulakan semula aplikasi..." -ForegroundColor Yellow
+& adb -s $CAR_IP shell "am force-stop com.noor.thenoorcar"
+Start-Sleep -Seconds 1
 
 Write-Host "`n8. Melancarkan Emas Energy Monitor..." -ForegroundColor Yellow
-& adb shell "am start -n com.noor.thenoorcar/.MainActivity"
+& adb -s $CAR_IP shell "am start -n com.noor.thenoorcar/.MainActivity"
 
 Write-Host "`n=======================================================" -ForegroundColor Green
 Write-Host " BERJAYA! Emas Energy Monitor telah dipasang pada Noor." -ForegroundColor Green

@@ -22,3 +22,9 @@ nohup app_process /data/local/window com.emas.window.DoorPressureReliefDaemon > 
 NEW_PID=$!
 echo $NEW_PID > "$PIDFILE"
 echo "Daemon started successfully with PID $NEW_PID. Logging to $LOG"
+
+# Auto-launch Emas Energy app when vehicle starts
+(
+    sleep 8
+    am start -n com.noor.thenoorcar/.MainActivity >> "$LOG" 2>&1
+) &
