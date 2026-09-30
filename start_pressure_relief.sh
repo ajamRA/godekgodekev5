@@ -5,26 +5,25 @@ LOG="$DIR/pressure_relief.log"
 PIDFILE="$DIR/pressure_relief.pid"
 
 if [ -f "$PIDFILE" ]; then
-    OLD_PID=$(cat "$PIDFILE")
+    OLD_PID=$(cat "$PIDFILE" 2>/dev/null)
     if [ -n "$OLD_PID" ] && kill -0 "$OLD_PID" 2>/dev/null; then
-        echo "Stopping existing daemon PID $OLD_PID..."
+        echo "$(date) Stopping existing daemon PID $OLD_PID..."
         kill "$OLD_PID" 2>/dev/null
         sleep 1
     fi
     rm -f "$PIDFILE"
 fi
 
-pkill -f "DoorPressureReliefDaemon" 2>/dev/null
+pkill -f "com.emas.window.DoorPressureReliefDaemon" 2>/dev/null
 
-echo "Starting Door Pressure Relief Daemon..."
+if [ ! -f "$JAR" ]; then
+    echo "$(date) ERROR: $JAR missing; not starting."
+    exit 1
+fi
+
+echo "$(date) Starting DoorPressureReliefDaemon..."
 export CLASSPATH="$JAR"
 nohup app_process /data/local/window com.emas.window.DoorPressureReliefDaemon > "$LOG" 2>&1 &
 NEW_PID=$!
 echo $NEW_PID > "$PIDFILE"
-echo "Daemon started successfully with PID $NEW_PID. Logging to $LOG"
-
-# Auto-launch Emas Energy app when vehicle starts
-(
-    sleep 8
-    am start -n com.noor.thenoorcar/.MainActivity >> "$LOG" 2>&1
-) &
+echo "$(date) Daemon started with PID $NEW_PID. Logging to $LOG"

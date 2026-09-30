@@ -14,12 +14,12 @@ New-Item -ItemType Directory -Path $OUT_DIR | Out-Null
 New-Item -ItemType Directory -Path $DEX_DIR | Out-Null
 
 Write-Host "Compiling DoorPressureReliefDaemon.java..." -ForegroundColor Cyan
-& $JAVAC -source 1.8 -target 1.8 -cp $AJ -d $OUT_DIR "$SRC_DIR\com\emas\window\DoorPressureReliefDaemon.java"
+& $JAVAC -J-Xmx128m -encoding UTF-8 -source 1.8 -target 1.8 -sourcepath $SRC_DIR -cp $AJ -d $OUT_DIR "$SRC_DIR\com\emas\window\DoorPressureReliefDaemon.java"
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "Dexing with D8..." -ForegroundColor Cyan
 $classes = Get-ChildItem -Path $OUT_DIR -Filter "*.class" -Recurse | ForEach-Object { $_.FullName }
-& $JAVA -cp $R8 com.android.tools.r8.D8 --min-api 28 --lib $AJ --output $DEX_DIR $classes
+& $JAVA -Xmx128m -cp $R8 com.android.tools.r8.D8 --min-api 28 --lib $AJ --output $DEX_DIR $classes
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "Packaging jar..." -ForegroundColor Cyan
