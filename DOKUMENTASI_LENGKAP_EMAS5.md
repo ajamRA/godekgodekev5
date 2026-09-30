@@ -1,14 +1,19 @@
-# Dokumentasi Lengkap Sistem & Modifikasi Proton e.MAS 7 / Geely Galaxy E5
+# Dokumentasi Lengkap Sistem & Modifikasi Proton e.MAS 5 / Geely Galaxy E5
 
-Dokumentasi induk teknikal (offline & self-hosted) bagi platform kenderaan elektrik **Proton e.MAS 7** (Geely Galaxy E5 / Geely EX2). Dokumen ini merangkumi keseluruhan seni bina sistem, kaedah pembukaan kunci root, penyahkodan telemetri CAN Bus, ejen latar belakang, kawalan tingkap, mod khemah, nada kunci kustom, dan panduan pemasangan pada kenderaan lain tanpa sebarang pengubahsuaian VIN.
+> [!CAUTION]
+> **DOKUMEN ARKIB SEJARAH (HISTORICAL REFERENCE ONLY)**
+> Dokumen ini adalah catatan sejarah eksperimen awal platform e.MAS 5 / Geely E5 sebelum audit keselamatan 27 September 2026.
+> **DILARANG DIGUNAKAN SEBAGAI PANDUAN OPERASI SEMASA PROTON e.MAS 5.**
+> Untuk panduan dan SOP rasmi semasa e.MAS 5, rujuk [**`README.md`**](README.md), [**`ARAHAN_ASAS_EMAS5.md`**](ARAHAN_ASAS_EMAS5.md), dan [**`SOP_PEMASANGAN_APK.md`**](SOP_PEMASANGAN_APK.md).
 
 ---
+
 
 ## 1. Spesifikasi Perkakasan & Seni Bina Sistem
 
 | Parameter | Butiran Teknikal |
 | :--- | :--- |
-| **Model Kenderaan** | Proton e.MAS 7 / Geely Galaxy E5 (Kod Platform: `SX11RA` / `EMC Series`) |
+| **Model Kenderaan** | Proton e.MAS 5 / Geely Galaxy E5 (Kod Platform: `SX11RA` / `EMC Series`) |
 | **Unit Infotainment (IHU)** | IHU801P (ECARX / Molead Automotive Platform) |
 | **Pemproses (SoC)** | MediaTek MT2712 / MT8666 Automotive Octa-Core ARM64 |
 | **Sistem Operasi** | Android 10 (API level 29) dengan penyesuaian automotif Flyme Auto / ECARX |
@@ -55,7 +60,7 @@ Sebaik sahaja pakej OTA terpasang, servis `adbd` dikonfigurasi untuk berjalan se
 ### Jawapan: TIDAK PERLU SAMA SEKALI (100% Universal Plug-and-Play)
 * **Pengesahan Perkakasan:** Pakej sistem dan OTA hanya mengesahkan pengenalan perkakasan (`IHU801P`), kod projek (`SX11RA`), dan kunci tandatangan pengeluar.
 * **Peranan VIN:** Nombor VIN kenderaan hanya digunakan oleh pelayan awan rasmi ACO Tech / Proton untuk aplikasi telefon pintar (telematik jauh). Unit utama kereta tidak mengunci aplikasi dalaman, daemon, atau ubah suai audio kepada nombor VIN tertentu.
-* **Kesimpulan:** Fail `update.zip` (1.97 GB), fail `door_pressure_relief.jar`, dan fail `NoorEnergy_clean.apk` boleh dipasang pada mana-mana Proton e.MAS 7 atau Geely Galaxy E5 lain secara terus tanpa mengubah walau satu baris kod pun.
+* **Kesimpulan:** Fail `update.zip` (1.97 GB), fail `door_pressure_relief.jar`, dan fail `NoorEnergy_clean.apk` boleh dipasang pada mana-mana Proton e.MAS 5 atau Geely Galaxy E5 lain secara terus tanpa mengubah walau satu baris kod pun.
 
 ---
 
@@ -73,9 +78,9 @@ Sistem kini membaca daftar CAN Bus OEM yang sebenar daripada `EnergyCenter_MOLEA
 
 | Parameter | CAN Bus Property ID | Formula Penyahkodan | Julat / Unit |
 | :--- | :--- | :--- | :--- |
-| **BMS Battery SOC** | `678429103` (`BMSH_BattSOC`) | `uint16 / 10.0f` | **0.0% – 100.0%** (Tepat sepadan meter) |
-| **HV Bus Voltage** | `678429461` (`BMSH_HVBusVolt`) | `uint16 / 10.0f` | **~380V – 410V** |
-| **HV Battery Current** | `678429104` (`BMSH_BattCurr`) | `(uint16 - 5000) * 0.1f` | **Ampere (A)**<br>Positif = Nyahcas<br>Negatif = Caj / Regen |
+| **BMS Battery SOC** | `678429103` = `0x287001AF` (`INFO_ID_BATTERY_REMAINING_CAPACITY`) | `uint16 / 10.0f` | **0.0% – 100.0%**. Bukan `0x2870014F` (itu media) |
+| **HV Bus Voltage** | `678429461` = `0x28700315` (`INFO_ID_BMSH_BATTVOLT`) | `uint16 / 10.0f` | **~380V – 410V**. Bukan `0x287002B5` (itu radar) |
+| **HV Battery Current** | `678429104` = `0x287001B0` (`INFO_ID_BATTERY_CURR`) | `(uint16 - 5000) * 0.1f` | **Ampere (A)**<br>Positif = Nyahcas<br>Negatif = Caj / Regen |
 | **Kuasa Segera Sebenar** | Formula Fizik $P = V \times I$ | `(HVBusVolt * BattCurr) / 1000` | **Kilowatt (kW)**<br>Pecutan: **`+kW`** (Biru/Merah)<br>Regen: **`-n kW`** (Hijau Zamrud) |
 | **Baki Jarak (DTE)** | `678429101` (`VCU_EVDTEodometer`) | `uint16` | **Kilometer (km)** |
 | **HVAC Aircond Load** | `678429413` (`VCU_ThermalPwrAct`) | Byte 0 & 1 Little-Endian + Algoritma Suhu Kabin | **Watt (W)** (Contoh: 1070W = Kompresor 950W + Kipas 120W) |
@@ -138,7 +143,7 @@ Selaras dengan polisi privasi dan sekuriti projek, kod dan dokumentasi **TIDAK D
 
 ## 8. Panduan Langkah Demi Langkah Pasang di Kereta Kawan
 
-Untuk memasang pada kereta Proton e.MAS 7 lain:
+Untuk memasang pada kereta Proton e.MAS 5 lain:
 
 1. **Sediakan Pemacu USB (1.97 GB):**
    - Salin fail `update.zip` asal (1.97 GB) ke pemacu USB FAT32.
