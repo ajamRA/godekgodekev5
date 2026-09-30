@@ -55,21 +55,27 @@ public class MegaphoneDaemon {
         Thread syncThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                System.out.println("[MegaphoneDaemon] Cloud Sync loop active -> " + VPS_SYNC_URL);
-                long sleepMs = 45000; // Default to 45s power/data save mode
+                System.out.println("[MegaphoneDaemon] Cloud Sync loop active (responsive polling) -> " + VPS_SYNC_URL);
+                long sleepMs = 2500; // Fast 2.5s responsive default idle polling
                 while (true) {
                     try {
                         Thread.sleep(sleepMs);
                         URL url = new URL(VPS_SYNC_URL);
                         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                         conn.setRequestMethod("POST");
-                        conn.setConnectTimeout(5000);
-                        conn.setReadTimeout(5000);
+                        conn.setConnectTimeout(4000);
+                        conn.setReadTimeout(4000);
                         conn.setDoOutput(true);
                         conn.setRequestProperty("Content-Type", "application/json");
 
-                        String payload = "{\"client\":\"MegaphoneDaemon\",\"playing\":" + isPlaying.get() + "}";
-                        conn.getOutputStream().write(payload.getBytes("UTF-8"));
+                        StringBuilder payload = new StringBuilder();
+                        payload.append("{\"client\":\"MegaphoneDaemon\",\"playing\":").append(isPlaying.get());
+                        if (lastPlayedMegaphoneId != null && !lastPlayedMegaphoneId.isEmpty()) {
+                            payload.append(",\"megaphone_ack\":\"").append(lastPlayedMegaphoneId).append("\"");
+                        }
+                        payload.append("}");
+
+                        conn.getOutputStream().write(payload.toString().getBytes("UTF-8"));
 
                         if (conn.getResponseCode() == 200) {
                             BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
@@ -81,14 +87,14 @@ public class MegaphoneDaemon {
                             try {
                                 JSONObject root = new JSONObject(resp);
 
-                                // Adaptive polling interval from server (1.5s when active, 45s when idle/switch off)
-                                if (root.has("poll_interval_sec")) {
-                                    double sec = root.optDouble("poll_interval_sec", 45.0);
-                                    sleepMs = Math.max(1000, (long)(sec * 1000));
-                                } else if (root.optBoolean("megaphone_switch", false)) {
-                                    sleepMs = 1500;
+                                // Adaptive polling interval: capped at max 3.0s idle, 1.2s when active
+                                if (root.optBoolean("megaphone_switch", false)) {
+                                    sleepMs = 1200;
+                                } else if (root.has("poll_interval_sec")) {
+                                    double sec = root.optDouble("poll_interval_sec", 2.5);
+                                    sleepMs = Math.max(1000, Math.min(3000, (long)(sec * 1000)));
                                 } else {
-                                    sleepMs = 45000;
+                                    sleepMs = 2500;
                                 }
 
                                 if (root.has("megaphone") && !root.isNull("megaphone")) {
@@ -101,7 +107,7 @@ public class MegaphoneDaemon {
                                         downloadFile(audioUrl, targetAudio);
                                         if (targetAudio.exists() && targetAudio.length() > 500) {
                                             lastPlayedMegaphoneId = msgId;
-                                            sleepMs = 1500; // Stay fast while active
+                                            sleepMs = 1200; // Stay fast while active
                                             if (isPlaying.compareAndSet(false, true)) {
                                                 new Thread(new Runnable() {
                                                     @Override
@@ -123,7 +129,7 @@ public class MegaphoneDaemon {
                             }
                         }
                     } catch (Throwable ignored) {
-                        sleepMs = 30000; // Backoff on connection drop
+                        sleepMs = 5000; // Quick 5s retry on temporary network glitch
                     }
                 }
             }
@@ -388,16 +394,30 @@ public class MegaphoneDaemon {
             stopProc.waitFor(2, TimeUnit.SECONDS);
             avasStopped = true;
 
-            Thread.sleep(150);
+            boolean playSuccess = false;
+            for (int attempt = 1; attempt <= 3; attempt++) {
+                Thread.sleep(attempt == 1 ? 250 : 350);
+                System.out.println("[MegaphoneDaemon] Attempt " + attempt + ": playing " + wavPath + " -> /dev/snd/pcmC0D29p");
+                Process p = new ProcessBuilder(TINYPLAY_BIN, wavPath, "-D", "0", "-d", "29").start();
+                boolean finished = p.waitFor(60, TimeUnit.SECONDS);
+                if (!finished) {
+                    System.err.println("[MegaphoneDaemon] tinyplay timeout (60s), killing process...");
+                    p.destroyForcibly();
+                    break;
+                }
+                int exitCode = p.exitValue();
+                if (exitCode == 0) {
+                    System.out.println("[MegaphoneDaemon] tinyplay finished successfully (exit=0)");
+                    playSuccess = true;
+                    break;
+                } else {
+                    System.err.println("[MegaphoneDaemon] tinyplay attempt " + attempt + " failed (exit=" + exitCode + "), retrying...");
+                }
+            }
 
-            System.out.println("[MegaphoneDaemon] Playing: " + wavPath + " -> /dev/snd/pcmC0D29p");
-            Process p = new ProcessBuilder(TINYPLAY_BIN, wavPath, "-D", "0", "-d", "29").start();
-            boolean finished = p.waitFor(12, TimeUnit.SECONDS);
-            if (!finished) {
-                System.err.println("[MegaphoneDaemon] tinyplay timeout (12s), killing process...");
-                p.destroyForcibly();
-            } else {
-                System.out.println("[MegaphoneDaemon] tinyplay finished (exit=" + p.exitValue() + ")");
+            if (!playSuccess) {
+                System.err.println("[MegaphoneDaemon] External bumper speaker playback failed after 3 attempts, falling back to cabin speaker...");
+                playCabinAudio(new File(wavPath));
             }
         } catch (Throwable t) {
             System.err.println("[MegaphoneDaemon] External playback error: " + t.getMessage());
