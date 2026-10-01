@@ -6,7 +6,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.lang.reflect.Method;
 import org.json.JSONObject;
 import android.media.AudioAttributes;
 import android.media.AudioFormat;
@@ -34,14 +33,6 @@ public class MegaphoneDaemon {
     static final String LOCK_TARGET = "/sdcard/V3_Vehicle_Locked_Single.wav";
     static final String LOCK_ACTIVE = "/data/local/window/locksounds/lock_active.wav";
 
-    // VHAL Vehicle Properties
-    static final int PROP_LOCK_FL = 678428821; // 0x28700095 (1=Locked, 0=Unlocked)
-    static final int PROP_LOCK_FR = 678428822; // 0x28700096
-    static final int PROP_GEAR_MCU = 678428908; // 0x287000EC (5=P, 2=D, 3=N, 4=R)
-
-    private Object propService;
-    private Method getPropMethod;
-
     private static final AtomicBoolean isPlaying = new AtomicBoolean(false);
     private static volatile String lastPlayedMegaphoneId = "";
     private static volatile String lastAppliedLockDeployId = "";
@@ -53,7 +44,7 @@ public class MegaphoneDaemon {
             new ArrayBlockingQueue<Runnable>(8));
 
     public static void main(String[] args) {
-        System.out.println("=== EMAS MEGAPHONE & SOUND DAEMON v1.2 (CLOUD SYNC + LOCK/UNLOCK) ===");
+        System.out.println("=== EMAS MEGAPHONE & DOA DAEMON v1.1 (CLOUD SYNC ENABLED) ===");
         System.out.println("Port: " + HTTP_PORT);
         System.out.println("VPS Sync: " + VPS_SYNC_URL);
         System.out.println("Megafon Directory: " + MEGAFON_DIR);
@@ -64,7 +55,6 @@ public class MegaphoneDaemon {
 
         MegaphoneDaemon daemon = new MegaphoneDaemon();
         daemon.startCloudSync();
-        daemon.startLockUnlockMonitor();
         daemon.startHttpServer();
     }
 
@@ -270,124 +260,6 @@ public class MegaphoneDaemon {
         } catch (Throwable t) {
             System.err.println("[MegaphoneDaemon] copyFile error: " + t.getMessage());
         }
-    }
-
-    private synchronized boolean connectCarService() {
-        if (propService != null && getPropMethod != null) return true;
-        try {
-            Class<?> smClass = Class.forName("android.os.ServiceManager");
-            Object binder = smClass.getMethod("getService", String.class).invoke(null, "car_service");
-            if (binder == null) return false;
-            Class<?> iCarStub = Class.forName("android.car.ICar$Stub");
-            Object icar = iCarStub.getMethod("asInterface", Class.forName("android.os.IBinder")).invoke(null, binder);
-            Object propBinder = icar.getClass().getMethod("getCarService", String.class).invoke(icar, "property");
-            Class<?> iPropStub = Class.forName("android.car.hardware.property.ICarProperty$Stub");
-            propService = iPropStub.getMethod("asInterface", Class.forName("android.os.IBinder")).invoke(null, propBinder);
-
-            for (Method m : propService.getClass().getMethods()) {
-                if (m.getName().equals("getProperty") && m.getParameterTypes().length == 2) {
-                    getPropMethod = m;
-                    break;
-                }
-            }
-            return (propService != null && getPropMethod != null);
-        } catch (Throwable t) {
-            return false;
-        }
-    }
-
-    public int readIntProp(int propId, int area, int fallback) {
-        if (propService == null || getPropMethod == null) {
-            if (!connectCarService()) return fallback;
-        }
-        try {
-            Object cpv = getPropMethod.invoke(propService, propId, area);
-            if (cpv != null) {
-                Object val = cpv.getClass().getMethod("getValue").invoke(cpv);
-                if (val instanceof Integer) return (Integer) val;
-                if (val instanceof Byte) return ((Byte) val).intValue();
-                if (val instanceof byte[]) {
-                    byte[] bytes = (byte[]) val;
-                    if (bytes.length > 0) return bytes[0] & 0xFF;
-                }
-                if (val instanceof Boolean) return ((Boolean) val) ? 1 : 0;
-            }
-        } catch (Throwable ignored) {}
-        return fallback;
-    }
-
-    public int isCarLocked() {
-        int fl = readIntProp(PROP_LOCK_FL, 0, -1);
-        if (fl != -1) return fl;
-        return readIntProp(PROP_LOCK_FR, 0, -1);
-    }
-
-    private void startLockUnlockMonitor() {
-        Thread monitorThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("[MegaphoneDaemon] Lock/Unlock Sound Monitor starting...");
-                while (!connectCarService()) {
-                    try { Thread.sleep(2000); } catch (InterruptedException ignored) {}
-                }
-                System.out.println("[MegaphoneDaemon] Connected to CarPropertyService for Lock/Unlock sound monitoring.");
-
-                // Initialize with current state to prevent false trigger on daemon startup
-                int lastLockState = isCarLocked();
-                System.out.println("[MegaphoneDaemon] Initial lock state: " + (lastLockState == 1 ? "LOCKED" : (lastLockState == 0 ? "UNLOCKED" : "UNKNOWN")));
-                long lastTriggerTime = 0;
-
-                while (true) {
-                    try {
-                        Thread.sleep(120);
-                        int curLock = isCarLocked();
-
-                        if (curLock != -1 && lastLockState != -1 && curLock != lastLockState) {
-                            long now = System.currentTimeMillis();
-                            if (now - lastTriggerTime > 1500) { // 1.5s debounce
-                                lastTriggerTime = now;
-                                int mcuGear = readIntProp(PROP_GEAR_MCU, 0, -1);
-                                // Safe to play: in Gear P (5) or stopped/unknown (-1). NEVER when driving D(2), R(4), N(3).
-                                boolean isSafeToPlay = (mcuGear == 5 || mcuGear == -1);
-
-                                if (curLock == 1) {
-                                    System.out.println("[MegaphoneDaemon] Lock event detected! (gear=" + mcuGear + ", safe=" + isSafeToPlay + ")");
-                                    if (isSafeToPlay) {
-                                        File lockWav = new File(LOCK_ACTIVE);
-                                        if (!lockWav.exists() || lockWav.length() < 1000) {
-                                            lockWav = new File(LOCKSOUNDS_DIR, "lock_mario.wav");
-                                        }
-                                        if (lockWav.exists() && lockWav.length() > 1000) {
-                                            final String wavPath = lockWav.getAbsolutePath();
-                                            new Thread(() -> playExternalAudio(wavPath)).start();
-                                        }
-                                    }
-                                } else if (curLock == 0) {
-                                    System.out.println("[MegaphoneDaemon] Unlock event detected! (gear=" + mcuGear + ", safe=" + isSafeToPlay + ")");
-                                    if (isSafeToPlay) {
-                                        File unlockWav = new File(LOCKSOUNDS_DIR, "unlock_active.wav");
-                                        if (!unlockWav.exists() || unlockWav.length() < 1000) {
-                                            unlockWav = new File(LOCKSOUNDS_DIR, "unlock_mario_coin.wav");
-                                        }
-                                        if (unlockWav.exists() && unlockWav.length() > 1000) {
-                                            final String wavPath = unlockWav.getAbsolutePath();
-                                            new Thread(() -> playExternalAudio(wavPath)).start();
-                                        }
-                                    }
-                                }
-                            }
-                            lastLockState = curLock;
-                        } else if (lastLockState == -1 && curLock != -1) {
-                            lastLockState = curLock;
-                        }
-                    } catch (Throwable t) {
-                        try { Thread.sleep(1000); } catch (InterruptedException ignored) {}
-                    }
-                }
-            }
-        });
-        monitorThread.setDaemon(true);
-        monitorThread.start();
     }
 
     private void startHttpServer() {
