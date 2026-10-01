@@ -29,9 +29,16 @@ public class MegaphoneDaemon {
     static final String MEGAFON_DIR = "/data/local/window/megafon";
     static final String TINYPLAY_BIN = "/data/local/window/tinyplay";
     static final String DOA_PATH = "/data/local/window/locksounds/unlock_omar_hana.wav";
+    static final String LOCKSOUNDS_DIR = "/data/local/window/locksounds";
+    static final String LOCK_TARGET = "/sdcard/V3_Vehicle_Locked_Single.wav";
+    static final String LOCK_ACTIVE = "/data/local/window/locksounds/lock_active.wav";
 
     private static final AtomicBoolean isPlaying = new AtomicBoolean(false);
     private static volatile String lastPlayedMegaphoneId = "";
+    private static volatile String lastAppliedLockDeployId = "";
+    private static volatile String pendingLockAck = "";
+    private static volatile String lastAppliedUnlockDeployId = "";
+    private static volatile String pendingUnlockAck = "";
     private final ThreadPoolExecutor httpWorkers = new ThreadPoolExecutor(
             3, 3, 0L, TimeUnit.MILLISECONDS,
             new ArrayBlockingQueue<Runnable>(8));
@@ -73,6 +80,12 @@ public class MegaphoneDaemon {
                         if (lastPlayedMegaphoneId != null && !lastPlayedMegaphoneId.isEmpty()) {
                             payload.append(",\"megaphone_ack\":\"").append(lastPlayedMegaphoneId).append("\"");
                         }
+                        if (pendingLockAck != null && !pendingLockAck.isEmpty()) {
+                            payload.append(",\"lock_applied\":\"").append(pendingLockAck).append("\"");
+                        }
+                        if (pendingUnlockAck != null && !pendingUnlockAck.isEmpty()) {
+                            payload.append(",\"unlock_applied\":\"").append(pendingUnlockAck).append("\"");
+                        }
                         payload.append("}");
 
                         conn.getOutputStream().write(payload.toString().getBytes("UTF-8"));
@@ -87,6 +100,14 @@ public class MegaphoneDaemon {
                             try {
                                 JSONObject root = new JSONObject(resp);
 
+                                // Clear ACKs once VPS indicates pending deploy is cleared (null)
+                                if (root.isNull("lock_deploy")) {
+                                    pendingLockAck = "";
+                                }
+                                if (root.isNull("unlock_deploy")) {
+                                    pendingUnlockAck = "";
+                                }
+
                                 // Adaptive polling interval: capped at max 3.0s idle, 1.2s when active
                                 if (root.optBoolean("megaphone_switch", false)) {
                                     sleepMs = 1200;
@@ -97,6 +118,7 @@ public class MegaphoneDaemon {
                                     sleepMs = 2500;
                                 }
 
+                                // Handle Megaphone audio broadcasts
                                 if (root.has("megaphone") && !root.isNull("megaphone")) {
                                     JSONObject m = root.getJSONObject("megaphone");
                                     String msgId = m.optString("id");
@@ -121,6 +143,70 @@ public class MegaphoneDaemon {
                                                 }).start();
                                                 System.out.println("[MegaphoneDaemon-SYNC] Playing broadcast: " + msgId);
                                             }
+                                        }
+                                    }
+                                }
+
+                                // Handle Lock Sound deployment from Phone/VPS
+                                if (root.has("lock_deploy") && !root.isNull("lock_deploy")) {
+                                    JSONObject ld = root.getJSONObject("lock_deploy");
+                                    String deployId = ld.optString("deploy_id");
+                                    String soundKey = ld.optString("sound_key");
+                                    String fileName = ld.optString("file");
+                                    String audioUrl = ld.optString("audio_url");
+
+                                    if (!deployId.isEmpty() && !deployId.equals(lastAppliedLockDeployId)) {
+                                        System.out.println("[MegaphoneDaemon-SYNC] Lock sound deploy received: " + deployId + " (" + soundKey + ")");
+                                        File lDir = new File(LOCKSOUNDS_DIR);
+                                        if (!lDir.exists()) lDir.mkdirs();
+
+                                        File localPreset = new File(lDir, fileName);
+                                        if (!localPreset.exists() || localPreset.length() < 1000) {
+                                            if (!audioUrl.isEmpty()) {
+                                                downloadFile(audioUrl, localPreset);
+                                            }
+                                        }
+
+                                        if (localPreset.exists() && localPreset.length() > 1000) {
+                                            File targetNative = new File(LOCK_TARGET);
+                                            copyFile(localPreset, targetNative);
+                                            targetNative.setReadable(true, false);
+                                            targetNative.setWritable(true, false);
+
+                                            File activeLock = new File(LOCK_ACTIVE);
+                                            copyFile(localPreset, activeLock);
+
+                                            lastAppliedLockDeployId = deployId;
+                                            pendingLockAck = deployId;
+                                            System.out.println("[MegaphoneDaemon-SYNC] Applied lock sound to " + LOCK_TARGET + ": " + soundKey + " (" + deployId + ")");
+                                        }
+                                    }
+                                }
+
+                                // Handle Unlock Sound deployment from Phone/VPS
+                                if (root.has("unlock_deploy") && !root.isNull("unlock_deploy")) {
+                                    JSONObject ud = root.getJSONObject("unlock_deploy");
+                                    String uDeployId = ud.optString("deploy_id");
+                                    String uFileName = ud.optString("file");
+                                    String uAudioUrl = ud.optString("audio_url");
+
+                                    if (!uDeployId.isEmpty() && !uDeployId.equals(lastAppliedUnlockDeployId)) {
+                                        File lDir = new File(LOCKSOUNDS_DIR);
+                                        if (!lDir.exists()) lDir.mkdirs();
+
+                                        File localPreset = new File(lDir, uFileName);
+                                        if (!localPreset.exists() || localPreset.length() < 1000) {
+                                            if (!uAudioUrl.isEmpty()) {
+                                                downloadFile(uAudioUrl, localPreset);
+                                            }
+                                        }
+
+                                        if (localPreset.exists() && localPreset.length() > 1000) {
+                                            File activeUnlock = new File(lDir, "unlock_active.wav");
+                                            copyFile(localPreset, activeUnlock);
+                                            lastAppliedUnlockDeployId = uDeployId;
+                                            pendingUnlockAck = uDeployId;
+                                            System.out.println("[MegaphoneDaemon-SYNC] Applied unlock sound: " + uFileName + " (" + uDeployId + ")");
                                         }
                                     }
                                 }
@@ -160,6 +246,19 @@ public class MegaphoneDaemon {
             }
         } catch (Throwable t) {
             System.err.println("[MegaphoneDaemon] downloadFile error: " + t.getMessage());
+        }
+    }
+
+    private static void copyFile(File src, File dst) {
+        try (FileInputStream fis = new FileInputStream(src);
+             FileOutputStream fos = new FileOutputStream(dst)) {
+            byte[] buf = new byte[8192];
+            int r;
+            while ((r = fis.read(buf)) != -1) {
+                fos.write(buf, 0, r);
+            }
+        } catch (Throwable t) {
+            System.err.println("[MegaphoneDaemon] copyFile error: " + t.getMessage());
         }
     }
 
