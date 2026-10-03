@@ -120,13 +120,16 @@ Ejen latar belakang Java berjalan di `/data/local/window/door_pressure_relief.ja
 
 ---
 
-## 6. Pengubahsuaian Bunyi Pejalan Kaki (AVAS V8 Sound Mod)
+## 6. Pemulihan Penuh AVAS Kilang (100% Factory Original Restore)
 
-Sistem amaran pejalan kaki berkelajuan rendah (*Acoustic Vehicle Alerting System*) dikawal oleh daemon vendor `/vendor/bin/hw/vendor.molead.hardware.avas_service@1.0-service`:
-* **Slot Pilihan 3 (Pixel Technology):** Dipetakan ke fail enjin V8 garang: `/data/local/avas/v8_loud.wav` (bind-mount ke `/vendor/etc/avas/sound_type_3/pixel.wav`).
-* **Lengkung Kelantangan Kustom (Rumble Tuning):** Fail `tuning3_rumble.txt` dilaras kepada volum lebih tinggi (4, 6, 8, 10, 8, 4, 0) bagi membolehkan bunyi V8 didengari jelas pada kelajuan rendah 0–30 km/j.
-* **Penyulitan & CRC:** Algoritma proprietari kilang telah berjaya di-reverse engineer (penyulitan XOR 0x70 dengan 4 pengecualian bait + semakan CRC16-CCITT jadual 0x6b50).
-* **Persistensi Boot:** Diuruskan oleh `/system/etc/init/zzz_avas_boot.rc` dan `/system/bin/avas_boot.sh`.
+Selaras dengan penyeragaman sistem kenderaan, semua bunyi amaran pejalan kaki berkelajuan rendah (*Acoustic Vehicle Alerting System*) telah dikembalikan sepenuhnya kepada **100% Asal Kilang Proton** (`commit 8a973e5`):
+* **Laluan HAL:** Dikawal oleh vendor daemon `/vendor/bin/hw/vendor.molead.hardware.avas_service@1.0-service`.
+* **Kandungan Slot Pilihan:**
+  - Slot 1: `yinheyinfu.wav` (Galaxy Chord — Kilang)
+  - Slot 2: `space.wav` (Space — Kilang)
+  - Slot 3: `pixel.wav` (Pixel Technology — Kilang)
+* **Bunyi Undur & Kelajuan Rendah:** `bDM_01_01.wav` dengan keluk volum standard asal kilang (`tuning.txt` dan `tuning_r.txt` asal pada `/vendor` tanpa ubah suai).
+* **Persistensi Boot:** Diuruskan oleh `/system/etc/init/zzz_avas_boot.rc` dan skrip `/system/bin/avas_boot.sh` (memastikan sebarang fail kustom lama di-unmount).
 
 ---
 
@@ -134,14 +137,74 @@ Sistem amaran pejalan kaki berkelajuan rendah (*Acoustic Vehicle Alerting System
 
 Selaras dengan polisi privasi dan sekuriti projek, kod dan dokumentasi **TIDAK DITERBITKAN KE GITHUB**:
 * **Storan Tempatan (Laptop):** Semua kod sumber, skrip kompilasi, fail sandaran (*full eMMC partition dump*), dan dokumentasi disimpan dalam `D:\apps\emas-ota` dan `D:\apps\emas5`.
-* **Pelayan VPS Awan (`emas.43-163-3-153.nip.io`):**
-  - Menjalankan pelayan FastAPI `server.py`.
+* **Pelayan VPS Awan (`emas.43-159-63-29.nip.io`):**
+  - Menjalankan pelayan FastAPI `server.py` di `/home/ubuntu/emas5/`.
   - Berfungsi sebagai jambatan penyelarasan arahan selamat antara telefon pintar/jam tangan dan kereta.
-  - Menyimpan pustaka fail audio nada kunci (*presets: Original, Tamatlah Sudah, Quack, Gop Gop Gop, Ack!, Guru Hentikan*).
+  - Port 8000 di sebalik Caddy reverse proxy dengan HTTPS automatik.
 
 ---
 
-## 8. Panduan Langkah Demi Langkah Pasang di Kereta Kawan
+## 8. Megaphone Daemon v1.3 (`megaphone_daemon.jar`)
+
+Daemon pembesar suara luar (*External Bumper Speaker*) terkini dengan perlindungan kualiti audio:
+* **Port Setempat:** `127.0.0.1:8890` (dilindungi, tiada akses luar tanpa kebenaran).
+* **Laluan Perkakasan:** `/dev/snd/pcmC0D29p` (I2S5DL1 Playback, Card 0 Device 29).
+* **Ciri Pembaikan Utama (Anti-Boom):**
+  - **Queue LinkedBlockingQueue (Cap 5):** Setiap audio masuk baris gilir dengan snapshot fail unik `.queue_N.wav` &mdash; tiada pertembungan atau fail ditindih semasa bermain.
+  - **Edge Repair Automatik (Trim & Fade):** Memotong senyap awal/akhir (threshold 600) + Fade-In 15ms (menghapuskan hentakan "boom/pop" pada speaker) + Fade-Out 40ms (kembali ke sifar dengan licin).
+  - **Atomic Download/Upload:** Guna fail sementara `.downloading` + pengesahan WAV sebelum rename.
+
+---
+
+## 9. Audio Trigger Gear D (Mario Coin Chime)
+
+Memainkan nada bunyi pendek apabila tuil gear ditolak ke mod pemanduan (**D**):
+* **Fail Audio:** `/data/local/window/gear_audio/gear_d.wav` (Mario Coin, 48kHz mono 16-bit).
+* **Enjin Audio:** `AudioTrack` dengan pra-muat memori (*byte array preload*) &mdash; memintas sekatan SELinux dengan latensi $\sim$2ms.
+* **Speed Guard:** Membaca kelajuan MCU `678428840`. Hanya trigger apabila kelajuan $\le$ 1.0 km/j dan kenderaan berhenti.
+* **Tingkah Laku (One-Shot per Boot):**
+  - Hanya berbunyi sekali sahaja pada peralihan `P -> D` pertama selepas IHU boot/hidup.
+  - Sebaik sahaja audio selesai, proses Java tamat dan keluar (`exit 0`) dengan sendirinya &mdash; 0% penggunaan RAM dan CPU sepanjang perjalanan selebihnya.
+* **Auto-Boot:** Dilancarkan secara automatik melalui `/system/bin/avas_boot.sh` (Step 6).
+
+---
+
+## 10. Audio Trigger Buka Pintu Kabin (Door Doa Trigger)
+
+Memainkan doa naik kenderaan apabila pintu hadapan dibuka pertama kali:
+* **Sensor VHAL RHD Malaysia:**
+  - `PROP_DOOR_FR = 678428816` &rarr; Pintu Pemandu Kanan
+  - `PROP_DOOR_FL = 678428815` &rarr; Pintu Penumpang Kiri
+* **Tingkah Laku (Zero Double Play):**
+  - Memantau kedua-dua pintu hadapan sebagai satu status kesatuan.
+  - Mana-mana satu pintu depan dibuka dahulu, audio dimainkan serta-merta dalam kabin.
+  - Audio dimainkan secara *blocking/synchronous*, dan proses terus tamat (`SESSION_DONE one-shot exit`), menjamin 100% tiada bunyi berganda walaupun pintu sebelah dibuka kemudian.
+  - Bonet belakang (Trunk) dan bonet depan (Frunk) diabaikan sepenuhnya.
+
+---
+
+## 11. 1-Click Proton SC Stealth Service Mode
+
+Untuk melindungi waranti dan mengelakkan sebarang isu semasa pemeriksaan servis berkala di Proton Service Centre (SC):
+
+* **Bila Nak Hantar Servis (Masuk Mod Kilang):**
+  ```powershell
+  .\sc_stealth_mode.ps1
+  ```
+  - Menyembunyikan aplikasi kustom (*Netflix, SmartTube, TheNoor, AcBridge*) dari skrin melalui `pm disable-user`.
+  - Aplikasi rasmi ACO (*Vivaldi Browser, Spotify, SYOK, HotFM*) kekal terlihat.
+  - Mewujudkan fail bendera `/data/local/window/.service_mode` yang menyekat permulaan semua daemon kustom.
+  - Mematikan semua daemon kustom &mdash; kereta 100% standard kilang (*Showroom Condition*).
+* **Bila Ambil Kereta Balik (Kembalikan Mod Kustom):**
+  ```powershell
+  .\sc_restore_mode.ps1
+  ```
+  - Memunculkan semula aplikasi di skrin dengan semua sesi login kekal tersimpan.
+  - Memadamkan bendera `.service_mode` dan menghidupkan semula semua daemon kustom dalam masa 3 saat.
+
+---
+
+## 12. Panduan Langkah Demi Langkah Pasang di Kereta Kawan
 
 Untuk memasang pada kereta Proton e.MAS 5 lain:
 
