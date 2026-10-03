@@ -53,6 +53,14 @@ if [ -n "$P" ]; then
     echo "New PID: $(pidof $SVC)" >> $LOG
 fi
 
+# Check if Service Centre Stealth Mode is active
+if [ -f /data/local/window/.service_mode ]; then
+    echo "[SERVICE_MODE] ACTIVE! Skipping all custom daemons for SC visit." >> $LOG
+    echo "=== AVAS FACTORY RESTORE COMPLETED: ALL SOUNDS 100% FACTORY ORIGINAL ===" >> $LOG
+    cat $LOG
+    exit 0
+fi
+
 # 4. Auto-start Cabin Pressure Relief Daemon if not already running
 if [ -f /data/local/window/start_pressure_relief.sh ]; then
     sh /data/local/window/start_pressure_relief.sh >> $LOG 2>&1
