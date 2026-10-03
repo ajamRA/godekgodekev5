@@ -44,13 +44,29 @@ fi
 
 # All tuning.txt, tuning_r.txt and bDM_01_01.wav are UNTOUCHED on /vendor (100% factory original curves & chime)
 
-# 3. Restart AVAS HAL service
+# 3. Synchronize IHU screen settings (persist.sys.avas.*) with AVAS HAL (persist.avas.*)
+MODE=$(getprop persist.sys.avas.mode)
+[ -z "$MODE" ] && MODE=1
+SWITCH=$(getprop persist.sys.avas.switch)
+[ -z "$SWITCH" ] && SWITCH=1
+
+setprop persist.avas.mode "$MODE"
+setprop persist.avas.switch "$SWITCH"
+echo "Synced props on boot: mode=$MODE, switch=$SWITCH" >> $LOG
+
+# 4. Restart AVAS HAL service so it starts with synced mode & mounts
 P=$(pidof $SVC)
 if [ -n "$P" ]; then
     echo "Restarting $SVC (old PID $P)..." >> $LOG
     kill $P
     sleep 2
     echo "New PID: $(pidof $SVC)" >> $LOG
+fi
+
+# 5. Start background AVAS Sync Daemon (keeps screen taps synced live)
+if [ -f /data/local/avas/sync_avas.sh ]; then
+    sh /data/local/avas/sync_avas.sh >> $LOG 2>&1 &
+    echo "Started AVAS Sync Daemon" >> $LOG
 fi
 
 # Check if Service Centre Stealth Mode is active
@@ -61,22 +77,22 @@ if [ -f /data/local/window/.service_mode ]; then
     exit 0
 fi
 
-# 4. Auto-start Cabin Pressure Relief Daemon if not already running
+# 6. Auto-start Cabin Pressure Relief Daemon if not already running
 if [ -f /data/local/window/start_pressure_relief.sh ]; then
     sh /data/local/window/start_pressure_relief.sh >> $LOG 2>&1
 fi
 
-# 5. Auto-start Megaphone Daemon if not already running
+# 7. Auto-start Megaphone Daemon if not already running
 if [ -f /data/local/window/start_megaphone.sh ]; then
     sh /data/local/window/start_megaphone.sh >> $LOG 2>&1
 fi
 
-# 6. Auto-start Gear Audio Doa Trigger (one-shot per reboot)
+# 8. Auto-start Gear Audio Doa Trigger (one-shot per reboot)
 if [ -f /data/local/window/start_gear_audio.sh ]; then
     sh /data/local/window/start_gear_audio.sh >> $LOG 2>&1
 fi
 
-# 7. Auto-start Door Salam Trigger (one-shot per reboot)
+# 9. Auto-start Door Salam Trigger (one-shot per reboot)
 if [ -f /data/local/window/start_door_salam.sh ]; then
     sh /data/local/window/start_door_salam.sh >> $LOG 2>&1
 fi

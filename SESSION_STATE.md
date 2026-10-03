@@ -63,6 +63,13 @@ Rekod status teknikal rasmi Proton e.MAS 5 (IHU801P) selepas pengemaskinian Mega
   * Slot 2: `space.wav` (Space)
   * Slot 3: `pixel.wav` (Pixel)
   * Bunyi undur/perlahan: `bDM_01_01.wav` (Factory curve & tuning asal tanpa ubah suai).
+* **AVAS Property Sync Daemon (`sync_avas.sh`):**
+  * **Punca Isu Terdahulu (Slot 1 & 2 Senyap):** UI tetapan IHU menulis ke `persist.sys.avas.mode` & `persist.sys.avas.switch`, tetapi binari HAL `vendor.molead.hardware.avas_service` hanya membaca `persist.avas.mode` & `persist.avas.switch`. Akibatnya, pilihan Slot 1 / Slot 2 di skrin tidak sampai ke service bawah.
+  * **Penyelesaian Dilaksanakan:** Skrip `/data/local/avas/sync_avas.sh` berjalan sebagai background watcher ultra-ringan (0.0% CPU, tidur 2s). Sebaik sahaja pengguna memilih Slot 1, 2, atau 3 di skrin, daemon ini secara automatik:
+    1. Menyegerakkan `persist.avas.mode` & `persist.avas.switch`.
+    2. Menghantar broadcast rasmi ke `ecarx.settings/.receiver.AvasSetReceiver`.
+    3. Memuat semula service `avas_service` supaya ALSA audio driver terus memainkan lagu slot yang dipilih.
+  * Auto-start disepadukan secara kekal dalam `/system/bin/avas_boot.sh` (Step 5).
 * **Sistem Nada Kunci (Lock Chime):**
   * Dijalankan secara natif oleh servis sistem kilang `/system/bin/ecarx_reverse_radar` yang membaca `/sdcard/V3_Vehicle_Locked_Single.wav`.
   * Tiada daemon kustom diperlukan untuk lock sound asas kilang.
