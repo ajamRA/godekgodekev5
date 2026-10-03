@@ -97,7 +97,19 @@ Untuk menjaga waranti dan mengelakkan sebarang isu semasa pemeriksaan servis ber
 
 ---
 
-## 🧭 7. PANDUAN UNTUK AI SETERUSNYA
+## 🔒 7. PERLINDUNGAN APPS ASLI PROTON (ZERO TOKEN CLASH)
+* **Punca Isu Terdahulu (Auto-Kick Sesi Telefon):**
+  * Server Cloud Proton (ACO Tech) menguatkuasakan polisi ketat *Single Active Session* (1 akaun = 1 token aktif).
+  * Pada fasa awal, pelayan VPS (`server.py`) memanggil endpoint `https://emas-app.acotech.my:8443/auth/refresh` secara automatik apabila menerima kod 401. Ini membatalkan (*revoked*) sesi log masuk rasmi pada aplikasi telefon bimbit pemandu.
+* **Tindakan Pembersihan Dilaksanakan:**
+  1. Fungsi `refresh_token_if_needed()` dalam `/home/ubuntu/emas5/server.py` telah **dimatikan sepenuhnya** (hanya memulangkan `None` tanpa memanggil server ACO Tech).
+  2. Fail `emas_tokens.json` telah **dikosongkan** (`{}`).
+  3. Kontena Docker `emas5` telah dimuat semula.
+* **Kesan:** Aplikasi rasmi **Proton e.MAS** pada telefon pintar pemandu kini kekal log masuk 100% secara kekal tanpa risiko ditendang (*zero kick*), memudahkan urusan tempahan servis dan penerimaan kemas kini rasmi. Semua komunikasi Webapp/PWA peribadi kini 100% menggunakan laluan selamat VPS-ke-IHU (`DoorPressureReliefDaemon` / Megaphone) dengan kunci `azam7988`.
+
+---
+
+## 🧭 8. PANDUAN UNTUK AI SETERUSNYA
 1. **Jangan sesekali menukar VHAL Drive Mode secara gelung berterusan (Zero Drive Mode Clamping).**
 2. **Jangan menulis fail sementara atau WAV ke direktori shell/tmp jika melibatkan AudioTrack/SoundPool**, kerana SELinux `drmserver` menyekat `shell_data_file`. Gunakan laluan `/data/local/window/gear_audio/`.
 3. **Partition `/vendor` adalah 100% penuh (0 bytes free)**. Sebarang penukaran fail AVAS mestilah menggunakan kaedah *bind-mount* melalui `/system/bin/avas_boot.sh`.
