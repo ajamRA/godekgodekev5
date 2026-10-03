@@ -63,5 +63,10 @@ if [ -f /data/local/window/start_megaphone.sh ]; then
     sh /data/local/window/start_megaphone.sh >> $LOG 2>&1
 fi
 
+# 6. Auto-start Gear Audio Coin Trigger (one-shot per reboot)
+if [ -f /data/local/window/start_gear_audio.sh ]; then
+    sh /data/local/window/start_gear_audio.sh >> $LOG 2>&1
+fi
+
 echo "=== AVAS FACTORY RESTORE COMPLETED: ALL SOUNDS 100% FACTORY ORIGINAL ===" >> $LOG
 cat $LOG
