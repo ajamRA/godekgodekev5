@@ -26,29 +26,31 @@ Rekod status teknikal rasmi Proton e.MAS 5 (IHU801P) selepas pengemaskinian Mega
 
 ---
 
-## 🪙 3. TRIGGER AUDIO GEAR D (`GearAudioPoc.jar`)
+## 🪙 3. TRIGGER AUDIO GEAR D — DOA NAIK KENDERAAN (`GearAudioPoc.jar`)
 * **Lokasi IHU:** `/data/local/window/gear_audio/GearAudioPoc.jar`.
-* **Fail Audio:** `/data/local/window/gear_audio/gear_d.wav` (Mario Coin, 48kHz 16-bit mono).
+* **Fail Audio:** `/data/local/window/gear_audio/gear_doa.wav` (Doa Naik Kenderaan Omar & Hana, 1.25 MB, ~13s, 48kHz mono 16-bit).
 * **Pelancar Boot:** `/data/local/window/start_gear_audio.sh` (Auto-start via `/system/bin/avas_boot.sh` Step 6).
 * **Senibina & Logik Pengendalian:**
   * **VHAL Reading (Read-Only):** Membaca gear CAN MCU `678428908` (`2=D, 3=N, 4=R, 5=P`). Tiada sebarang `setProperty` (Zero risk).
   * **Speed Guard:** Membaca kelajuan MCU `678428840` (`raw / 100.0`). Hanya trigger jika kelajuan $\le$ 1.0 km/j dan kenderaan berhenti.
   * **Audio Engine:** Menggunakan `AudioTrack` pra-muat (preload byte array ke memori) dengan `USAGE_ASSISTANCE_SONIFICATION`. Memintas sekatan SELinux `drmserver` SoundPool dengan latensi trigger $\sim$2ms!
   * **One-Shot Per Boot (Ciri Utama):**
-    * Hanya berbunyi sekali sahaja pada peralihan `P -> D` pertama selepas IHU boot/hidup.
-    * Sebaik sahaja audio selesai, proses Java **tamat dan keluar (exit 0)** dengan sendiri.
+    * Hanya berbunyi sekali sahaja pada peralihan `P -> D` pertama selepas IHU boot/hidup untuk memulakan perjalanan.
+    * Sebaik sahaja audio doa selesai, proses Java **tamat dan keluar (exit 0)** dengan sendiri.
     * 0% RAM & CPU sepanjang perjalanan selebihnya, dan mustahil berbunyi lagi sehingga IHU reboot.
 
 ---
 
-## 🚪 4. TRIGGER DOA BUKA PINTU (`DoorDoaPoc.jar`)
-* **Lokasi IHU:** `/data/local/tmp/DoorDoaPoc.jar`.
+## 🚪 4. TRIGGER BUKA PINTU — ASSALAMUALAIKUM (`DoorDoaPoc.jar`)
+* **Lokasi IHU:** `/data/local/window/gear_audio/DoorDoaPoc.jar`.
+* **Fail Audio:** `/data/local/window/gear_audio/door_salam.wav` ("Assalamualaikum", ~1.5s, 48kHz 16-bit).
+* **Pelancar Boot:** `/data/local/window/start_door_salam.sh` (Auto-start via `/system/bin/avas_boot.sh` Step 7).
 * **Sensor VHAL Pintu (RHD Malaysia):**
   * `PROP_DOOR_FR = 678428816` &rarr; Pintu Pemandu Kanan (RHD Malaysia)
   * `PROP_DOOR_FL = 678428815` &rarr; Pintu Penumpang Kiri
 * **Tingkah Laku Dual Front Door (Zero Double Play):**
   * Memantau kedua-dua pintu hadapan sebagai satu kesatuan status (`CLOSED -> OPEN`).
-  * Mana-mana satu pintu depan dibuka dahulu, doa naik kenderaan dimainkan serta-merta dalam kabin.
+  * Mana-mana satu pintu depan dibuka dahulu semasa masuk kereta, ucapan "Assalamualaikum" dimainkan serta-merta dalam kabin.
   * Fungsi playback berjalan secara *synchronous* (blocking), dan status kekal `OPEN`, menjamin **100% mustahil berlaku double play** walaupun pintu sebelah lagi dibuka beberapa saat kemudian.
   * Selepas audio tamat, proses tamat dengan sendirinya (`SESSION_DONE one-shot exit`).
 * **Pengecualian:** Bonet belakang (`Trunk: 678428819`) dan Bonet depan (`Frunk: 678428820`) diabaikan sepenuhnya agar tidak mengganggu urusan memasukkan barang pasaraya.

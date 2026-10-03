@@ -156,30 +156,32 @@ Daemon pembesar suara luar (*External Bumper Speaker*) terkini dengan perlindung
 
 ---
 
-## 9. Audio Trigger Gear D (Mario Coin Chime)
+## 9. Audio Trigger Gear D — Doa Naik Kenderaan
 
-Memainkan nada bunyi pendek apabila tuil gear ditolak ke mod pemanduan (**D**):
-* **Fail Audio:** `/data/local/window/gear_audio/gear_d.wav` (Mario Coin, 48kHz mono 16-bit).
+Memainkan bacaan Doa Naik Kenderaan apabila tuil gear ditolak ke mod pemanduan (**D**) untuk memulakan perjalanan:
+* **Fail Audio:** `/data/local/window/gear_audio/gear_doa.wav` (Doa Naik Kenderaan Omar & Hana, 1.25 MB, ~13s, 48kHz mono 16-bit).
 * **Enjin Audio:** `AudioTrack` dengan pra-muat memori (*byte array preload*) &mdash; memintas sekatan SELinux dengan latensi $\sim$2ms.
 * **Speed Guard:** Membaca kelajuan MCU `678428840`. Hanya trigger apabila kelajuan $\le$ 1.0 km/j dan kenderaan berhenti.
 * **Tingkah Laku (One-Shot per Boot):**
-  - Hanya berbunyi sekali sahaja pada peralihan `P -> D` pertama selepas IHU boot/hidup.
-  - Sebaik sahaja audio selesai, proses Java tamat dan keluar (`exit 0`) dengan sendirinya &mdash; 0% penggunaan RAM dan CPU sepanjang perjalanan selebihnya.
+  - Hanya berbunyi sekali sahaja pada peralihan `P -> D` pertama selepas IHU boot/hidup untuk memulakan pemanduan.
+  - Sebaik sahaja bacaan doa selesai, proses Java tamat dan keluar (`exit 0`) dengan sendirinya &mdash; 0% penggunaan RAM dan CPU sepanjang perjalanan selebihnya.
 * **Auto-Boot:** Dilancarkan secara automatik melalui `/system/bin/avas_boot.sh` (Step 6).
 
 ---
 
-## 10. Audio Trigger Buka Pintu Kabin (Door Doa Trigger)
+## 10. Audio Trigger Buka Pintu Kabin — Assalamualaikum
 
-Memainkan doa naik kenderaan apabila pintu hadapan dibuka pertama kali:
+Memainkan ucapan salam mesra apabila mana-mana pintu hadapan dibuka pertama kali:
+* **Fail Audio:** `/data/local/window/gear_audio/door_salam.wav` ("Assalamualaikum", ~1.5s, 48kHz 16-bit).
 * **Sensor VHAL RHD Malaysia:**
   - `PROP_DOOR_FR = 678428816` &rarr; Pintu Pemandu Kanan
   - `PROP_DOOR_FL = 678428815` &rarr; Pintu Penumpang Kiri
 * **Tingkah Laku (Zero Double Play):**
   - Memantau kedua-dua pintu hadapan sebagai satu status kesatuan.
-  - Mana-mana satu pintu depan dibuka dahulu, audio dimainkan serta-merta dalam kabin.
+  - Mana-mana satu pintu depan dibuka dahulu semasa masuk kereta, ucapan salam dimainkan serta-merta dalam kabin.
   - Audio dimainkan secara *blocking/synchronous*, dan proses terus tamat (`SESSION_DONE one-shot exit`), menjamin 100% tiada bunyi berganda walaupun pintu sebelah dibuka kemudian.
   - Bonet belakang (Trunk) dan bonet depan (Frunk) diabaikan sepenuhnya.
+* **Auto-Boot:** Dilancarkan secara automatik melalui `/system/bin/avas_boot.sh` (Step 7).
 
 ---
 

@@ -1,7 +1,7 @@
 #!/system/bin/sh
 DIR="/data/local/window/gear_audio"
 JAR="$DIR/GearAudioPoc.jar"
-WAV="$DIR/gear_d.wav"
+WAV="$DIR/gear_doa.wav"
 LOG="$DIR/gear_audio.log"
 PIDFILE="$DIR/gear_audio.pid"
 
