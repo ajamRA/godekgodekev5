@@ -30,12 +30,45 @@ public class MainActivity extends Activity {
     private WebView webView;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private volatile boolean isRunning = true;
+    private MediaPlayer lockPreviewPlayer;
+    private final java.util.concurrent.atomic.AtomicBoolean lockSoundListPending =
+            new java.util.concurrent.atomic.AtomicBoolean(false);
+
+    private void releaseLockPreview() {
+        if (lockPreviewPlayer != null) {
+            lockPreviewPlayer.release();
+            lockPreviewPlayer = null;
+        }
+    }
+    private void reportLockPreview(final boolean ok, final String key, final String error) {
+        handler.post(() -> {
+            if (webView == null || isFinishing()) return;
+            webView.evaluateJavascript("window.onLockSoundPreviewResult && window.onLockSoundPreviewResult("
+                    + ok + "," + org.json.JSONObject.quote(key) + "," + org.json.JSONObject.quote(error) + ");", null);
+        });
+    }
 
     private final java.util.concurrent.ThreadPoolExecutor vehicleRequests = new java.util.concurrent.ThreadPoolExecutor(
         1, 1, 0L, java.util.concurrent.TimeUnit.MILLISECONDS, new java.util.concurrent.ArrayBlockingQueue<Runnable>(4));
     private final com.noor.thenoorcar.VehicleHttpClient vehicleClient = new com.noor.thenoorcar.VehicleHttpClient();
     private volatile boolean energyReadErrorLogged = false;
     private boolean legacyVehicleControlsBlocked() { return true; }
+
+    private final java.util.concurrent.atomic.AtomicBoolean lockSoundRequestPending =
+            new java.util.concurrent.atomic.AtomicBoolean(false);
+
+    private void reportLockSound(final boolean ok, final String soundKey, final org.json.JSONObject details) {
+        final String keyJson = org.json.JSONObject.quote(soundKey == null ? "" : soundKey);
+        final String detailsJson = details == null ? "{}" : details.toString();
+        handler.post(new Runnable() {
+            @Override public void run() {
+                if (webView == null || isFinishing()) return;
+                String js = "window.onLockSoundResult && window.onLockSoundResult("
+                        + (ok ? "true" : "false") + "," + keyJson + "," + detailsJson + ");";
+                webView.evaluateJavascript(js, null);
+            }
+        });
+    }
 
     private volatile String latestEnergyJson = "{}";
 
@@ -73,6 +106,10 @@ public class MainActivity extends Activity {
 
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
+            public void onPermissionRequest(final android.webkit.PermissionRequest request) {
+                request.grant(request.getResources());
+            }
+            @Override
             public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
                 Log.d("WebViewConsole", consoleMessage.message() + " [" + consoleMessage.lineNumber() + ":" + consoleMessage.sourceId() + "]");
                 return true;
@@ -101,15 +138,22 @@ public class MainActivity extends Activity {
         } catch (Throwable ignored) {}
     }
 
-    private boolean firstResume = true;
-
     @Override
     protected void onResume() {
         super.onResume();
-        // WebView content can disappear after the renderer is reclaimed (screen blank /
-        // offline cycles). Reload once on resume so the dashboard always repaints.
-        if (firstResume) { firstResume = false; return; }
-        handler.post(() -> { if (webView != null) webView.reload(); });
+        if (webView != null) {
+            webView.onResume(); webView.resumeTimers();
+            webView.evaluateJavascript("window.CompanionLifecycle && window.CompanionLifecycle.resume();", null);
+        }
+    }
+
+    @Override protected void onPause() {
+        if (webView != null) {
+            webView.evaluateJavascript("window.CompanionLifecycle && window.CompanionLifecycle.pause();", null);
+            webView.onPause(); webView.pauseTimers();
+        }
+        releaseLockPreview();
+        super.onPause();
     }
 
     @Override
@@ -311,6 +355,10 @@ public class MainActivity extends Activity {
                             lock.put("enabled", false);
                             data.put("lock", lock);
                             code = 200;
+                        } else if ("GET".equals(method) && ("/api/window?action=crack".equals(path)
+                                || "/api/window?action=close".equals(path))) {
+                            data = com.noor.thenoorcar.WindowHttpClient.request(path);
+                            code = data.optBoolean("ok", false) ? 200 : 502;
                         } else if (path != null && path.startsWith("/api/avas")) {
                             // Forward AVAS sound management requests to dedicated AvasSoundDaemon on port 8889
                             try {
@@ -373,6 +421,37 @@ public class MainActivity extends Activity {
             return latestEnergyJson;
         }
 
+        @JavascriptInterface
+        public void playMegafonPreset(final String preset) {
+            if (preset == null || preset.isEmpty()) return;
+            new Thread(() -> {
+                try {
+                    URL u = new URL("http://127.0.0.1:8890/api/megafon/play?preset=" + java.net.URLEncoder.encode(preset, "UTF-8"));
+                    HttpURLConnection c = (HttpURLConnection) u.openConnection();
+                    c.setRequestMethod("GET");
+                    c.getResponseCode();
+                    c.disconnect();
+                } catch (Throwable t) {
+                    Log.e(TAG, "Error playing preset: " + t.getMessage());
+                }
+            }).start();
+        }
+
+        @JavascriptInterface
+        public void playDoa() {
+            new Thread(() -> {
+                try {
+                    URL u = new URL("http://127.0.0.1:8890/api/doa/play");
+                    HttpURLConnection c = (HttpURLConnection) u.openConnection();
+                    c.setRequestMethod("GET");
+                    c.getResponseCode();
+                    c.disconnect();
+                } catch (Throwable t) {
+                    Log.e(TAG, "Error playing doa: " + t.getMessage());
+                }
+            }).start();
+        }
+
 
         @JavascriptInterface
         public void closeApp() {
@@ -431,45 +510,108 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void playAudioPreview(final String soundKey) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        String path = "/data/local/window/locksounds/lock_" + soundKey + ".wav";
-                        MediaPlayer mp = new MediaPlayer();
-                        mp.setDataSource(path);
-                        mp.prepare();
-                        mp.start();
-                        mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                            @Override
-                            public void onCompletion(MediaPlayer mediaPlayer) {
-                                mediaPlayer.release();
-                            }
-                        });
-                    } catch (Throwable t) {
-                        t.printStackTrace();
-                    }
+            if (soundKey == null || !soundKey.matches("[a-z0-9_]{1,32}")) {
+                reportLockPreview(false, soundKey == null ? "" : soundKey, "INVALID_SOUND_KEY");
+                return;
+            }
+            handler.post(() -> {
+                if (isFinishing()) return;
+                releaseLockPreview();
+                try {
+                    final MediaPlayer mp = new MediaPlayer();
+                    lockPreviewPlayer = mp;
+                    mp.setOnPreparedListener(player -> {
+                        if (lockPreviewPlayer != player) return;
+                        try { player.start(); }
+                        catch (RuntimeException failed) { releaseLockPreview(); reportLockPreview(false, soundKey, "PREVIEW_FAILED"); }
+                    });
+                    mp.setOnCompletionListener(player -> {
+                        if (lockPreviewPlayer != player) return;
+                        releaseLockPreview();
+                        reportLockPreview(true, soundKey, "");
+                    });
+                    mp.setOnErrorListener((player, what, extra) -> {
+                        if (lockPreviewPlayer != player) return true;
+                        releaseLockPreview();
+                        reportLockPreview(false, soundKey, "PREVIEW_UNAVAILABLE");
+                        return true;
+                    });
+                    mp.setDataSource(com.noor.thenoorcar.LockSoundHttpClient.previewUrl(soundKey));
+                    mp.prepareAsync();
+                } catch (Exception failed) {
+                    releaseLockPreview();
+                    reportLockPreview(false, soundKey, "PREVIEW_UNAVAILABLE");
                 }
-            }).start();
+            });
+        }
+
+        @JavascriptInterface
+        public void listLockSounds() {
+            if (!lockSoundListPending.compareAndSet(false, true)) return;
+            try { vehicleRequests.execute(() -> {
+                try {
+                    final org.json.JSONObject result = com.noor.thenoorcar.LockSoundHttpClient.listPresets();
+                    handler.post(() -> {
+                        if (webView == null || isFinishing()) return;
+                        webView.evaluateJavascript("window.onLockSoundPresets && window.onLockSoundPresets("
+                                + result.toString() + ");", null);
+                    });
+                } finally { lockSoundListPending.set(false); }
+            }); } catch (java.util.concurrent.RejectedExecutionException busy) {
+                lockSoundListPending.set(false);
+            }
+        }
+
+        @JavascriptInterface
+        public void stopLockSoundPreview() { handler.post(() -> releaseLockPreview()); }
+
+        @JavascriptInterface
+        public void getLockSoundStatus(final String requestId) {
+            if (requestId == null || !requestId.matches("s[0-9]{1,12}")) return;
+            try { vehicleRequests.execute(() -> {
+                final org.json.JSONObject result = com.noor.thenoorcar.LockSoundHttpClient.status();
+                handler.post(() -> {
+                    if (!isRunning || webView == null || isFinishing()) return;
+                    webView.evaluateJavascript("window.onLockSoundStatus && window.onLockSoundStatus("
+                            + org.json.JSONObject.quote(requestId) + "," + result.toString() + ");", null);
+                });
+            }); } catch (java.util.concurrent.RejectedExecutionException busy) {
+                Log.w(TAG, "Lock status queue busy");
+            }
         }
 
         @JavascriptInterface
         public void applyLockSoundDirect(final String soundKey) {
-            if (legacyVehicleControlsBlocked()) { Log.w(TAG, "Control unavailable in reviewed candidate"); return; }
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
+            final long queuedAt = android.os.SystemClock.elapsedRealtime();
+            if (!lockSoundRequestPending.compareAndSet(false, true)) {
+                try {
+                    reportLockSound(false, soundKey, new org.json.JSONObject()
+                            .put("ok", false).put("file_committed", false).put("error", "LOCK_REQUEST_BUSY"));
+                } catch (org.json.JSONException impossible) { Log.w(TAG, "lock callback unavailable"); }
+                return;
+            }
+            // Deliberately does NOT unlock any other legacy vehicle controls.
+            try { vehicleRequests.execute(new Runnable() {
+                @Override public void run() {
                     try {
-                        String body = "{\"sound\":\"" + soundKey + "\"}";
-                        java.net.Socket sock = new java.net.Socket("127.0.0.1", 8888);
-                        sock.setSoTimeout(800);
-                        java.io.OutputStream os = sock.getOutputStream();
-                        os.write(("POST /api/locksound HTTP/1.1\r\nHost: 127.0.0.1:8888\r\nContent-Type: application/json\r\nContent-Length: " + body.length() + "\r\nConnection: close\r\n\r\n" + body).getBytes());
-                        os.flush();
-                        sock.close();
-                    } catch (Throwable ignored) {}
+                        if (android.os.SystemClock.elapsedRealtime() - queuedAt > 3000) {
+                            try { reportLockSound(false, soundKey, new org.json.JSONObject().put("ok", false)
+                                    .put("file_committed", false).put("error", "LOCK_REQUEST_BUSY")); }
+                            catch (org.json.JSONException ignored) {}
+                            return;
+                        }
+                        org.json.JSONObject result = com.noor.thenoorcar.LockSoundHttpClient.apply(soundKey);
+                        reportLockSound(result.optBoolean("file_committed", false), soundKey, result);
+                    } finally {
+                        lockSoundRequestPending.set(false);
+                    }
                 }
-            }).start();
+            }); } catch (java.util.concurrent.RejectedExecutionException busy) {
+                lockSoundRequestPending.set(false);
+                try { reportLockSound(false, soundKey, new org.json.JSONObject().put("ok", false)
+                        .put("file_committed", false).put("error", "LOCK_REQUEST_BUSY")); }
+                catch (org.json.JSONException ignored) {}
+            }
         }
 
         @JavascriptInterface
@@ -617,7 +759,15 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         isRunning = false;
+        releaseLockPreview();
         vehicleRequests.shutdownNow();
+        handler.removeCallbacksAndMessages(null);
+        if (webView != null) {
+            webView.removeJavascriptInterface("AndroidEnergy");
+            webView.removeJavascriptInterface("Android");
+            webView.destroy();
+            webView = null;
+        }
         super.onDestroy();
     }
 }

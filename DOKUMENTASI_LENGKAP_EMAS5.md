@@ -1,4 +1,4 @@
-# Dokumentasi Lengkap Sistem & Modifikasi Proton e.MAS 5 / Geely Galaxy E5
+﻿# Dokumentasi Lengkap Sistem & Modifikasi Proton e.MAS 5 / Geely Galaxy E5
 
 > [!CAUTION]
 > **DOKUMEN ARKIB SEJARAH (HISTORICAL REFERENCE ONLY)**
@@ -110,10 +110,12 @@ Ejen latar belakang Java berjalan di `/data/local/window/door_pressure_relief.ja
 ### C. Penukar Nada Kunci Kustom (Custom Lock Sound Switcher)
 1. Ejen berhubung dengan pelayan VPS (`/api/car/sync`) setiap 2 saat melalui sambungan keluar (*outbound-only*).
 2. Apabila nada baru dipilih dari webapp:
-   - Fail WAV dimuat turun ke `/data/local/window/locksounds/lock_active.wav`.
-   - Fail disalin ke `/sdcard/V3_Vehicle_Locked_Single.wav`.
-   - Ditetapkan kebenaran **`chmod 444`** bagi menghalang servis sistem `ecarx.settings` daripada menimpa semula fail dengan bunyi asal kilang saat boot.
-   - Servis native `/system/bin/ecarx_reverse_radar` dimulakan semula untuk memuatkan nada kunci baharu serta-merta tanpa perlu reboot kereta.
+   - `MegaphoneDaemon` memuat turun preset `/data/local/window/locksounds/lock_<key>.wav`, mengesahkan raw SHA jika dibekalkan dan menghasilkan PCM16 stereo 48 kHz tanpa mengubah sampel audio. Cache mengikat raw SHA kepada SHA kanonik kandungan sebenar.
+   - Fail menggantikan `/sdcard/V3_Vehicle_Locked_Single.wav` melalui staging pada filesystem sasaran dan rename atomik; baseline pemulihan yang diluluskan diperlukan. `lock_active.wav` hanyalah mirror selepas commit.
+   - `chmod 644` ialah petunjuk permission best-effort pada staging sebenar dan fail aktif, bukan perlindungan anti-overwrite daripada Settings atau bukti akses SELinux.
+   - ACK `lock_applied` mengesahkan commit fail sahaja. Restart radar automatik belum dilaksanakan; response menjelaskan `radar_restarted=false` dan `playback_verified=false`. Mainan native pada event kunci perlu disahkan pada IHU.
+3. Skrin IHU offline menyediakan pemilih preset pada halaman Controls melalui `GET http://127.0.0.1:8890/api/locksound/list`, pratonton kabin melalui `/api/locksound/preview?sound=<key>`, dan simpan melalui `POST /api/locksound/apply`. Port 8888 kekal untuk telemetri, bukan pertukaran nada.
+4. Ujian dan binaan laptop: `build_lock_sound.ps1` menghasilkan JAR dan dua APK dalam folder artifact berasingan tanpa deployment. Ujian permission/native playback/Settings overwrite sebenar masih diperlukan pada kereta sebelum menyatakan kelancaran penuh.
 
 ### D. Enjin Telemetri Tempatan (Local HTTP Telemetry Server)
 * Menyediakan endpoint HTTP setempat di `http://127.0.0.1:8888/api/energy` untuk disalurkan terus kepada aplikasi antaramuka `e.MAS Energy`.
@@ -185,28 +187,67 @@ Memainkan ucapan salam mesra apabila mana-mana pintu hadapan dibuka pertama kali
 
 ---
 
-## 11. 1-Click Proton SC Stealth Service Mode
+## 11. Proton SC Stealth Service Mode (Mod Servis Kilang)
 
 Untuk melindungi waranti dan mengelakkan sebarang isu semasa pemeriksaan servis berkala di Proton Service Centre (SC):
 
-* **Bila Nak Hantar Servis (Masuk Mod Kilang):**
-  ```powershell
-  .\sc_stealth_mode.ps1
-  ```
-  - Menyembunyikan aplikasi kustom (*Netflix, SmartTube, TheNoor, AcBridge*) dari skrin melalui `pm disable-user`.
+* **Kaedah A: Tekan Steering Wheel (Paling Cepat & Mudah):**
+  - Tekan dan **hold butang BAWAH (Volume Down) di stereng selama 5 saat**.
+  - Chime pengesahan akan berbunyi dan kereta bertukar ke mod kilang secara automatik.
+  - Untuk membatalkan dan memulihkan mod kustom: Tekan dan hold semula butang BAWAH selama 5 saat.
+* **Kaedah B: Skrip dari Laptop / Terminal:**
+  `ash
+  # Toggle atau periksa status
+  sh /data/local/window/service_mode.sh toggle
+  sh /data/local/window/service_mode.sh status
+  `
+* **Kesan Semasa Mod Servis Aktif:**
+  - Menyembunyikan aplikasi kustom (*Netflix, SmartTube, TheNoor/EmasEnergy, AcBridge*) dari skrin melalui pm disable-user --user 0.
   - Aplikasi rasmi ACO (*Vivaldi Browser, Spotify, SYOK, HotFM*) kekal terlihat.
-  - Mewujudkan fail bendera `/data/local/window/.service_mode` yang menyekat permulaan semua daemon kustom.
-  - Mematikan semua daemon kustom &mdash; kereta 100% standard kilang (*Showroom Condition*).
-* **Bila Ambil Kereta Balik (Kembalikan Mod Kustom):**
-  ```powershell
-  .\sc_restore_mode.ps1
-  ```
-  - Memunculkan semula aplikasi di skrin dengan semua sesi login kekal tersimpan.
-  - Memadamkan bendera `.service_mode` dan menghidupkan semula semua daemon kustom dalam masa 3 saat.
+  - Mematikan door pressure relief daemon dan merapatkan tingkap.
+  - Mematikan door chime / salam daemon.
+  - Memulihkan nada kunci asal kilang (stock_lock.wav ➡️ /sdcard/V3_Vehicle_Locked_Single.wav).
+  - Memulihkan AVAS ke mod asal kilang (Space mode 2).
+  - Kereta 100% standard kilang (*Showroom Condition*), selamat sepenuhnya untuk diperiksa oleh mekanik SC.
 
 ---
 
-## 12. Panduan Langkah Demi Langkah Pasang di Kereta Kawan
+## 12. Kawalan Pintas Steering Wheel (SteeringModeDaemon)
+
+Pemandu boleh mengawal tetapan kenderaan secara pantas tanpa perlu menyentuh skrin IHU:
+
+| Butang Steering | Tindakan | Kesan Operasi |
+| :--- | :--- | :--- |
+| **Kanan (▶)** | **Hold 800ms** | Tukar Drive Mode (Comfort 0 ➡️ Eco 1 ➡️ Sport 2) + Nada Chime |
+| **Kanan (▶)** | Tekan Sekejap (<800ms) | Langkau lagu seterusnya (*Next Track*) seperti biasa |
+| **Kiri (◀)** | **Hold 800ms** | Tukar Regen Level (Low 1 ➡️ Medium 2 ➡️ High 3) + Nada Chime |
+| **Kiri (◀)** | Tekan Sekejap (<800ms) | Ulang lagu sebelumnya (*Previous Track*) seperti biasa |
+| **Bawah (▼)** | **Hold 5 Saat** | Toggle Mod Servis Proton (Stealth Kilang On/Off) + Nada Chime |
+| **Bawah (▼)** | Tekan Sekejap (<5s) | Turunkan volume suara 1 takuk seperti biasa |
+| **Atas (▲)** | Tekan Biasa / Hold | Naikkan volume suara native kilang (100% tidak diusik) |
+
+---
+
+## 13. Pusat Suara Luar & Megafon 0ms dalam IHU (EmasEnergy)
+
+Penyepaduan kawalan pembesar suara luar bumper (ALSA pcmC0D29p) secara terus pada skrin tengah kereta:
+
+* **Tab Megafon:** Boleh diakses terus melalui menu navigasi aplikasi **e.MAS Energy** pada IHU.
+* **0ms Latensi Tempatan:** Menghubungi MegaphoneDaemon terus pada 127.0.0.1:8890 tanpa bergantung kepada internet atau cloud VPS.
+* **4 Slot Suara Segera:**
+  1. 📢 **Alihkan Kereta:** "Tolong alihkan kenderaan anda" (lihkan.wav).
+  2. 🕌 **Beri Salam:** "Assalamualaikum" (salam.wav).
+  3. 🚨 **Minta Laluan:** "Minta laluan ke tepi" (	epi.wav).
+  4. ⏳ **Saya Datang:** "Saya datang sekejap" (datang.wav).
+* **Push-to-Talk (Live Mic):**
+  - Tekan dan tahan butang mikrofon pada skrin untuk bercakap.
+  - Suara dirakam melalui mikrofon kabin IHU, ditukar automatik kepada format 16-bit PCM WAV, dan disiarkan ke speaker luar sebaik sahaja butang dilepaskan.
+* **Audio Kabin:**
+  - 🤲 Butang khas untuk memainkan **Doa Naik Kenderaan** di dalam kabin melalui AudioTrack.
+
+---
+
+## 14. Panduan Langkah Demi Langkah Pasang di Kereta Kawan
 
 Untuk memasang pada kereta Proton e.MAS 5 lain:
 

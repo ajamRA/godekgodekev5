@@ -6,8 +6,8 @@ Dokumen ini menggariskan prinsip teras, had tindakan, dan disiplin asas yang waj
 
 ## 1. Lokasi Projek & Sasaran Peranti
 * **Projek Laptop:** `D:\apps\emas-ota`
-* **Alamat ADB Terkini:** `192.168.1.19:5555` (Wi-Fi: `AzamRahim`, MAC: `0e-5c-fb-05-3d-56`)
-* **Pengendalian Perubahan Alamat:** Alamat ini diberikan oleh router DHCP dan boleh berubah antara `.11`, `.12`, `.19`. Sentiasa semak ARP jadual router sebelum mencuba sasaran lain.
+* **Alamat ADB Terkini:** `192.168.1.13:5555` (Wi-Fi: `AzamRahim`, MAC: `74:04:f0:c3:28:34`)
+* **Pengendalian Perubahan Alamat:** Alamat ini diberikan oleh router DHCP dan boleh berubah antara `.11`, `.12`, `.13`, `.19`. Sentiasa semak `adb devices` sebelum menjalankan arahan.
 * **Pengasingan Sasaran:** Sentiasa gunakan parameter `-s <IP_SEMASA>:5555` pada setiap arahan terhadap peranti.
 
 ---

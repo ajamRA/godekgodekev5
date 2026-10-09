@@ -1,0 +1,92 @@
+/* Mobile companion additions; the existing IHU layout stays available. */
+:root{color-scheme:light dark}
+[data-theme=dark]{--bg:#0e1418;--card:#182127;--ink:#eef5f6;--muted:#a6b8c0;--line:#30424c;--accent:#79dfc2;--soft:#253933}
+body{font-variant-numeric:tabular-nums}
+button,a,input,select{touch-action:manipulation}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+button:active:not(:disabled){transform:scale(.98)}
+button:disabled{opacity:.5;cursor:not-allowed}
+.connection-panel{border:1px solid var(--line);border-radius:16px;background:var(--card);padding:16px;margin:8px 0 18px;font-size:13px}
+.connection-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.connection-heading strong{font-size:14px}
+.connection-heading span{color:var(--muted);font-size:11px;font-weight:650}
+[data-connection=online] .connection-heading span{color:var(--accent)}
+.connection-panel p{color:var(--muted);line-height:1.5;margin:8px 0}
+.connection-panel form{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:end}
+.connection-panel form[hidden]{display:none}
+.connection-panel label{display:grid;gap:6px}
+.connection-panel input{width:100%;min-width:0;min-height:48px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:16px}
+.connection-panel button{min-height:48px;padding:10px 14px}
+.lock-active-row{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;padding:12px 0;border-block:1px solid var(--line);margin-bottom:16px}
+.lock-active-row span{display:grid;gap:5px;color:var(--muted);font-size:12px}
+.lock-active-row strong{color:var(--ink);font-size:16px}
+.lock-sync-badge{color:var(--accent)!important;font-size:12px!important}
+.lock-sound-card select{font-size:16px}
+.lock-sound-card h2{margin-bottom:8px}
+.lock-sound-actions button{flex:1 1 130px;min-height:48px}
+.lock-sound-status{overflow-wrap:anywhere}
+.door-status-tile:disabled{opacity:.8}
+.live-power-card .card-head,.live-power-card .card-head>div{flex-wrap:wrap;gap:8px!important}
+.vehicle-status-board,.controls-grid,.hv-battery-layout,.flow-diagram-panel{min-width:0}
+.card,.vehicle-status-tile,.tpms-panel,.hv-pack-panel,.hv-metric-stack{min-width:0;overflow-wrap:anywhere}
+@media(max-width:750px){
+  html,body{height:auto;min-height:100%;overflow:visible}
+  header{flex-wrap:wrap;height:auto!important;min-height:70px;padding:12px 0;gap:10px}
+  .header-right{margin-left:auto}.page-heading{flex-wrap:wrap}.page-heading .pill{font-size:10px}
+  .connection-panel form{grid-template-columns:1fr 1fr}.connection-panel label{grid-column:1/-1}
+  .connection-panel{margin-top:0}.vehicle-status-board{display:grid!important;grid-template-columns:minmax(0,1fr)!important}
+  .vehicle-state-primary,.cabin-door-card,.door-monitor-panel,.live-power-card{grid-column:1/-1!important;grid-row:auto!important}
+  .door-status-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+  .vehicle-state-primary>div,.cabin-status-head>div>div{flex-wrap:wrap}
+  .overview-energy-strip,.energy-strip-metrics{flex-wrap:wrap;gap:14px}
+  .hv-battery-layout{grid-template-columns:minmax(0,1fr)!important}.hv-metric-stack{grid-template-columns:1fr 1fr}
+  .hv-caution{grid-column:1/-1}.flow-diagram{flex-wrap:wrap;justify-content:center;gap:14px!important}
+  .flow-pack,.flow-result{min-width:0!important;max-width:100%}.flow-foot{flex-wrap:wrap;gap:8px}
+  main[data-page=controls] .controls-grid{grid-template-columns:minmax(0,1fr)!important}
+  button,.quick{min-height:48px}nav a{font-size:10px!important;min-width:0}
+  aside{height:calc(76px + env(safe-area-inset-bottom))!important;padding-bottom:env(safe-area-inset-bottom)}
+  .shell{height:auto!important;min-height:100dvh;overflow:visible!important;padding-bottom:calc(90px + env(safe-area-inset-bottom))!important}
+  #toast{bottom:calc(92px + env(safe-area-inset-bottom))!important;white-space:normal;line-height:1.5;width:max-content;max-width:calc(100% - 32px)}
+  .avas-slot-buttons{grid-template-columns:repeat(2,minmax(0,1fr))!important}.avas-actions-bar{flex-wrap:wrap}
+  .avas-sliders-grid{grid-template-columns:repeat(4,minmax(0,1fr));overflow:visible}.avas-main-btns,.avas-presets-group{flex-wrap:wrap}
+  .avas-curve-meta,.avas-track-info,.avas-header,.avas-title-row{flex-wrap:wrap;gap:8px}.avas-track-info{min-width:0}
+  .avas-tuning-panel{padding:12px}.avas-actions-bar{align-items:stretch;gap:12px}
+  .modal-card{max-height:calc(100dvh - 40px);overflow:auto;width:calc(100% - 24px)}
+}
+@media(max-width:360px){.hv-metric-stack{grid-template-columns:minmax(0,1fr)}.pack-readout strong{font-size:64px!important}.wordmark{font-size:20px!important}.demo{font-size:9px!important}}
+@media(prefers-reduced-motion:reduce){button:active:not(:disabled){transform:none}*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Megafon Dashboard Styles */
+.megafon-dashboard{display:flex;flex-direction:column;gap:16px}
+.megafon-header-card{padding:20px;background:linear-gradient(135deg,rgba(121,223,194,0.1),rgba(24,33,39,0.9));border:1px solid var(--line)}
+.megafon-header-info{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.megafon-title-row{display:flex;align-items:center;gap:16px}
+.megafon-icon{font-size:36px}
+.megafon-title-row h2{margin:0 0 4px;font-size:18px}
+.megafon-title-row p{margin:0;font-size:12px;color:var(--muted)}
+.megafon-status-badge{font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;padding:6px 14px;border-radius:20px;background:rgba(255,255,255,0.05);border:1px solid var(--line)}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.status-dot.online{background:#10b981;box-shadow:0 0 8px #10b981}
+.status-dot.offline{background:#6b7280}
+.status-dot.live-pulse{background:#ef4444;box-shadow:0 0 10px #ef4444;animation:pulse 1s infinite}
+@keyframes pulse{0%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.3)}100%{opacity:1;transform:scale(1)}}
+
+.megafon-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:14px}
+.megafon-tile{display:flex;flex-direction:column;align-items:flex-start;padding:18px;background:var(--card);border:1px solid var(--line);border-radius:14px;cursor:pointer;text-align:left;transition:all .2s ease}
+.megafon-tile:hover{border-color:var(--accent);transform:translateY(-2px)}
+.megafon-tile .tile-icon{font-size:28px;margin-bottom:8px}
+.megafon-tile .tile-title{font-size:15px;color:var(--ink);margin-bottom:4px}
+.megafon-tile .tile-desc{font-size:11px;color:var(--muted);margin-bottom:12px}
+.megafon-tile .tile-play-indicator{font-size:10px;font-weight:700;color:var(--accent);letter-spacing:0.5px}
+.playing-pulse{border-color:var(--accent)!important;box-shadow:0 0 15px rgba(121,223,194,0.4)!important;transform:scale(0.98)!important}
+
+.megafon-lower-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:750px){.megafon-lower-grid{grid-template-columns:1fr}}
+.mic-button-wrap{display:flex;flex-direction:column;align-items:center;padding:20px 0;gap:12px}
+.megafon-ptt-btn{width:84px;height:84px;border-radius:50%;border:2px solid var(--accent);background:rgba(121,223,194,0.15);font-size:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+.megafon-ptt-btn:active,.recording-active{background:#ef4444!important;border-color:#ef4444!important;box-shadow:0 0 20px #ef4444!important;transform:scale(0.92)!important}
+.mic-status-text{font-size:12px;font-weight:600;color:var(--muted)}
+.cabin-actions{display:flex;gap:10px;margin:14px 0}
+.cabin-btn{min-height:50px;font-size:14px;font-weight:600;border-radius:10px;width:100%}
+.megafon-spec-hint{display:flex;flex-direction:column;gap:4px;font-size:10px;color:var(--muted);padding-top:12px;border-top:1px solid var(--line)}
+

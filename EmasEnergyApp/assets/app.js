@@ -13,27 +13,34 @@ const icons = {
   air_fresh: '<path d="M3 12h14 M13 8l4 4-4 4 M21 5v14"/>',
   air_recirc: '<path d="M4 12a8 8 0 0 1 14-5.3L20 8 M20 3v5h-5 M20 12a8 8 0 0 1-14 5.3L4 16 M4 21v-5h5"/>',
   defog: '<path d="M3 5c2 4 14 4 18 0v14c-4-4-16-4-18 0V5z M8 8c.5 1.5-.5 2.5 0 4 M12 8c.5 1.5-.5 2.5 0 4 M16 8c.5 1.5-.5 2.5 0 4"/>',
-  drivemode: '<path d="M12 14l3.5-3.5"/><path d="M3.34 16.5A9.5 9.5 0 1 1 20.66 16.5"/><circle cx="12" cy="14" r="2" fill="currentColor"/><path d="M6 14h1.5 M16.5 14H18 M8 8.5l1 1 M15 9.5l1-1 M12 5v1.5"/>'
+  drivemode: '<path d="M12 14l3.5-3.5"/><path d="M3.34 16.5A9.5 9.5 0 1 1 20.66 16.5"/><circle cx="12" cy="14" r="2" fill="currentColor"/><path d="M6 14h1.5 M16.5 14H18 M8 8.5l1 1 M15 9.5l1-1 M12 5v1.5"/>',
+  megafon: '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>'
 };
 
 const icon = (name) => `<svg class="icon automotive-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name] || icons.power}</svg>`;
 
 // Vehicle access is exclusively through the reviewed native bridge. No browser HTTP fallback.
-const vehicleTransport = SafeVehicle.nativeTransport(window);
+const vehicleTransport = window.CompanionConnection && window.CompanionConnection.transport || SafeVehicle.nativeTransport(window);
 async function vehicleFetch(path, options = {}) {
   const method = options.method || 'GET';
   const isAvas = typeof path === 'string' && path.startsWith('/api/avas');
   const isBoot = typeof path === 'string' && (path.startsWith('/api/frunk') || path.startsWith('/api/trunk'));
   const isAllowedGet = method === 'GET' && ['/api/energy', '/api/status', '/api/drive_mode'].includes(path);
-  if (!isAvas && !isAllowedGet && !isBoot) {
+  const isWindow = method === 'GET' && ['/api/window?action=crack', '/api/window?action=close'].includes(path);
+  if (!isAvas && !isAllowedGet && !isBoot && !isWindow) {
     throw new Error('Kawalan ini belum tersedia dalam calon ini.');
   }
   const body = options.body ? (typeof options.body === 'string' ? options.body : JSON.stringify(options.body)) : '';
   const response = await vehicleTransport(method, path, body);
-  return { ok: response.status === 200, status: response.status, json: async () => response.body };
+  return { ok: response.status === 200 && response.body && response.body.ok !== false, status: response.status, json: async () => response.body };
 }
 function getApiBase() { return '/offline-preview'; } // Media preview only; never a vehicle address.
 let batteryReading = { source: null, soc: null, voltage: null, current: null, observedAt: null };
+let telemetryObservedAt = 0;
+function canControlVehicle() { return vehicleTransport.available() && telemetryObservedAt > 0 && Date.now() - telemetryObservedAt <= 15000; }
+function updateControlAvailability() {
+  document.querySelectorAll('[data-action^="window-"]').forEach(button => { button.disabled = windowCommandBusy || !canControlVehicle(); });
+}
 function energyReadings() {
   const live = state.isLive;
   const soc = live && Number.isFinite(batteryReading.soc) ? batteryReading.soc : null;
@@ -74,8 +81,8 @@ function overviewCockpitPage() {
   const allDoorsClosed = knownDoorCount === doorItems.length && openDoors === 0;
 
   // Seatbelt & Passenger Occupancy Logic (Seat weight sensor + belt)
-  let cabinPresence = 'Pemandu Sahaja';
-  let cabinSub = 'Kerusi penumpang kosong';
+  let cabinPresence = 'Tiada data sensor';
+  let cabinSub = 'Kehadiran penumpang belum diketahui';
   let cabinBadge = '';
   const sb = state.seatbelt || {};
   if (sb.passenger === 1) {
@@ -83,17 +90,13 @@ function overviewCockpitPage() {
     cabinSub = 'Tali pinggang belum dipasang!';
     cabinBadge = '<span class="badge" style="background:rgba(239,68,68,0.25); color:#ef4444; border:1px solid #ef4444; font-size:10px;">AMARAN TALI PINGGANG</span>';
   } else if (sb.passenger === 0 && sb.driver === 0) {
-    cabinPresence = 'Pemandu & Penumpang';
+    cabinPresence = 'Status tali pinggang';
     cabinSub = 'Tali pinggang dipasang selamat';
     cabinBadge = '<span class="badge" style="background:rgba(16,185,129,0.2); color:#10b981; font-size:10px;">SELAMAT</span>';
   } else if (sb.driver === 1) {
     cabinPresence = 'Pemandu';
     cabinSub = 'Sila pasang tali pinggang keledar';
     cabinBadge = '<span class="badge" style="background:rgba(245,158,11,0.25); color:#f59e0b; font-size:10px;">TALI PINGGANG</span>';
-  } else if (liveVehicle) {
-    cabinPresence = 'Pemandu Sahaja';
-    cabinSub = 'Sensor kerusi & tali pinggang aktif';
-    cabinBadge = '<span class="badge" style="background:rgba(255,255,255,0.08); font-size:10px;">SENSOR AKTIF</span>';
   }
 
   return `<section class="vehicle-status-board" aria-label="Status kenderaan">
@@ -103,7 +106,7 @@ function overviewCockpitPage() {
       <div>
         <span class="gear-chip"><b>${gear}</b> ${gearName}</span>
         <span class="speed-chip">${speed === null ? '— km/j' : `${d.value(speed, 0)} km/j`}</span>
-        <span class="speed-chip" style="color:var(--muted); font-size:12px;">${state.ambientTemp ? `${state.ambientTemp.toFixed(1)}°C Luar` : '28.0°C Luar'}${state.setpoint ? ` · A/C ${state.setpoint.toFixed(1)}°C Sasaran` : ''}</span>
+        <span class="speed-chip" style="color:var(--muted); font-size:12px;">${Number.isFinite(state.ambientTemp) && liveVehicle ? `${state.ambientTemp.toFixed(1)}°C Luar` : '— °C Luar'}</span>
       </div>
     </article>
     <article class="vehicle-status-tile cabin-door-card" style="display:flex; flex-direction:column; justify-content:center; gap:8px;">
@@ -120,11 +123,11 @@ function overviewCockpitPage() {
       <div class="cabin-belt-summary">
         <div class="belt-chip ${sb.driver === 0 ? 'belt-ok' : sb.driver === 1 ? 'belt-warn' : ''}">
           <span>TALI PINGGANG PEMANDU</span>
-          <strong>${sb.driver === 0 ? '✓ DIPASANG' : sb.driver === 1 ? '⚠ SILA PASANG' : 'SIAP SEDIA'}</strong>
+          <strong>${sb.driver === 0 ? '✓ DIPASANG' : sb.driver === 1 ? '⚠ SILA PASANG' : 'TIADA DATA'}</strong>
         </div>
         <div class="belt-chip ${sb.passenger === 0 ? 'belt-ok' : sb.passenger === 1 ? 'belt-warn' : ''}">
           <span>TALI PINGGANG PENUMPANG</span>
-          <strong>${sb.passenger === 0 ? '✓ DIPASANG' : sb.passenger === 1 ? '⚠ SILA PASANG' : 'KERUSI KOSONG'}</strong>
+          <strong>${sb.passenger === 0 ? '✓ DIPASANG' : sb.passenger === 1 ? '⚠ SILA PASANG' : 'TIADA DATA'}</strong>
         </div>
       </div>
     </article>
@@ -136,7 +139,7 @@ function overviewCockpitPage() {
           <h2>Status Pintu, Frunk & But</h2>
         </div>
         <span class="tpms-source" style="font-weight:600; ${allDoorsClosed ? 'color:#10b981; background:rgba(16,185,129,0.12);' : 'color:#ef4444; background:rgba(239,68,68,0.18);'}">
-          ${allDoorsClosed ? '✓ SEMUA TERTUTUP' : `⚠ ${openDoors} TERBUKA`}
+          ${allDoorsClosed ? '✓ SEMUA TERTUTUP' : openDoors === null ? 'TIADA DATA PINTU' : openDoors > 0 ? `⚠ ${openDoors} TERBUKA` : 'SEBAHAGIAN SENSOR SAHAJA'}
         </span>
       </div>
       <div class="door-status-grid">
@@ -150,16 +153,18 @@ function overviewCockpitPage() {
             ? (open ? (isTrunk ? '👆 Tekan Tutup' : 'Terbuka') : '👆 Tekan Buka')
             : (!known ? 'Sensor Menunggu' : open ? 'Pintu Renggang' : 'Rapat Selamat');
           const actionAttr = isFrunk ? 'data-action="open-frunk"' : isTrunk ? 'data-action="toggle-trunk"' : '';
-          const actionRole = isClickable ? 'role="button" tabindex="0"' : '';
+          const canControl = isClickable && canControlVehicle() && known && !bootCommandBusy;
+          const tag = isClickable ? 'button' : 'article';
+          const actionRole = isClickable ? `type="button" ${canControl ? '' : 'disabled'}` : '';
           return `
-            <article class="tpms-reading door-status-tile ${isClickable ? 'clickable-boot-tile' : ''} ${known ? (open ? 'is-open' : 'is-closed') : 'is-unknown'}" ${actionAttr} ${actionRole}>
+            <${tag} class="tpms-reading door-status-tile ${isClickable ? 'clickable-boot-tile' : ''} ${known ? (open ? 'is-open' : 'is-closed') : 'is-unknown'}" ${actionAttr} ${actionRole}>
               <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span>${code} · ${label}</span>
                 ${isClickable ? `<span class="boot-badge">${isFrunk ? 'BUKA' : (open ? 'TUTUP' : 'BUKA')}</span>` : ''}
               </div>
               <strong style="color:${open ? '#ef4444' : '#10b981'}; font-size:15px;">${statusText}</strong>
               <small style="color:${isClickable ? 'var(--accent, #6ee7b7)' : (open ? '#ff7b72' : '#8f9e94')}; font-weight:${isClickable ? '600' : 'normal'};">${subText}</small>
-            </article>
+            </${tag}>
           `;
         }).join('')}
       </div>
@@ -242,7 +247,8 @@ const pages = [
   ['power', 'Power Flow'],
   ['trip', 'Trip'],
   ['climate', 'Climate'],
-  ['controls', 'Controls']
+  ['controls', 'Controls'],
+  ['megafon', 'Megafon']
 ];
 
 const state = {
@@ -250,7 +256,7 @@ const state = {
   camp: false,
   vent: false,
   power: true,
-  avas: 3,
+  avas: null,
   avasSlot: 3,
   avasConfig: {
     1: { name: 'Slot 1 (Galaxy)', custom_name: 'Paddle Pop', volume: [0, 2, 5, 6, 7, 2, 0], pitch: [100, 100, 100, 100, 100, 100, 100] },
@@ -268,6 +274,7 @@ const state = {
     distance2Km: null
   },
   fan: 1,
+  hvacDataAvailable: false,
   fanOff: false,
   airMode: 0,
   scenario: 'drive',
@@ -556,12 +563,6 @@ function tripPage() {
     ['trip-distance2', 'Jarak Trip 2', tripNum(t.distance2Km, 1), 'km']
   ];
 
-  const dist = typeof t.distanceKm === 'number' && t.distanceKm > 0 ? t.distanceKm : 0;
-  const energy = typeof t.energyKwh === 'number' && t.energyKwh > 0 ? t.energyKwh : 0;
-  const estCostRm = (energy * 0.218).toFixed(2);
-  const petrolEquivRm = (dist * 0.07 * 2.05).toFixed(2);
-  const savingsRm = Math.max(0, parseFloat(petrolEquivRm) - parseFloat(estCostRm)).toFixed(2);
-
   return `
     <div class="detail-grid">
       ${cards.map(([id, label, val, unit], index) => `
@@ -577,50 +578,7 @@ function tripPage() {
 
     <!-- Analisis Kecekapan Tenaga & Penjimatan Perjalanan (Zero duplicate graph!) -->
     <div class="trip-analysis-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-top:16px;">
-      <section class="card stat-card" style="padding:18px;">
-        <div class="card-head" style="margin-bottom:12px;">
-          <h2 style="font-size:15px;">Analisis Kos & Kecekapan EV</h2>
-          <span class="badge" style="background:rgba(16,185,129,0.18); color:#10b981;">PENAWARAN CEKAP</span>
-        </div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-          <div class="metric">
-            <small>Anggaran Kos Elektrik</small>
-            <strong style="color:#3db66e;">RM ${estCostRm}</strong>
-            <small style="font-size:11px; color:var(--muted);">Kadar Domestik TNB</small>
-          </div>
-          <div class="metric">
-            <small>Penjimatan vs Petrol</small>
-            <strong style="color:#e08a30;">+RM ${savingsRm}</strong>
-            <small style="font-size:11px; color:var(--muted);">Banding RON95 (7L/100km)</small>
-          </div>
-        </div>
-        <div style="margin-top:12px; padding-top:10px; border-top:1px solid var(--line); font-size:12px; color:var(--muted);">
-          Kecekapan ${tripNum(t.consumptionKwh100, 1)} kWh/100 km meletakkan Proton e.MAS 5 dalam kelas EV bandar paling jimat tenaga.
-        </div>
-      </section>
-
-      <section class="card stat-card" style="padding:18px;">
-        <div class="card-head" style="margin-bottom:12px;">
-          <h2 style="font-size:15px;">Pecahan Pemulihan Tenaga (Regen)</h2>
-          <span class="badge" style="background:rgba(224,138,48,0.18); color:#e08a30;">CRBS REKUPERASI</span>
-        </div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-          <div class="metric">
-            <small>Kadar Pemulihan Brek</small>
-            <strong style="color:#3db66e;">~22.4 %</strong>
-            <small style="font-size:11px; color:var(--muted);">Tenaga Masuk Semula</small>
-          </div>
-          <div class="metric">
-            <small>Pecahan Beban HVAC</small>
-            <strong>~12 %</strong>
-            <small style="font-size:11px; color:var(--muted);">Klimat Kabin</small>
-          </div>
-        </div>
-        <div style="margin-top:12px; padding-top:10px; border-top:1px solid var(--line); font-size:12px; color:var(--muted);">
-          Sistem motor magnet kekal berputar secara dinamik menjana tenaga elektrik setiap kali pedal dilepaskan atau brek ditekan.
-        </div>
-      </section>
-
+      <section class="card"><h2>Data perjalanan</h2><p>Kos, peratus rekuperasi dan pecahan beban belum disediakan oleh daemon. Anggaran akan memerlukan kadar pengguna dan sampel tenaga yang sah.</p></section>
       <section class="card stat-card" style="padding:18px;">
         <div class="card-head" style="margin-bottom:12px;">
           <h2 style="font-size:15px;">Status Pengesanan Trip (Odo)</h2>
@@ -637,7 +595,7 @@ function tripPage() {
           </div>
           <div style="display:flex; justify-content:space-between; font-size:13px;">
             <span style="color:var(--muted);">Baki Jarak DTE:</span>
-            <strong style="color:#3db66e;">${state.range || 339} km</strong>
+            <strong style="color:#3db66e;">${state.isLive && Number.isFinite(state.range) ? state.range.toFixed(0) : '—'} km</strong>
           </div>
         </div>
       </section>
@@ -652,6 +610,7 @@ function formatSetpoint(v) {
 }
 
 function climatePage() {
+  if (!state.hvacDataAvailable) return '<section class="card"><h2>Keadaan penghawa dingin</h2><p>Tiada bacaan penghawa dingin daripada daemon. Kawalan belum tersedia melalui kontrak semasa.</p></section>';
   const airModes = ['Fresh Air', 'Recirculation', 'Defogger'];
   return `
     <div class="detail-grid">
@@ -696,7 +655,7 @@ function climatePage() {
         </div>
       </section>
       <section class="card">
-        ${metric('Ambient Temperature', state.ambientTemp.toFixed(1), '°C')}
+        ${metric('Ambient Temperature', state.isLive && Number.isFinite(state.ambientTemp) ? state.ambientTemp.toFixed(1) : '—', '°C')}
       </section>
       <section class="card">
         ${metric('A/C Compressor Load', state.hvacPower > 40 ? Math.round(state.hvacPower - 40) : 0, 'W')}
@@ -910,15 +869,14 @@ window.saveAvasTuningDirect = function(silent = false) {
 function controlsPage() {
   return `
     <div class="controls-grid">
-      <section class="card control-card">
-        ${icon('camp')}
-        <h2>Native Camp Mode</h2>
-        ${quickButton('camp', 'Camp Mode', state.camp ? 'Active' : 'Standby', state.camp)}
-      </section>
+      <section class="card control-card lock-sound-card" id="lock-sound-panel"></section>
       <section class="card control-card">
         ${icon('vent')}
-        <h2>One-Touch Heat Vent</h2>
-        ${quickButton('vent', 'Heat Vent', state.vent ? 'Windows 5%' : 'Closed', state.vent)}
+        <h2>Pengudaraan cermin</h2>
+        <p>Buka sedikit untuk pengudaraan atau tutup semua cermin. Kedudukan sebenar perlu diperiksa pada kereta.</p>
+        <div class="lock-sound-actions"><button type="button" class="secondary" data-action="window-crack" ${canControlVehicle() ? '' : 'disabled'}>Buka sedikit</button>
+        <button type="button" class="primary" data-action="window-close" ${canControlVehicle() ? '' : 'disabled'}>Tutup semua</button></div>
+        <p role="status" id="window-command-status">Belum ada arahan dihantar.</p>
       </section>
       <section class="card control-card avas-card">
         <div class="avas-header">
@@ -926,7 +884,7 @@ function controlsPage() {
             ${icon('sound')}
             <h2>AVAS Sound & Tuning Curve</h2>
           </div>
-          <span class="badge">${state.avas === 0 ? 'MUTED' : `SLOT ${state.avas} AKTIF`}</span>
+          <span class="badge">${state.avas === null ? 'BELUM DISAHKAN' : state.avas === 0 ? 'MUTED' : `SLOT ${state.avas} AKTIF`}</span>
         </div>
 
         <!-- 4 Mode Buttons: OFF, SLOT 1, SLOT 2, SLOT 3 -->
@@ -990,12 +948,12 @@ function controlsPage() {
             <div class="avas-actions-bar">
               <div class="avas-presets-group">
                 <span style="font-size:11px;color:var(--muted);font-weight:600;">Preset:</span>
-                <button type="button" class="preset-btn" data-action="apply-preset" data-preset="gentle" onclick="applyPresetDirect('gentle')">Lembut</button>
-                <button type="button" class="preset-btn" data-action="apply-preset" data-preset="balanced" onclick="applyPresetDirect('balanced')">Seimbang</button>
-                <button type="button" class="preset-btn" data-action="apply-preset" data-preset="sport" onclick="applyPresetDirect('sport')">Sporty</button>
+                <button type="button" class="preset-btn" data-action="apply-preset" data-preset="gentle">Lembut</button>
+                <button type="button" class="preset-btn" data-action="apply-preset" data-preset="balanced">Seimbang</button>
+                <button type="button" class="preset-btn" data-action="apply-preset" data-preset="sport">Sporty</button>
               </div>
               <div class="avas-main-btns">
-                <button type="button" class="secondary" data-action="open-usb-modal" onclick="openUsbModal()" style="font-size:12px;padding:8px 12px;">📁 Muzik USB</button>
+                <button type="button" class="secondary" data-action="open-usb-modal" style="font-size:12px;padding:8px 12px;">📁 Muzik USB</button>
                 <button type="button" class="primary" data-action="save-tuning" onclick="saveAvasTuningDirect()" style="font-size:12px;padding:8px 14px;">💾 Terapkan Tuning</button>
               </div>
             </div>
@@ -1040,7 +998,8 @@ const renders = {
   power: powerPage,
   trip: tripPage,
   climate: climatePage,
-  controls: controlsPage
+  controls: controlsPage,
+  megafon: () => window.MegafonUI ? window.MegafonUI.render() : '<p>Memuatkan Megafon...</p>'
 };
 
 const titles = {
@@ -1049,7 +1008,8 @@ const titles = {
   power: ['02 / POWER FLOW', 'Aliran kuasa bateri'],
   trip: ['03 / TRIP', 'Trip komputer kereta'],
   climate: ['04 / CLIMATE', 'Cabin Climate Control'],
-  controls: ['05 / CONTROLS', 'Quick Controls']
+  controls: ['05 / CONTROLS', 'Quick Controls'],
+  megafon: ['06 / MEGAFON LUAR', 'Pusat Kawalan Suara & Speaker Bumper']
 };
 
 function render() {
@@ -1079,6 +1039,21 @@ function render() {
       <span class="pill"><i class="connection-dot"></i>${modeBadge}</span>
     </div>
     ${page === 'overview' ? overviewCockpitPage() : page === 'battery' ? hvBatteryPage() : page === 'power' ? powerFlowPage() : renders[page] ? renders[page]() : ''}`;
+  if (page === 'controls' && window.LockSoundUI) window.LockSoundUI.mount(document.getElementById('lock-sound-panel'));
+  if (page === 'megafon' && window.MegafonUI) window.MegafonUI.mount();
+  // These legacy bridge methods are explicitly blocked by the current Android build.
+  for (const action of ['camp','vent','power','fan-off','set-air','cooler','warmer','temp-preset','fan-down','fan-up']) {
+    document.querySelectorAll(`[data-action="${action}"]`).forEach(button => {
+      button.disabled = true; button.title = 'Kawalan belum tersedia dalam kontrak daemon semasa.';
+    });
+  }
+  document.querySelectorAll('#setpoint-slider,#fan-slider').forEach(input => { input.disabled = true; });
+  if (window.CompanionConnection && window.CompanionConnection.client) {
+    document.querySelectorAll('[data-action="set-avas"],[data-action="apply-preset"],[data-action="open-usb-modal"],[data-action="save-tuning"],[data-action="tuning-slider"]').forEach(button => {
+      button.disabled = true; button.title = 'Pengurusan AVAS tersedia melalui aplikasi IHU.';
+    });
+  }
+  if (typeof drawMotorGraph === 'function') drawMotorGraph();
 }
 let toastTimer;
 function toast(s) {
@@ -1089,29 +1064,53 @@ function toast(s) {
   toastTimer = setTimeout(() => e.classList.remove('visible'), 3000);
 }
 
+let windowCommandBusy = false;
+let bootCommandBusy = false;
 document.addEventListener('click', async (e) => {
   const b = e.target.closest('[data-action]');
-  if (!b) return;
+  if (!b || b.disabled) return;
   const a = b.dataset.action;
+  if (['window-crack','window-close','open-frunk','toggle-trunk'].includes(a) && !canControlVehicle()) { toast('Bacaan sambungan sudah luput. Tunggu kereta tersambung semula.'); return; }
+  if (a === 'window-crack' || a === 'window-close') {
+    if (windowCommandBusy) return;
+    windowCommandBusy = true;
+    const output = document.getElementById('window-command-status');
+    const controls = Array.from(document.querySelectorAll('[data-action^="window-"]'));
+    controls.forEach(button => { button.disabled = true; });
+    if (output) output.textContent = 'Menghantar arahan…';
+    try {
+      const response = await vehicleFetch('/api/window?action=' + (a === 'window-close' ? 'close' : 'crack'));
+      const data = await response.json();
+      if (!response.ok || data.ok !== true) throw new Error('DAEMON_REJECTED');
+      if (output) output.textContent = 'Arahan dihantar. Semak kedudukan cermin pada kereta.';
+      toast('Arahan cermin dihantar. Kedudukan belum disahkan.');
+    } catch (error) {
+      if (output) output.textContent = 'Tiada pengesahan. Arahan mungkin telah dihantar; semak kereta sebelum mencuba lagi.';
+      toast('Cermin: semak sambungan dan keadaan kereta.');
+    } finally { windowCommandBusy = false; updateControlAvailability(); }
+    return;
+  }
   if (a === 'open-frunk') {
+    if (bootCommandBusy) return;
     if (confirm('Buka bonet depan (Frunk)? Sila pastikan keselamatan kenderaan.')) {
+      bootCommandBusy = true; b.disabled = true;
       toast('Menghantar arahan buka Frunk...');
       try {
         const res = await vehicleFetch('/api/frunk/open');
         if (res.ok) {
-          toast('✓ Kunci bonet depan dibuka');
-          state.doors.frunk = true;
-          render();
+          toast('Arahan frunk dihantar. Menunggu bacaan sensor.');
         } else {
           toast('Gagal membuka bonet depan');
         }
       } catch (err) {
         toast('Ralat: ' + err.message);
-      }
+      } finally { bootCommandBusy = false; b.disabled = false; }
     }
     return;
   }
   if (a === 'toggle-trunk') {
+    if (bootCommandBusy) return;
+    bootCommandBusy = true; b.disabled = true;
     const isCurrentlyOpen = state.doors && state.doors.trunk;
     const actionName = isCurrentlyOpen ? 'menutup' : 'membuka';
     toast(`Menghantar arahan ${actionName} but belakang...`);
@@ -1119,14 +1118,12 @@ document.addEventListener('click', async (e) => {
       const res = await vehicleFetch('/api/trunk/toggle');
       if (res.ok) {
         toast(`✓ Arahan ${actionName} but dihantar`);
-        state.doors.trunk = !isCurrentlyOpen;
-        render();
       } else {
         toast('Gagal mengawal but');
       }
     } catch (err) {
       toast('Ralat: ' + err.message);
-    }
+    } finally { bootCommandBusy = false; b.disabled = false; }
     return;
   }
   if (a === 'vent') {
@@ -1305,7 +1302,7 @@ function dispatchHvacRecirc(mode) {
 }
 
 document.addEventListener('change', (e) => {
-  if (e.target.closest('#main')) return;
+  if (e.target.disabled) return;
   const slider = e.target.closest('[data-action="tuning-slider"]');
   if (slider) {
     clearTimeout(tuningDebounceTimer);
@@ -1323,7 +1320,7 @@ document.addEventListener('change', (e) => {
 });
 
 document.addEventListener('input', (e) => {
-  if (e.target.closest('#main')) return;
+  if (e.target.disabled) return;
   const slider = e.target.closest('[data-action="tuning-slider"]');
   if (slider) {
     const idx = parseInt(slider.dataset.index, 10);
@@ -1383,10 +1380,7 @@ try {
   savedTheme = localStorage.getItem('emas-theme');
 } catch {}
 
-if (!savedTheme) {
-  const hr = new Date().getHours();
-  savedTheme = (hr >= 7 && hr < 19) ? 'light' : 'dark';
-}
+if (!savedTheme) savedTheme = 'dark';
 theme(savedTheme === 'dark' ? 'dark' : 'light');
 
 document.getElementById('theme').onclick = () => {
@@ -1400,7 +1394,7 @@ function clock() {
   }
 }
 clock();
-setInterval(clock, 30000);
+let clockTimer = null;
 
 window.addEventListener('hashchange', () => {
   render();
@@ -1409,338 +1403,97 @@ window.addEventListener('hashchange', () => {
 
 // Telemetry Polling & Live DOM Engine
 function updateLiveTelemetryDom() {
-  const p = getPowerValues();
-  const isRegen = p.net < 0;
-
-  // Hero battery
-  const heroSoc = document.getElementById('live-hero-soc');
-  if (heroSoc) heroSoc.innerHTML = `${state.soc.toFixed(1)}<small> %</small>`;
-
-  const heroRange = document.getElementById('live-hero-range');
-  if (heroRange) heroRange.innerHTML = `${state.range} <small>km</small>`;
-
-  const heroTemp = document.getElementById('live-hero-temp');
-  if (heroTemp) heroTemp.innerHTML = `${state.battTemp.toFixed(1)} <span>°C</span>`;
-
-  const heroTrack = document.getElementById('live-battery-track');
-  if (heroTrack) {
-    const activeSegments = Math.round((state.soc / 100) * 24);
-    heroTrack.innerHTML = Array.from({ length: 24 }, (_, i) => `<i class="${i >= activeSegments ? 'empty' : ''}"></i>`).join('');
-  }
-
-  // Gear badge
-  const gearBadge = document.getElementById('live-gear-badge');
-  if (gearBadge) {
-    const gearText = state.gear === 'P' ? 'P · PARK' : (state.gear === 'R' ? 'R · REVERSE' : (state.gear === 'N' ? 'N · NEUTRAL' : 'D · DRIVE'));
-    gearBadge.textContent = state.power ? gearText : 'HV OFF';
-  }
-
-  // Power Flow Card
-  const flowTotal = document.getElementById('live-flow-total');
-  if (flowTotal) {
-    flowTotal.innerHTML = `${p.net > 0 ? '+' : ''}${p.net.toFixed(2)} <span>kW</span>`;
-    flowTotal.style.color = isRegen ? '#4e8c56' : 'inherit';
-  }
-
-  const flowHint = document.getElementById('live-flow-hint');
-  if (flowHint) {
-    flowHint.textContent = isRegen ? 'REGENERATIVE BRAKING' : (p.net > 0.3 ? 'TRACTION & AUX POWER' : 'STANDBY & AUX LOAD');
-  }
-
-  const motorVal = document.getElementById('live-motor-val');
-  if (motorVal) motorVal.textContent = `${p.motor >= 0 ? '+' : ''}${p.motor.toFixed(1)} kW`;
-
-  const motorBar = document.getElementById('live-motor-bar');
-  if (motorBar) motorBar.style.width = `${Math.min(100, (Math.abs(p.motor) / 85) * 100)}%`;
-
-  const hvacVal = document.getElementById('live-hvac-val');
-  if (hvacVal) hvacVal.textContent = `${Math.round(p.hvac)} W`;
-
-  const hvacBar = document.getElementById('live-hvac-bar');
-  if (hvacBar) hvacBar.style.width = `${Math.min(100, (p.hvac / 2500) * 100)}%`;
-
-  const auxVal = document.getElementById('live-aux-val');
-  if (auxVal) auxVal.textContent = `${Math.round(p.aux)} W`;
-
-  const auxBar = document.getElementById('live-aux-bar');
-  if (auxBar) auxBar.style.width = `${Math.min(100, (p.aux / 1000) * 100)}%`;
-
-  // Power Page stats
-  const motorTempEl = document.getElementById('live-motor-temp');
-  if (motorTempEl) motorTempEl.innerHTML = `${state.motorTemp.toFixed(0)} <span>°C</span>`;
-
-  const inverterTempEl = document.getElementById('live-inverter-temp');
-  if (inverterTempEl) inverterTempEl.innerHTML = `${state.inverterTemp.toFixed(0)} <span>°C</span>`;
-
-  const busVoltEl = document.getElementById('live-bus-volt');
-  if (busVoltEl) busVoltEl.innerHTML = `${p.v.toFixed(1)} <span>V</span>`;
-
-  const busCurrEl = document.getElementById('live-bus-curr');
-  if (busCurrEl) busCurrEl.innerHTML = `${p.a.toFixed(1)} <span>A</span>`;
-
-  // Live Power Flow Canvas Board
-  const pfCanvas = document.getElementById('pf-canvas');
-  if (pfCanvas) {
-    const d = energyReadings();
-    const isOut = d.current !== null && d.current > 0.1;
-    const isIn = d.current !== null && d.current < -0.1;
-    const isIdle = d.current !== null && !isOut && !isIn;
-    const direction = d.current === null ? 'unknown' : isOut ? 'out' : isIn ? 'in' : 'idle';
-    
-    pfCanvas.className = `flow-canvas direction-${direction}`;
-    
-    const pfHeading = document.getElementById('pf-heading');
-    if (pfHeading) {
-      pfHeading.textContent = isOut ? 'KUASA KELUAR DARI PEK' : isIn ? 'KUASA MASUK KE PEK' : isIdle ? 'ARUS HAMPIR SIFAR' : 'ARAH ALIRAN BELUM DIKETAHUI';
-      pfHeading.style.color = isOut ? '#ef4444' : isIn ? '#10b981' : 'inherit';
-    }
-    
-    const pfArrow = document.getElementById('pf-arrow');
-    if (pfArrow) pfArrow.textContent = isOut ? '▶' : isIn ? '◀' : '↔';
-
-    const pfLabel = document.getElementById('pf-label');
-    if (pfLabel) pfLabel.textContent = isOut ? 'ARUS KELUAR · BEBAN & TRAKSI' : isIn ? 'ARUS MASUK · CAS & REGEN' : isIdle ? 'TIADA ALIRAN BERSIH' : 'MENUNGGU ARUS';
-
-    const pfSoc = document.getElementById('pf-soc');
-    if (pfSoc) pfSoc.textContent = `${d.value(d.soc, 0)}% CAS`;
-
-    const pfPower = document.getElementById('pf-power');
-    if (pfPower) pfPower.innerHTML = `${d.value(d.power !== null ? Math.abs(d.power) : null, 2)}<small> kW</small>`;
-
-    const pfFormula = document.getElementById('pf-formula');
-    if (pfFormula) pfFormula.textContent = `${d.voltage !== null ? d.voltage.toFixed(1) : '—'} V × ${d.current !== null ? Math.abs(d.current).toFixed(1) : '—'} A`;
-
-    const pfFootNote = document.getElementById('pf-foot-note');
-    if (pfFootNote) {
-      pfFootNote.textContent = isOut 
-        ? '🔴 Arus mengalir keluar dari pek bateri voltan tinggi untuk memacu motor traksi dan beban kenderaan.'
-        : isIn 
-          ? '🟢 Arus mengalir masuk ke pek bateri voltan tinggi (pengecasan AC/DC atau brek regeneratif).'
-          : '⚪ Arus bateri hampir sifar (kenderaan bersedia / tiada beban ketara).';
-    }
-
-    const pfTime = document.getElementById('pf-time');
-    if (pfTime) pfTime.textContent = `Kemas kini: ${d.time}`;
-  }
-
-  // Vehicle bottom target temp
-  const targetEl = document.getElementById('live-target-temp');
-  if (targetEl) targetEl.textContent = formatSetpoint(state.setpoint);
-
-  // Climate Page elements (only sync if user is not currently interacting)
-  if (Date.now() > userInteractingHvacUntil) {
-    const setpointValEl = document.getElementById('setpoint-value');
-    const setpointSliderEl = document.getElementById('setpoint-slider');
-    if (setpointValEl && document.activeElement !== setpointSliderEl) {
-      setpointValEl.textContent = formatSetpoint(state.setpoint);
-    }
-    if (setpointSliderEl && document.activeElement !== setpointSliderEl) {
-      setpointSliderEl.value = Math.min(24, Math.max(17, Math.round(state.setpoint)));
-    }
-
-    const fanValEl = document.getElementById('fan-value');
-    const fanSliderEl = document.getElementById('fan-slider');
-    if (fanValEl && document.activeElement !== fanSliderEl) {
-      fanValEl.textContent = state.fanOff ? 'OFF' : state.fan;
-    }
-    if (fanSliderEl && document.activeElement !== fanSliderEl) {
-      fanSliderEl.value = state.fan;
-      fanSliderEl.disabled = state.fanOff;
-    }
-  }
-
-  const tripDistance = document.getElementById('trip-distance');
-  if (tripDistance) tripDistance.innerHTML = `${tripNum(state.trip.distanceKm, 1)} <span>km</span>`;
-  const tripDuration = document.getElementById('trip-duration');
-  if (tripDuration) tripDuration.textContent = formatTripDuration(state.trip.durationMin);
-  const tripSpeed = document.getElementById('trip-speed');
-  if (tripSpeed) tripSpeed.innerHTML = `${typeof state.trip.avgSpeedKmh === 'number' ? state.trip.avgSpeedKmh : '—'} <span>km/j</span>`;
-  const tripUse = document.getElementById('trip-use');
-  if (tripUse) tripUse.innerHTML = `${tripNum(state.trip.consumptionKwh100, 1)} <span>kWh/100 km</span>`;
-  const tripEnergy = document.getElementById('trip-energy');
-  if (tripEnergy) tripEnergy.innerHTML = `${tripNum(state.trip.energyKwh, 2)} <span>kWh</span>`;
-  const tripDistance2 = document.getElementById('trip-distance2');
-  if (tripDistance2) tripDistance2.innerHTML = `${tripNum(state.trip.distance2Km, 1)} <span>km</span>`;
-
-  // Outside temp
-  const outEl = document.getElementById('outside-temp');
-  if (outEl) outEl.innerHTML = `${Math.round(state.ambientTemp)}° <span>Luar</span>`;
-
-  // Status pill
-  const pill = document.getElementById('status-pill');
-  if (pill) {
-    pill.innerHTML = `<i></i> ${state.isLive ? 'BACAAN TERAKHIR' : 'DATA CONTOH'}`;
-    pill.style.borderColor = state.isLive ? 'var(--accent)' : '';
-  }
-
-  // Update theme charge variable
-  const mainEl = document.getElementById('main');
-  if (mainEl) mainEl.style.setProperty('--charge', `${Math.max(0, Math.min(100, state.soc))}%`);
+  if (typeof drawMotorGraph === 'function') drawMotorGraph();
 }
-
+function clearLiveTelemetry() {
+  telemetryObservedAt = 0;
+  state.isLive = false; state.vehicleTelemetryAvailable = false;
+  batteryReading = {soc:null,voltage:null,current:null,observedAt:null};
+  state.speed = null; state.gear = null; state.motorPower = null; state.ambientTemp = null;
+  state.range = null; state.battTemp = null; state.hvacPower = null; state.auxPower = null;
+  state.doorKnown = {fl:false,fr:false,rl:false,rr:false,trunk:false,frunk:false};
+  state.doorDataAvailable = false; state.tpmsAvailable = false;
+  state.hvacDataAvailable = false;
+  state.seatbelt = {driver:null,passenger:null};
+  state.trip = {distanceKm:null,durationMin:null,avgSpeedKmh:null,consumptionKwh100:null,energyKwh:null,distance2Km:null};
+  if (typeof window.updateLiveMotorPower === 'function') window.updateLiveMotorPower(null);
+}
 function processIncomingEnergy(data) {
-  const battery = data && data.battery;
-  const valid = (n, min, max) => typeof n === 'number' && Number.isFinite(n) && n >= min && n <= max ? n : null;
-  batteryReading = {
-    source: data && data.source || (window.__EMAS_MOCK__ ? 'SIMULASI LAPTOP' : 'ihu_vhal_read_only'),
-    soc: valid(battery && battery.soc_pct, 0, 100),
-    voltage: valid(battery && battery.voltage_v, 100, 1000),
-    current: valid(battery && battery.current_a, -500, 500),
-    observedAt: data && data.observed_at_ms || null
-  };
-  state.isLive = batteryReading.soc !== null || batteryReading.voltage !== null || batteryReading.current !== null;
+  const sample = CompanionTelemetry.normalize(data);
+  telemetryObservedAt = Date.now();
+  batteryReading = sample.battery;
+  state.isLive = [sample.battery.soc,sample.battery.voltage,sample.battery.current].some(Number.isFinite);
   state.isSimulation = !!window.__EMAS_MOCK__;
-  if (batteryReading.soc !== null) state.soc = batteryReading.soc;
-  if (batteryReading.voltage !== null) state.voltage = batteryReading.voltage;
-  if (batteryReading.current !== null) state.current = batteryReading.current;
-
-  state.vehicleTelemetryAvailable = (typeof data.speed_kmh === 'number' && Number.isFinite(data.speed_kmh))
-    || (typeof data.gear === 'string' && data.gear.length > 0)
-    || !!(data.doors && typeof data.doors === 'object');
-
-  // Battery Telemetry
-  if (data.battery) {
-    if (typeof data.battery.soc_pct === 'number') state.soc = data.battery.soc_pct;
-    if (typeof data.battery.voltage_v === 'number') state.voltage = data.battery.voltage_v;
-    if (typeof data.battery.current_a === 'number') state.current = data.battery.current_a;
-    if (typeof data.battery.range_km === 'number') state.range = Math.round(data.battery.range_km);
-    if (typeof data.battery.temp_c === 'number') state.battTemp = data.battery.temp_c;
-  } else {
-    if (typeof data.soc === 'number') state.soc = data.soc;
-    if (typeof data.voltage === 'number') state.voltage = data.voltage;
-    if (typeof data.current === 'number') state.current = data.current;
-    if (typeof data.range === 'number') state.range = Math.round(data.range);
+  if (sample.battery.soc !== null) state.soc = sample.battery.soc;
+  if (sample.battery.voltage !== null) state.voltage = sample.battery.voltage;
+  if (sample.battery.current !== null) state.current = sample.battery.current;
+  for (const key of ['speed','gear','ambientTemp','range','battTemp','motorPower','hvacPower','auxPower','seatbelt','trip']) state[key] = sample[key];
+  state.doors = sample.doors; state.doorKnown = sample.known;
+  state.doorDataAvailable = Object.values(sample.known).some(Boolean);
+  state.vehicleTelemetryAvailable = state.doorDataAvailable || sample.speed !== null || sample.gear !== null;
+  state.hvacDataAvailable = sample.hvac.setpoint !== null && sample.hvac.fan !== null;
+  if (state.hvacDataAvailable) {
+    state.setpoint = sample.hvac.setpoint; state.fan = sample.hvac.fan;
+    if (sample.hvac.powerOn !== null) state.fanOff = !sample.hvac.powerOn;
+    if (sample.hvac.airMode !== null) state.airMode = sample.hvac.airMode;
   }
-
-  // Motor Power (kW): Map from direct field, battery power, or pack V*A
-  state.motorPower = null;
-  if (typeof data.motor_power_kw === 'number' && Number.isFinite(data.motor_power_kw)) {
-    state.motorPower = data.motor_power_kw;
-  } else if (typeof data.total_power_kw === 'number' && Number.isFinite(data.total_power_kw)) {
-    state.motorPower = data.total_power_kw;
-  } else if (typeof data.motor_power === 'number' && Number.isFinite(data.motor_power)) {
-    state.motorPower = data.motor_power;
-  } else if (data.battery && typeof data.battery.power_kw === 'number' && Number.isFinite(data.battery.power_kw)) {
-    state.motorPower = data.battery.power_kw;
-  } else if (typeof state.voltage === 'number' && typeof state.current === 'number' && Number.isFinite(state.voltage) && Number.isFinite(state.current)) {
-    state.motorPower = Math.round((state.voltage * state.current / 1000.0) * 10) / 10;
-  }
-
-  // HVAC & Aux Load
-  if (typeof data.hvac_power_w === 'number') state.hvacPower = data.hvac_power_w;
-  else if (typeof data.hvac_power === 'number') state.hvacPower = data.hvac_power;
-
-  if (typeof data.accessories_12v_w === 'number') state.auxPower = data.accessories_12v_w;
-  else if (typeof data.accessories_power === 'number') state.auxPower = data.accessories_power;
-
-  // Speed & Gear
-  if (typeof data.speed_kmh === 'number') state.speed = data.speed_kmh;
-  if (typeof data.gear === 'string' && data.gear) state.gear = data.gear;
-
-  if (data.trip) {
-    const n = (v) => (typeof v === 'number' ? v : null);
-    state.trip = {
-      distanceKm: n(data.trip.distance_km),
-      durationMin: n(data.trip.duration_min),
-      avgSpeedKmh: n(data.trip.avg_speed_kmh),
-      consumptionKwh100: n(data.trip.consumption_kwh_100km),
-      energyKwh: n(data.trip.energy_kwh),
-      distance2Km: n(data.trip.distance2_km)
-    };
-  }
-
-  // Ambient Temp
-  if (typeof data.ambient_temp_c === 'number') state.ambientTemp = data.ambient_temp_c;
-  else if (typeof data.outside_temp === 'number') state.ambientTemp = data.outside_temp;
-
-  // HVAC details
-  if (data.hvac_details && Date.now() > userInteractingHvacUntil) {
-    if (typeof data.hvac_details.blower_speed === 'number') state.fan = data.hvac_details.blower_speed;
-    if (typeof data.hvac_details.setpoint_c === 'number') state.setpoint = Math.min(24, Math.max(17, Math.round(data.hvac_details.setpoint_c)));
-    if (typeof data.hvac_details.power_on === 'boolean') state.fanOff = !data.hvac_details.power_on;
-    if (typeof data.hvac_details.loop_mode === 'number') state.airMode = data.hvac_details.loop_mode;
-  }
-
-  state.doorKnown = { fl:false, fr:false, rl:false, rr:false, trunk:false, frunk:false };
-  if (data.doors && typeof data.doors === 'object') {
-    for (const key of Object.keys(state.doorKnown)) {
-      if (typeof data.doors[key] === 'boolean') {
-        state.doors[key] = data.doors[key];
-        state.doorKnown[key] = true;
-      }
-    }
-  }
-  state.doorDataAvailable = Object.values(state.doorKnown).some(Boolean);
-  if (data.tpms) {
-    state.tpms = Object.assign(state.tpms, data.tpms);
-    state.tpmsAvailable = ['fl','fr','rl','rr'].some(key => data.tpms[key] && Number.isFinite(data.tpms[key].p));
-  } else {
-    state.tpmsAvailable = false;
-  }
-
-  if (data.seatbelt) {
-    state.seatbelt = Object.assign(state.seatbelt || {}, data.seatbelt);
-  }
-
-  // Feed live motor power to live scrolling graph
-  if (typeof window.updateLiveMotorPower === 'function') {
-    window.updateLiveMotorPower(state.motorPower, !state.isSimulation);
-  }
-
-  // Update DOM metrics smoothly
-  updateLiveTelemetryDom();
+  if (typeof window.updateLiveMotorPower === 'function') window.updateLiveMotorPower(sample.motorPower,!state.isSimulation,sample.powerKind);
 }
-
-let telemetryPolling = false;
-async function pollTelemetry() {
-  if (telemetryPolling) return;
-  telemetryPolling = true;
-  const wasLive = state.isLive;
-  const previousReading = JSON.stringify(batteryReading);
-  const previousVehicleReading = JSON.stringify([state.vehicleTelemetryAvailable, state.doorDataAvailable, state.speed, state.gear, state.doors, state.doorKnown, state.motorPower, state.tpmsAvailable, state.tpms]);
+async function pollTelemetry(isCurrent) {
+  if (!vehicleTransport.available()) {
+    if (isCurrent()) { clearLiveTelemetry(); render(); }
+    return false;
+  }
   try {
-  try {
-    const res = await vehicleFetch('/api/energy', { cache: 'no-store' });
-    if (res.ok) {
-      const data = await res.json();
-      processIncomingEnergy(data);
-    } else { state.isLive = false; batteryReading = { soc: null, voltage: null, current: null, observedAt: null }; }
-  } catch { state.isLive = false; batteryReading = { soc: null, voltage: null, current: null, observedAt: null }; }
-
-  try {
-    const sRes = await vehicleFetch('/api/status', { cache: 'no-store' });
-    if (sRes.ok) {
-      const st = await sRes.json();
-      if (st.windows) {
-        const isAjar = (st.windows.fl > 0 || st.windows.fr > 0 || st.windows.rl > 0 || st.windows.rr > 0);
-        if (state.vent !== isAjar) {
-          state.vent = isAjar;
-          const vBottom = document.querySelector('.vehicle-bottom div:first-child strong');
-          if (vBottom) vBottom.textContent = isAjar ? '5% Ajar' : 'Closed';
-          const vBtn = document.querySelector('[data-action="vent"]');
-          if (vBtn) {
-            vBtn.setAttribute('aria-pressed', String(isAjar));
-            const sub = vBtn.querySelector('small');
-            if (sub) sub.textContent = isAjar ? 'Windows 5%' : 'Closed';
-            const tog = vBtn.querySelector('.toggle');
-            if (tog) tog.className = `toggle ${isAjar ? 'on' : ''}`;
-          }
-        }
-      }
-    }
-  } catch {}
-  } finally {
-    telemetryPolling = false;
-    if (wasLive !== state.isLive || (state.isLive && previousReading !== JSON.stringify(batteryReading))
-        || previousVehicleReading !== JSON.stringify([state.vehicleTelemetryAvailable, state.doorDataAvailable, state.speed, state.gear, state.doors, state.doorKnown, state.motorPower, state.tpmsAvailable, state.tpms])) {
-      render();
-    }
+    const response = await vehicleFetch('/api/energy');
+    if (!isCurrent()) return false;
+    if (!response.ok) throw new Error('CAR_OFFLINE');
+    processIncomingEnergy(await response.json());
+    updateControlAvailability();
+    if (window.CompanionConnection) window.CompanionConnection.observe(true);
+    const page = document.getElementById('main').dataset.page;
+    if (['overview','battery','power','trip'].includes(page)) render();
+    return true;
+  } catch (error) {
+    if (!isCurrent()) return false;
+    clearLiveTelemetry();
+    updateControlAvailability();
+    if (window.CompanionConnection) window.CompanionConnection.observe(false);
+    const page = document.getElementById('main').dataset.page;
+    if (['overview','battery','power','trip'].includes(page)) render();
+    return false;
   }
 }
+const telemetryPoller = CompanionClient.createPoller(pollTelemetry,{interval:1200});
+window.CompanionLifecycle = {
+  pause() {
+    window.CompanionPaused = true;
+    telemetryPoller.pause(); clearInterval(clockTimer); clockTimer = null;
+    for (const timer of [toastTimer,tuningDebounceTimer,hvacTempTimer,hvacFanTimer]) clearTimeout(timer);
+    if (window.CompanionConnection && window.CompanionConnection.client) window.CompanionConnection.client.pause();
+    if (window.LockSoundUI) window.LockSoundUI.pause();
+    clearLiveTelemetry(); render();
+  },
+  resume() {
+    if (document.hidden) return;
+    window.CompanionPaused = false;
+    if (window.CompanionConnection && window.CompanionConnection.client) window.CompanionConnection.client.resume();
+    clock(); if (!clockTimer) clockTimer = setInterval(clock,30000);
+    telemetryPoller.resume();
+    if (window.LockSoundUI) window.LockSoundUI.resume();
+  }
+};
+document.addEventListener('visibilitychange',() => window.CompanionLifecycle[document.hidden ? 'pause' : 'resume']());
+window.addEventListener('pagehide',() => window.CompanionLifecycle.pause());
+window.addEventListener('pageshow',() => window.CompanionLifecycle.resume());
+window.addEventListener('offline',() => window.CompanionLifecycle.pause());
+window.addEventListener('online',() => window.CompanionLifecycle.resume());
+window.addEventListener('companion-connected',() => { render(); telemetryPoller.refresh(); });
 
 // Android Automotive OS Native Bridge Callbacks
 window.onEnergyUpdate = function(data) {
-  processIncomingEnergy(data);
+  if (document.hidden) return;
+  try { processIncomingEnergy(data); render(); } catch (_) { clearLiveTelemetry(); render(); }
 };
 
 window.onCarNightModeChanged = function(isNight) {
@@ -1761,7 +1514,5 @@ window.toggleFloatingAssistantDirect = function() {
 
 window.testJarvisVoiceDirect = function() { toast('Ujian suara tidak tersedia dalam pratonton ini.'); };
 
-pollTelemetry();
-setInterval(pollTelemetry, 800);
-
 render();
+window.CompanionLifecycle.resume();

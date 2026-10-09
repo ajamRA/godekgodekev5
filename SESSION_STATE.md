@@ -1,116 +1,97 @@
-# SESSION STATE — 3 Oktober 2026 (12:20)
+# SESSION STATE — 9 Oktober 2026 (14:10)
 
-Rekod status teknikal rasmi Proton e.MAS 5 (IHU801P) selepas pengemaskinian Megaphone Daemon v1.3 (Edge Repair anti-boom), Trigger Audio Gear D (Mario Coin), Trigger Doa Buka Pintu Kabin, dan Pelaksanaan 1-Click Stealth Service Mode Proton SC.
+Rekod status teknikal rasmi Proton e.MAS 5 (IHU801P) selepas pelaksanaan lengkap Kawalan Steering Wheel (Drive Mode, Regen & Mod Servis), Mod Servis Proton SC Stealth, Penyepaduan Tab Megafon 0ms dalam EmasEnergy IHU, dan Kemas Kini Voice Presets Phone APK v1.4.
 
 ---
 
 ## 🚗 1. KENDERAAN & SAMBUNGAN
 * **Model Kenderaan:** Strictly **Proton e.MAS 5** (IHU801P, Android 10 API 29, root access).
-* **IP ADB Semasa:** `192.168.1.19:5555` (DHCP Wi-Fi: `AzamRahim`, MAC: `0e-5c-fb-05-3d-56`).
-* **PC Local IP:** `192.168.1.16`.
+* **IP ADB Semasa:** `192.168.1.13:5555` (DHCP Wi-Fi: `AzamRahim`).
+* **PC Local IP:** `192.168.1.12`.
 * **VPS Sync Server:** `https://emas.43-159-63-29.nip.io` (API Key: `azam7988` via `X-API-Key`).
 * **SSH VPS:** `ubuntu@43.159.63.29` (`/home/ubuntu/emas5/`).
+* **Pakej APK Dipasang:**
+  * IHU Monitor: `com.noor.thenoorcar` (EmasEnergy v2.0 dengan Megafon Tab).
+  * Phone Remote: `com.azam.emaswidget` (eMAS Remote v1.4 Hosted di VPS).
 
 ---
 
-## 📢 2. MEGAPHONE DAEMON v1.3 (`megaphone_daemon.jar`)
-* **Lokasi IHU:** `/data/local/window/megaphone_daemon.jar` (SHA-256: `8b57b7bdd23077cc5423ac4641669c47cfefaa13a4f74b30a82099f0c2fe3040`).
-* **Pelancar Boot:** `/data/local/window/start_megaphone.sh` (Auto-start via `/system/bin/avas_boot.sh` Step 5).
-* **Port HTTP:** Terkunci selamat pada `127.0.0.1:8890` (Localhost only).
-* **Ciri Pembaikan Utama (Anti-Boom & Concurrency):**
-  1. **Queue LinkedBlockingQueue (Cap 5):** Setiap item masuk baris gilir dengan snapshot fail unik `.queue_N.wav` &mdash; fail asal `current.wav` mustahil ditimpa semasa audio lain sedang bermain.
-  2. **Edge Repair Automatik (Trim & Fade):** Memotong senyap awal/akhir (threshold 600) + Fade-In 15ms (buang hentakan "boom/pop" speaker) + Fade-Out 40ms (kembali ke sifar dengan licin).
-  3. **Atomic Download/Upload:** Guna fail sementara `.downloading` + semakan kesahihan WAV sebelum *atomic rename*.
-  4. **Pencegahan Kehilangan Broadcast Cloud:** ID `lastPlayedMegaphoneId` hanya di-ACK selepas berjaya masuk queue.
-  5. **Auto Handoff AVAS:** Memberhentikan `avas_service` semasa `tinyplay` ke `/dev/snd/pcmC0D29p`, dan menghidupkan semula `avas_service` serta-merta selepas selesai (exit=0).
+## 🎮 2. KAWALAN STEERING WHEEL (`SteeringModeDaemon.jar`)
+* **Lokasi IHU:** `/data/local/window/steering_mode_controller.jar`
+* **Skrip Pelancar:** `/data/local/window/start_steering_daemon.sh` (PID aktif)
+* **Log Fail:** `/data/local/window/steering.log`
+* **Seni Bina Interception:**
+  * Memintas input secara terus pada peringkat `IInputManager` Android Binder IPC melalui `EmasDirectInputAdapter`.
+  * Menggunakan `SystemClock.uptimeMillis()` yang tepat dan bebas daripada delay UI.
+  * Replay OEM tidak menyekat atau mengganggu butang asal jika ditekan secara biasa.
+* **Pemetaan & Tingkah Laku Butang Steering:**
+  1. **Kanan (▶ / HW 305):**
+     * **Hold 800ms:** Kitaran Drive Mode (`Comfort 0` ➡️ `Eco 1` ➡️ `Sport 2`) + Audio Chime (`/data/local/window/mode_chime.wav`).
+     * **Tekan Sekejap (<800ms):** Replay keyevent 87 (`KEYCODE_MEDIA_NEXT`) untuk langkau lagu seterusnya.
+  2. **Kiri (◀ / HW 304):**
+     * **Hold 800ms:** Kitaran Regen Level (`Low 1` ➡️ `Medium 2` ➡️ `High 3`) + Audio Chime (`/data/local/window/regen_chime.wav`).
+     * **Tekan Sekejap (<800ms):** Replay keyevent 88 (`KEYCODE_MEDIA_PREVIOUS`) untuk lagu sebelumnya.
+  3. **Bawah (▼ / HW 302):**
+     * **Hold 5000ms (5 saat):** Toggle Mod Servis Proton (Stealth Kilang) + Audio Chime 35% volume.
+     * **Tekan Sekejap (<5000ms):** Replay keyevent 25 (`KEYCODE_VOLUME_DOWN`) untuk turunkan volume 1 takuk seperti biasa.
+  4. **Atas (▲ / HW 301):**
+     * 100% dikecualikan daripada pintasan (`not intercepted`). Volume naik berfungsi secara native kilang tanpa sebarang runaway repeat.
 
 ---
 
-## 🪙 3. TRIGGER AUDIO GEAR D — DOA NAIK KENDERAAN (`GearAudioPoc.jar`)
-* **Lokasi IHU:** `/data/local/window/gear_audio/GearAudioPoc.jar`.
-* **Fail Audio:** `/data/local/window/gear_audio/gear_doa.wav` (Doa Naik Kenderaan Omar & Hana, 1.25 MB, ~13s, 48kHz mono 16-bit).
-* **Pelancar Boot:** `/data/local/window/start_gear_audio.sh` (Auto-start via `/system/bin/avas_boot.sh` Step 6).
-* **Senibina & Logik Pengendalian:**
-  * **VHAL Reading (Read-Only):** Membaca gear CAN MCU `678428908` (`2=D, 3=N, 4=R, 5=P`). Tiada sebarang `setProperty` (Zero risk).
-  * **Speed Guard:** Membaca kelajuan MCU `678428840` (`raw / 100.0`). Hanya trigger jika kelajuan $\le$ 1.0 km/j dan kenderaan berhenti.
-  * **Audio Engine:** Menggunakan `AudioTrack` pra-muat (preload byte array ke memori) dengan `USAGE_ASSISTANCE_SONIFICATION`. Memintas sekatan SELinux `drmserver` SoundPool dengan latensi trigger $\sim$2ms!
-  * **One-Shot Per Boot (Ciri Utama):**
-    * Hanya berbunyi sekali sahaja pada peralihan `P -> D` pertama selepas IHU boot/hidup untuk memulakan perjalanan.
-    * Sebaik sahaja audio doa selesai, proses Java **tamat dan keluar (exit 0)** dengan sendiri.
-    * 0% RAM & CPU sepanjang perjalanan selebihnya, dan mustahil berbunyi lagi sehingga IHU reboot.
+## 🛡️ 3. MOD SERVIS PROTON (STEALTH KILANG) (`service_mode.sh`)
+* **Lokasi IHU:** `/data/local/window/service_mode.sh` (chmod 755)
+* **Fail Bendera:** `/data/local/window/SERVICE_MODE_ACTIVE`
+* **Trigger Fizikal:** Tekan dan hold butang **BAWAH** di steering wheel selama **5 saat**.
+* **Trigger Baris Arahan:** `sh /data/local/window/service_mode.sh [on|off|toggle|status]`
+* **Tindakan Semasa Diaktifkan (`on`):**
+  1. Matikan door pressure relief daemon (`pkill -f DoorPressureReliefDaemon`) dan pastikan tingkap rapat.
+  2. Matikan door chime / salam daemon (`pkill -f DoorChime`).
+  3. Pulihkan lock sound kepada nada asal kilang Proton/Geely (`/data/local/tmp/stock_lock.wav` ➡️ `/sdcard/V3_Vehicle_Locked_Single.wav`).
+  4. Buka unmount custom AVAS sound dan kembalikan kepada AVAS factory mode 2.
+  5. Sembunyikan semua sideloaded apps (`SmartTube`, `Netflix`, `com.noor.thenoorcar`, `AcBridge`, dll) menggunakan `pm disable-user --user 0 <pkg>`.
+  6. Mainkan audio pengesahan chime dua kali (`tinyplay mode_chime.wav`).
+  7. Kereta berada dalam keadaan 100% standard kilang (*Showroom Condition*), selamat untuk dihantar ke pusat servis Proton SC.
+* **Tindakan Semasa Dimatikan (`off`):**
+  1. Hidupkan semula semua aplikasi sideloaded melalui `pm enable <pkg>`.
+  2. Hidupkan semula door pressure relief daemon dan door chime daemon.
+  3. Pulihkan nada kunci custom (Mario) dan AVAS custom.
+  4. Mainkan audio pengesahan chime satu kali.
 
 ---
 
-## 🚪 4. TRIGGER BUKA PINTU — ASSALAMUALAIKUM (`DoorDoaPoc.jar`)
-* **Lokasi IHU:** `/data/local/window/gear_audio/DoorDoaPoc.jar`.
-* **Fail Audio:** `/data/local/window/gear_audio/door_salam.wav` ("Assalamualaikum", ~1.5s, 48kHz 16-bit).
-* **Pelancar Boot:** `/data/local/window/start_door_salam.sh` (Auto-start via `/system/bin/avas_boot.sh` Step 7).
-* **Sensor VHAL Pintu (RHD Malaysia):**
-  * `PROP_DOOR_FR = 678428816` &rarr; Pintu Pemandu Kanan (RHD Malaysia)
-  * `PROP_DOOR_FL = 678428815` &rarr; Pintu Penumpang Kiri
-* **Tingkah Laku Dual Front Door (Zero Double Play):**
-  * Memantau kedua-dua pintu hadapan sebagai satu kesatuan status (`CLOSED -> OPEN`).
-  * Mana-mana satu pintu depan dibuka dahulu semasa masuk kereta, ucapan "Assalamualaikum" dimainkan serta-merta dalam kabin.
-  * Fungsi playback berjalan secara *synchronous* (blocking), dan status kekal `OPEN`, menjamin **100% mustahil berlaku double play** walaupun pintu sebelah lagi dibuka beberapa saat kemudian.
-  * Selepas audio tamat, proses tamat dengan sendirinya (`SESSION_DONE one-shot exit`).
-* **Pengecualian:** Bonet belakang (`Trunk: 678428819`) dan Bonet depan (`Frunk: 678428820`) diabaikan sepenuhnya agar tidak mengganggu urusan memasukkan barang pasaraya.
+## 📢 4. PENYEPADUAN MEGAFON 0ms DALAM IHU (`EmasEnergy`)
+* **Pakej IHU:** `com.noor.thenoorcar` (`NoorEnergy_Megafon.apk`, bersaiz 435 KB, ditandatangani dengan `debug.ks`).
+* **Modul UI:** `assets/megafon.js`, `assets/companion.css`, `assets/app.js`, `assets/index.html`.
+* **Sambungan Daemon:** Berkomunikasi terus dengan `MegaphoneDaemon` pada port `127.0.0.1:8890` (0ms latensi perkakasan ALSA `pcmC0D29p`).
+* **Fungsi Utama Tab Megafon:**
+  1. **Preset Suara Segera (1-Tap):**
+     * 📢 `alihkan` &rarr; "Tolong alihkan kenderaan anda" (`alihkan.wav`)
+     * 🕌 `salam` &rarr; "Assalamualaikum" (`salam.wav`)
+     * 🚨 `tepi` &rarr; "Minta laluan ke tepi" (`tepi.wav`)
+     * ⏳ `datang` &rarr; "Saya datang sekejap" (`datang.wav`)
+  2. **Push-to-Talk (Live Mic):**
+     * Menggunakan Web Audio API dan MediaRecorder dengan penukaran automatik kepada 16-bit PCM WAV (Mono 44.1kHz).
+     * Disiarkan secara terus melalui `POST /api/megafon/upload` ke pembesar suara luar bumper.
+  3. **Audio Kabin:**
+     * 🤲 Mainkan Doa Naik Kenderaan dalam kabin melalui `GET /api/doa/play`.
+  4. **Fallback Native Android:**
+     * Disokong oleh kaedah JavascriptInterface `@JavascriptInterface public void playMegafonPreset(String)` dan `playDoa()` serta sokongan kebenaran mikrofon automatik melalui `WebChromeClient.onPermissionRequest`.
 
 ---
 
-## 🔊 5. SISTEM AVAS & NADA KUNCI (LOCK CHIME)
-* **AVAS Pejalan Kaki Kilang:** 100% Asli Kilang dipulihkan (`commit 8a973e5`).
-  * Slot 1: `yinheyinfu.wav` (Galaxy Chord)
-  * Slot 2: `space.wav` (Space)
-  * Slot 3: `pixel.wav` (Pixel)
-  * Bunyi undur/perlahan: `bDM_01_01.wav` (Factory curve & tuning asal tanpa ubah suai).
-* **AVAS Property Sync Daemon (`sync_avas.sh`):**
-  * **Punca Isu Terdahulu (Slot 1 & 2 Senyap):** UI tetapan IHU menulis ke `persist.sys.avas.mode` & `persist.sys.avas.switch`, tetapi binari HAL `vendor.molead.hardware.avas_service` hanya membaca `persist.avas.mode` & `persist.avas.switch`. Akibatnya, pilihan Slot 1 / Slot 2 di skrin tidak sampai ke service bawah.
-  * **Penyelesaian Dilaksanakan:** Skrip `/data/local/avas/sync_avas.sh` berjalan sebagai background watcher ultra-ringan (0.0% CPU, tidur 2s). Sebaik sahaja pengguna memilih Slot 1, 2, atau 3 di skrin, daemon ini secara automatik:
-    1. Menyegerakkan `persist.avas.mode` & `persist.avas.switch`.
-    2. Menghantar broadcast rasmi ke `ecarx.settings/.receiver.AvasSetReceiver`.
-    3. Memuat semula service `avas_service` supaya ALSA audio driver terus memainkan lagu slot yang dipilih.
-  * Auto-start disepadukan secara kekal dalam `/system/bin/avas_boot.sh` (Step 5).
-* **Sistem Nada Kunci (Lock Chime):**
-  * Dijalankan secara natif oleh servis sistem kilang `/system/bin/ecarx_reverse_radar` yang membaca `/sdcard/V3_Vehicle_Locked_Single.wav`.
-  * Tiada daemon kustom diperlukan untuk lock sound asas kilang.
+## 📱 5. PHONE APK v1.4 & WEB APP VOICE PRESETS
+* **URL Hosting APK:** `https://emas.43-159-63-29.nip.io/static/apk/eMAS_Remote.apk`
+* **Penetapan Cache:** `LOAD_NO_CACHE` dan `clearCache(true)` diaktifkan untuk mengelakkan stale webview cache.
+* **Ciri Baharu:**
+  * Ikon tetapan gear (⚙️) pada setiap slot preset untuk menamakan semula tajuk dan merakam suara tersuai pemandu.
+  * API backend: `GET /api/megafon/presets` dan `POST /api/megafon/presets/<id>` dengan ffmpeg anti-pop normalization (`-map_metadata -1 -fflags +bitexact`).
+  * Sokongan 4 slot lalai dengan kebolehan menambah slot baharu.
 
 ---
 
-## 🛡️ 6. 1-CLICK PROTON SC STEALTH SERVICE MODE
-Untuk menjaga waranti dan mengelakkan sebarang isu semasa pemeriksaan servis berkala di Proton Service Centre (SC):
-
-### A. Skrip Masuk Mod Kilang (`sc_stealth_mode.ps1`):
-* Menjalankan `pm disable-user --user 0` pada aplikasi *sideloaded*:
-  1. `com.netflix.mediaclient` (Netflix)
-  2. `org.smarttube.stable` (SmartTube)
-  3. `com.noor.thenoorcar` (NoorEnergy)
-  4. `com.cybercat.acbridge` (AcBridge)
-  *(Ikon ghaib sepenuhnya daripada skrin IHU, data login & akaun kekal selamat).*
-* Aplikasi rasmi ACO App Store seperti **Vivaldi Browser**, **Spotify**, **SYOK**, dan **HotFM** dikekalkan terlihat seperti biasa.
-* Mewujudkan fail bendera `/data/local/window/.service_mode`.
-* `/system/bin/avas_boot.sh` secara automatik menyekat permulaan semua daemon kustom (`GearAudio`, `Megaphone`, `Telemetry`).
-* Semua daemon dimatikan, zero open ports &mdash; kereta 100% standard kilang (*Showroom Condition*).
-
-### B. Skrip Pulihkan Semula (`sc_restore_mode.ps1`):
-* Menjalankan `pm enable` untuk memunculkan semula Netflix, SmartTube, dan NoorEnergy di skrin.
-* Memadam fail `.service_mode` dan memulakan semula daemon kustom dalam masa 3 saat.
-
----
-
-## 🔒 7. PERLINDUNGAN APPS ASLI PROTON (ZERO TOKEN CLASH)
-* **Punca Isu Terdahulu (Auto-Kick Sesi Telefon):**
-  * Server Cloud Proton (ACO Tech) menguatkuasakan polisi ketat *Single Active Session* (1 akaun = 1 token aktif).
-  * Pada fasa awal, pelayan VPS (`server.py`) memanggil endpoint `https://emas-app.acotech.my:8443/auth/refresh` secara automatik apabila menerima kod 401. Ini membatalkan (*revoked*) sesi log masuk rasmi pada aplikasi telefon bimbit pemandu.
-* **Tindakan Pembersihan Dilaksanakan:**
-  1. Fungsi `refresh_token_if_needed()` dalam `/home/ubuntu/emas5/server.py` telah **dimatikan sepenuhnya** (hanya memulangkan `None` tanpa memanggil server ACO Tech).
-  2. Fail `emas_tokens.json` telah **dikosongkan** (`{}`).
-  3. Kontena Docker `emas5` telah dimuat semula.
-* **Kesan:** Aplikasi rasmi **Proton e.MAS** pada telefon pintar pemandu kini kekal log masuk 100% secara kekal tanpa risiko ditendang (*zero kick*), memudahkan urusan tempahan servis dan penerimaan kemas kini rasmi. Semua komunikasi Webapp/PWA peribadi kini 100% menggunakan laluan selamat VPS-ke-IHU (`DoorPressureReliefDaemon` / Megaphone) dengan kunci `azam7988`.
-
----
-
-## 🧭 8. PANDUAN UNTUK AI SETERUSNYA
-1. **Jangan sesekali menukar VHAL Drive Mode secara gelung berterusan (Zero Drive Mode Clamping).**
-2. **Jangan menulis fail sementara atau WAV ke direktori shell/tmp jika melibatkan AudioTrack/SoundPool**, kerana SELinux `drmserver` menyekat `shell_data_file`. Gunakan laluan `/data/local/window/gear_audio/`.
-3. **Partition `/vendor` adalah 100% penuh (0 bytes free)**. Sebarang penukaran fail AVAS mestilah menggunakan kaedah *bind-mount* melalui `/system/bin/avas_boot.sh`.
-4. **Semua skrip pelancar daemon diletakkan di `/data/local/window/`** dan dipautkan ke `/system/bin/avas_boot.sh`.
+## 🧭 6. PANDUAN PENTING UNTUK SESI SETERUSNYA
+1. **Butang Steering Wheel Bawah:** Menahan 5 saat mencetuskan Mod Servis. Jangan kurangkan threshold ke bawah 4 saat untuk mengelakkan salah trigger semasa menurunkan volume.
+2. **Butang Steering Wheel Atas (301):** Jangan sesekali dimasukkan ke dalam senarai `requestKeysInterception` untuk mengelakkan isu pengulangan volume.
+3. **Partition `/vendor`:** Kekal penuh 100%. Sebarang pengubahsuaian bunyi AVAS mesti melalui *bind-mount* di `/system/bin/avas_boot.sh`.
+4. **Pakej IHU EmasEnergy:** Diterbitkan dan dipasang di bawah nama pakej `com.noor.thenoorcar` dengan kebenaran `RECORD_AUDIO` dan `usesCleartextTraffic="true"`.
