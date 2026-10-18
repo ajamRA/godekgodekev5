@@ -311,17 +311,34 @@ async function scanSubnets() {
 
     log(`Port 5555 terbuka dikesan pada: ${foundIps.join(', ') || 'tiada'}. Mengesahkan model IHU...`);
 
-    // Verify which device is IHU801P and authorized
+    // Sahkan IHU801P DAN pastikan peranti authorize. Port 5555 terbuka bukan
+    // bermakna ia kereta — boleh jadi telefon/tablet yang belum authorize.
+    const unauthorized = [];
     for (const candIp of foundIps) {
         await runAdb(`connect ${candIp}:5555`);
         const modelCheck = await runShell(candIp, 'getprop ro.product.model', 2500);
-        if (modelCheck.stdout && (modelCheck.stdout.includes('IHU') || modelCheck.stdout.includes('801') || modelCheck.stdout.includes('Geely'))) {
-            log(`Kereta Proton e.MAS 5 disahkan pada: ${candIp} (${modelCheck.stdout})`);
+        const out = (modelCheck.stdout || '').trim();
+        const errtxt = (modelCheck.stderr || '').trim();
+
+        if (/unauthorized/i.test(out) || /unauthorized/i.test(errtxt)) {
+            unauthorized.push(candIp);
+            log(`SKIP ${candIp}: peranti tidak authorize (perlu terima prompt ADB pada peranti itu).`);
+            continue;
+        }
+
+        if (out && /IHU|801|Geely/i.test(out)) {
+            log(`Kereta Proton e.MAS 5 disahkan pada: ${candIp} (${out})`);
             return [candIp];
         }
+
+        log(`SKIP ${candIp}: model "${out || 'tiada respons'}" bukan IHU801P.`);
     }
 
-    return foundIps;
+    if (unauthorized.length > 0) {
+        log(`Port 5555 terbuka pada ${unauthorized.join(', ')} tetapi tidak authorize. Kereta TIDAK dijumpai.`);
+    }
+    // Jangan pulangkan peranti yang belum sah — pemanggil akan tersilap sambung.
+    return [];
 }
 
 // Robust Slot Scanner
@@ -534,9 +551,23 @@ const server = http.createServer(async (req, res) => {
                 log(`Menyambung manual ke ${ip}:5555...`);
                 const connRes = await runAdb(`connect ${ip}:5555`);
                 if (connRes.stdout.includes('connected')) {
+                    const modelRes = await runShell(ip, 'getprop ro.product.model', 3000);
+                    const out = (modelRes.stdout || '').trim();
+                    const errtxt = (modelRes.stderr || '').trim();
+
+                    if (/unauthorized/i.test(out) || /unauthorized/i.test(errtxt)) {
+                        const msg = `${ip} tidak authorize. Terima prompt "Allow USB debugging" pada peranti itu, atau IP salah.`;
+                        log(msg);
+                        return sendJson({ success: false, message: msg });
+                    }
+                    if (!/IHU|801|Geely/i.test(out)) {
+                        const msg = `${ip} bukan IHU801P (model: "${out || 'tiada respons'}"). Sambungan ditolak.`;
+                        log(msg);
+                        return sendJson({ success: false, message: msg });
+                    }
+
                     connectedIp = ip;
-                    const modelRes = await runShell(connectedIp, 'getprop ro.product.model');
-                    carModel = modelRes.stdout || 'IHU801P';
+                    carModel = out;
                     log(`Berjaya disambungkan ke ${carModel} (${connectedIp})!`);
                     sendJson({ success: true, ip: connectedIp, model: carModel });
                 } else {
@@ -920,11 +951,23 @@ const server = http.createServer(async (req, res) => {
             }
 
             if (preset === 'steering') {
-                log('Memasang Pengawal Butang Stereng (Hold 5 Saat)...');
+                log('Memasang Pengawal Butang Stereng (Drive Mode + Regen + Stealth)...');
                 const jar = getPresetPath('daemons/steering_mode_controller.jar');
                 const sh1 = getPresetPath('daemons/service_mode.sh');
                 const sh2 = getPresetPath('daemons/start_steering_daemon.sh');
                 const chime = getPresetPath('audio/mode_chime.wav');
+
+                // Sahkan jar yang dihantar ialah versi yang disahkan.
+                const EXPECTED_SHA = '99441654707109d669c9ba63d3f1ec751d7b700ea724cb4165ebab3030ec253b';
+                if (jar) {
+                    const h = crypto.createHash('sha256').update(fs.readFileSync(jar)).digest('hex');
+                    if (h !== EXPECTED_SHA) {
+                        const msg = `BATAL: jar tempatan tidak padan (${h.slice(0, 12)}...). Dijangka ${EXPECTED_SHA.slice(0, 12)}...`;
+                        log(msg);
+                        return sendJson({ success: false, message: msg }, 500);
+                    }
+                    log('JAR disahkan (hash padan dengan versi yang diuji pada kereta).');
+                }
 
                 await runShell(connectedIp, 'mkdir -p /data/local/window');
                 if (jar) await runAdb(`-s ${connectedIp}:5555 push "${jar}" /data/local/window/steering_mode_controller.jar`);
@@ -932,10 +975,33 @@ const server = http.createServer(async (req, res) => {
                 if (sh2) await runAdb(`-s ${connectedIp}:5555 push "${sh2}" /data/local/window/start_steering_daemon.sh`);
                 if (chime) await runAdb(`-s ${connectedIp}:5555 push "${chime}" /data/local/window/mode_chime.wav`);
 
-                await runShell(connectedIp, 'chmod 755 /data/local/window/*.sh && chmod 644 /data/local/window/*.jar');
-                await runShell(connectedIp, 'sh /data/local/window/start_steering_daemon.sh');
-                log('Mod butang stereng berjaya diaktifkan!');
-                return sendJson({ success: true, message: 'Mod butang stereng siap dipasang! Hold butang Bawah 5 saat untuk toggle mod.' });
+                await runShell(connectedIp, 'chmod 755 /data/local/window/*.sh && chmod 666 /data/local/window/*.jar');
+                await runShell(connectedIp, 'chown root:root /data/local/window/steering_mode_controller.jar /data/local/window/start_steering_daemon.sh 2>/dev/null || true');
+                await runShell(connectedIp, 'restorecon /data/local/window/steering_mode_controller.jar /data/local/window/start_steering_daemon.sh 2>/dev/null || true');
+
+                // Daftar auto-start jika belum ada (supaya daemon hidup selepas reboot).
+                const AVAS_BOOT = '/data/local/avas/avas_boot.sh';
+                const hasHook = await runShell(connectedIp, `grep -c start_steering_daemon ${AVAS_BOOT} 2>/dev/null || echo 0`);
+                if ((parseInt(hasHook.stdout.trim()) || 0) === 0) {
+                    await runShell(connectedIp,
+                        `printf '\\n# Steering daemon (Drive Mode + Regen + Stealth toggle)\\nif [ -f /data/local/window/start_steering_daemon.sh ]; then\\n    sh /data/local/window/start_steering_daemon.sh >> \\$LOG 2>&1\\nfi\\n' >> ${AVAS_BOOT}`);
+                    log('Auto-start didaftarkan dalam avas_boot.sh.');
+                } else {
+                    log('Auto-start sudah ada dalam avas_boot.sh.');
+                }
+
+                await runShell(connectedIp, 'sh /data/local/window/start_steering_daemon.sh', 60000);
+                await new Promise(res => setTimeout(res, 2000));
+                const check = await runShell(connectedIp, 'pgrep -f SteeringModeDaemon');
+                const ok = check.stdout.trim().length > 0;
+
+                log(ok ? 'Mod butang stereng aktif dan berjalan.' : 'AMARAN: daemon tidak dikesan selepas dimulakan.');
+                return sendJson({
+                    success: ok,
+                    message: ok
+                        ? 'Kawalan stereng siap. Kanan 800ms = Drive Mode, Kiri 800ms = Regen, Bawah 5s = Stealth.'
+                        : 'Fail dipasang tetapi daemon tidak bermula. Semak steering.log pada kereta.'
+                });
             }
 
             if (preset === 'locksound') {
@@ -1020,50 +1086,134 @@ const server = http.createServer(async (req, res) => {
             }
 
             if (preset === 'restore_stock') {
-                log('Mengaktifkan Stealth Mode: menyah-pasang semua mount custom apps...');
-
-                // P1 FIX: umount mesti pada MOUNT TARGET, bukan folder sumber.
-                // Dulu kod umount pada /system/app/JOOXMusic_ACO (folder), sedangkan
-                // target sebenar ialah .../JOOXMusic_ACO/JOOXMusic_ACO.apk â€” jadi tiada
-                // apa yang ter-unmount dan "Stealth Mode" tak pernah bersih.
-                const liveMounts = await getMountLines(connectedIp);
-                const customMounts = liveMounts.filter(
-                    (m) => m.source.startsWith('/data/local/custom_apps/') || /\/system\/app\/(ttincar_tiktok_ACO|JOOXMusic_ACO|AudioPlus_ACO|Noor|Noor_ACO|TheNoor_ACO)/.test(m.target)
-                );
-
-                let unmounted = 0;
-                const stillMounted = [];
-                for (const m of customMounts) {
-                    await runShell(connectedIp, `umount -l "${m.target}" 2>/dev/null || true`);
-                    if (await isBindMounted(connectedIp, m.target)) stillMounted.push(m.target);
-                    else unmounted++;
-                }
-
-                // Kes in-place replace (Noor.apk diganti terus) tak boleh di-unmount â€”
-                // itu fail sebenar di sistem, kena pulih dari sandaran atau OTA.
-                const inPlaceReplaced = [];
-                for (const p of ['/system/app/Noor/Noor.apk', '/system/app/Noor_ACO/Noor_ACO.apk']) {
-                    const sz = await remoteFileSize(connectedIp, p);
-                    if (sz > 3500000) inPlaceReplaced.push(`${p} (${sz} bait)`);
-                }
-
-                await runShell(connectedIp, 'pkill -f ecarx.launcher || am force-stop ecarx.launcher 2>/dev/null || true');
-
-                if (stillMounted.length > 0) {
-                    const msg = `SEBAHAGIAN GAGAL: ${unmounted} mount dibuang, tetapi ${stillMounted.length} masih aktif (${stillMounted.join(', ')}). Kereta BELUM 100% standard.`;
+                // Guna service_mode.sh yang dipasang oleh PAKEJ_STEALTH_EMAS5.
+                // Ini versi yang lebih lengkap: lumpuhkan apps, AVAS kilang,
+                // hentikan daemon, dan BERTAHAN selepas reboot.
+                log('Menyemak skrip Mod Servis pada kereta...');
+                const hasScript = (await runShell(connectedIp, 'ls /data/local/window/service_mode.sh 2>/dev/null')).stdout.trim();
+                if (!hasScript) {
+                    const msg = 'service_mode.sh tidak dijumpai. Pasang PAKEJ_STEALTH_EMAS5 dahulu, atau kereta ini belum ada Mod Servis.';
                     log(msg);
-                    return sendJson({ success: false, message: msg }, 500);
+                    return sendJson({ success: false, message: msg }, 400);
                 }
 
-                let extra = '';
-                if (inPlaceReplaced.length > 0) {
-                    extra = ` PERHATIAN: ${inPlaceReplaced.length} fail diganti terus (bukan mount) dan TIDAK dipulihkan: ${inPlaceReplaced.join(', ')}. Perlu restore dari sandaran/OTA.`;
+                log('Mengaktifkan Mod Servis (Stealth): lumpuhkan apps, AVAS kilang, hentikan daemon...');
+                setProgress(20, 'Mengaktifkan Stealth', 'Menjalankan service_mode.sh on...');
+                const on = await runShell(connectedIp, 'sh /data/local/window/service_mode.sh on', 120000);
+                for (const line of on.stdout.split('\n').filter(Boolean)) log('  ' + line);
+
+                setProgress(70, 'Mengesahkan', 'Menyemak keadaan akhir...');
+                const st = await runShell(connectedIp, 'sh /data/local/window/service_mode.sh status');
+                const disabled = await runShell(connectedIp, 'pm list packages -d | wc -l');
+                const mounts = await runShell(connectedIp, 'mount | grep -cE "ttincar|JOOX"');
+
+                const isStealth = st.stdout.includes('SERVICE_MODE_ACTIVE');
+                const nDisabled = parseInt(disabled.stdout.trim()) || 0;
+                const nMounts = parseInt(mounts.stdout.trim()) || 0;
+
+                setProgress(100, 'Selesai', 'Mod Servis aktif.');
+                log(`Stealth ${isStealth ? 'AKTIF' : 'GAGAL'}: ${nDisabled} pakej dilumpuhkan, ${nMounts} mount slot tinggal.`);
+
+                return sendJson({
+                    success: isStealth && nMounts === 0,
+                    message: isStealth
+                        ? `Mod Servis AKTIF. ${nDisabled} aplikasi tersembunyi, AVAS kilang, daemon kustom dihentikan. Bertahan selepas reboot.`
+                        : `GAGAL: status masih ${st.stdout.trim()}. Semak log.`,
+                    detail: { stealth: isStealth, disabledPackages: nDisabled, remainingMounts: nMounts }
+                });
+            }
+
+            if (preset === 'stealth_off') {
+                log('Menyahaktifkan Mod Servis — memulihkan semua ciri kustom...');
+                setProgress(20, 'Memulihkan', 'Menjalankan service_mode.sh off...');
+                const off = await runShell(connectedIp, 'sh /data/local/window/service_mode.sh off', 120000);
+                for (const line of off.stdout.split('\n').filter(Boolean)) log('  ' + line);
+
+                setProgress(70, 'Mengesahkan', 'Menyemak keadaan akhir...');
+                const st2 = await runShell(connectedIp, 'sh /data/local/window/service_mode.sh status');
+                const disabled2 = await runShell(connectedIp, 'pm list packages -d | wc -l');
+
+                const isNormal = st2.stdout.includes('NORMAL_MODE_ACTIVE');
+                const nDis2 = parseInt(disabled2.stdout.trim()) || 0;
+
+                setProgress(100, 'Selesai', 'Mod normal dipulihkan.');
+                log(`Stealth DIMATIKAN: status ${st2.stdout.trim()}, ${nDis2} pakej masih dilumpuhkan.`);
+
+                return sendJson({
+                    success: isNormal,
+                    message: isNormal
+                        ? `Mod normal dipulihkan. Semua aplikasi kustom kembali kelihatan, AVAS custom dipulihkan.`
+                        : `GAGAL: status masih ${st2.stdout.trim()}.`,
+                    detail: { stealth: !isNormal, disabledPackages: nDis2 }
+                });
+            }
+
+            if (preset === 'drivemode_install') {
+                log('Memasang kawalan stereng (Drive Mode + Regen + Stealth toggle)...');
+                const hasJar = (await runShell(connectedIp, 'ls /data/local/window/steering_mode_controller.jar 2>/dev/null')).stdout.trim();
+                const hasLauncher = (await runShell(connectedIp, 'ls /data/local/window/start_steering_daemon.sh 2>/dev/null')).stdout.trim();
+
+                if (!hasJar || !hasLauncher) {
+                    const msg = 'Fail kawalan stereng tiada. Pasang melalui PAKEJ_DRIVEMODE_EMAS5/pasang_drivemode.ps1 dahulu.';
+                    log(msg);
+                    return sendJson({ success: false, message: msg }, 400);
                 }
 
-                log(`Stealth Mode selesai: ${unmounted} mount dibuang.${extra}`);
+                setProgress(50, 'Memulakan daemon', 'Menjalankan start_steering_daemon.sh...');
+                const r = await runShell(connectedIp, 'sh /data/local/window/start_steering_daemon.sh', 60000);
+                for (const line of r.stdout.split('\n').filter(Boolean)) log('  ' + line);
+
+                await new Promise(res => setTimeout(res, 2000));
+                const ps = await runShell(connectedIp, 'pgrep -f SteeringModeDaemon');
+                const running = ps.stdout.trim().length > 0;
+
+                setProgress(100, 'Selesai', running ? 'Daemon stereng berjalan.' : 'Daemon tidak bermula.');
+                return sendJson({
+                    success: running,
+                    message: running
+                        ? 'Kawalan stereng aktif. Kanan 800ms = Drive Mode, Kiri 800ms = Regen, Bawah 5s = Stealth.'
+                        : 'Daemon stereng tidak bermula. Semak steering.log pada kereta.'
+                });
+            }
+
+            if (preset === 'drivemode_remove') {
+                log('Menghentikan daemon stereng...');
+                setProgress(50, 'Menghentikan', 'pkill SteeringModeDaemon...');
+                await runShell(connectedIp, 'pkill -f SteeringModeDaemon 2>/dev/null || true');
+                await new Promise(res => setTimeout(res, 1000));
+                const ps2 = await runShell(connectedIp, 'pgrep -f SteeringModeDaemon');
+                const stillRunning = ps2.stdout.trim().length > 0;
+
+                setProgress(100, 'Selesai', stillRunning ? 'Masih berjalan.' : 'Dihentikan.');
+                return sendJson({
+                    success: !stillRunning,
+                    message: stillRunning
+                        ? 'Daemon masih berjalan — cuba reboot.'
+                        : 'Daemon stereng dihentikan. Butang kembali fungsi volume biasa.'
+                });
+            }
+
+            if (preset === 'stealth_status') {
+                setProgress(30, 'Menyemak', 'Membaca keadaan Mod Servis...');
+                const st3 = await runShell(connectedIp, 'sh /data/local/window/service_mode.sh status');
+                const dis3 = await runShell(connectedIp, 'pm list packages -d | wc -l');
+                const mnt3 = await runShell(connectedIp, 'mount | grep -cE "ttincar|JOOX"');
+                const steer3 = await runShell(connectedIp, 'pgrep -f SteeringModeDaemon');
+                const avas3 = await runShell(connectedIp, 'ls /data/local/avas/factory_backup/*.wav 2>/dev/null | wc -l');
+
+                const state = st3.stdout.trim();
+                const n3 = parseInt(dis3.stdout.trim()) || 0;
+                const m3 = parseInt(mnt3.stdout.trim()) || 0;
+                const s3 = steer3.stdout.trim().length > 0;
+                const a3 = parseInt(avas3.stdout.trim()) || 0;
+
+                setProgress(100, 'Selesai', 'Status dibaca.');
+                log(`Status: ${state}, ${n3} pakej disable, ${m3} mount, stereng ${s3 ? 'RUNNING' : 'STOPPED'}, ${a3} fail AVAS kilang.`);
+
                 return sendJson({
                     success: true,
-                    message: `Semua bind mount modifikasi telah dibuang (${unmounted} mount, disahkan).${extra}`
+                    message: `Status: ${state.replace('_', ' ')} | ${n3} aplikasi tersembunyi | ${m3} mount slot | stereng ${s3 ? 'aktif' : 'mati'} | ${a3} fail AVAS kilang`,
+                    detail: { state, disabledPackages: n3, remainingMounts: m3, steering: s3, avasFactoryFiles: a3 }
                 });
             }
 

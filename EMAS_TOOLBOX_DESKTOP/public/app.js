@@ -331,7 +331,11 @@ async function triggerPreset(preset, label, extra = {}) {
 document.getElementById('btnSmartTube').addEventListener('click', () => triggerPreset('smarttube', 'Pasang SmartTube atas slot TikTok'));
 document.getElementById('btnNetflix').addEventListener('click', () => triggerPreset('netflix', 'Pasang Netflix atas slot JOOX Music'));
 document.getElementById('btnSteering').addEventListener('click', () => triggerPreset('steering', 'Pasang Mod Butang Stereng (Hold 5s)'));
-document.getElementById('btnStealth').addEventListener('click', () => triggerPreset('restore_stock', 'Kembalikan Standard Kilang (Stealth Mode)'));
+document.getElementById('btnStealth').addEventListener('click', () => triggerPreset('restore_stock', 'Aktifkan Stealth Mode'));
+document.getElementById('btnStealthOff').addEventListener('click', () => triggerPreset('stealth_off', 'Matikan Stealth — Pulih Mod Normal'));
+document.getElementById('btnStealthStatus').addEventListener('click', () => triggerPreset('stealth_status', 'Semak Status Sistem'));
+document.getElementById('btnDriveInstall').addEventListener('click', () => triggerPreset('drivemode_install', 'Mulakan Kawalan Stereng'));
+document.getElementById('btnDriveRemove').addEventListener('click', () => triggerPreset('drivemode_remove', 'Hentikan Kawalan Stereng'));
 document.getElementById('btnReboot').addEventListener('click', () => triggerPreset('reboot', 'Reboot Skrin IHU'));
 document.getElementById('btnScreenshot').addEventListener('click', () => triggerPreset('screenshot', 'Ambil Screenshot IHU'));
 

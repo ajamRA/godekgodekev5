@@ -38,6 +38,10 @@
 
 body {
     background-color: var(--bg-dark);
+    background-image:
+        radial-gradient(ellipse at top, rgba(226, 0, 26, 0.10) 0%, transparent 55%),
+        radial-gradient(ellipse at bottom right, rgba(226, 0, 26, 0.05) 0%, transparent 50%);
+    background-attachment: fixed;
     color: var(--text-primary);
     font-family: var(--font-stack);
     -webkit-font-smoothing: antialiased;
@@ -64,6 +68,9 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
+    padding-bottom: 14px;
+    border-bottom: 2px solid var(--swiss-red);
+    box-shadow: 0 2px 12px -4px rgba(226, 0, 26, 0.5);
 }
 
 .brand {
@@ -300,9 +307,9 @@ body {
 }
 
 .card-scrollable {
-    max-height: 620px;
-    overflow-y: auto;
-    padding-right: 8px;
+    max-height: none;
+    overflow-y: visible;
+    padding-right: 0;
 }
 
 .card-header {
@@ -526,15 +533,76 @@ body {
     gap: 14px;
     padding: 14px 16px;
     text-align: left;
-    background-color: #240c0e;
-    border: 1px solid var(--swiss-red);
-    color: #ff707a;
+    background-color: #2a0b0f;
+    border: 2px solid var(--swiss-red);
+    color: #ff8a94;
     margin-bottom: 8px;
+    box-shadow: 0 0 0 0 rgba(226, 0, 26, 0.4);
+    animation: stealthPulse 2.8s ease-in-out infinite;
 }
 
 .btn-stealth:hover {
-    background-color: #361014;
+    background-color: #3d0f14;
+    border-color: var(--swiss-red-hover);
+    color: #ffb3ba;
 }
+
+@keyframes stealthPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(226, 0, 26, 0.35); }
+    50%      { box-shadow: 0 0 0 6px rgba(226, 0, 26, 0); }
+}
+
+.btn-stealth-off {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    text-align: left;
+    background-color: #0f1a12;
+    border: 1px solid #2e7d32;
+    color: #a5d6a7;
+    margin-bottom: 8px;
+}
+
+.btn-stealth-off:hover {
+    background-color: #15261a;
+    border-color: #43a047;
+}
+
+.btn-status {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    text-align: left;
+    background-color: #0d1420;
+    border: 1px solid #1e5aa8;
+    color: #90caf9;
+    margin-bottom: 8px;
+}
+
+.btn-status:hover {
+    background-color: #122036;
+    border-color: #2b6fc4;
+}
+
+.btn-danger-soft {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    text-align: left;
+    background-color: #1a1214;
+    border: 1px solid #6b2a30;
+    color: #e88a92;
+    margin-bottom: 8px;
+}
+
+.btn-danger-soft:hover {
+    background-color: #261619;
+    border-color: #8a343c;
+}
+
 
 .btn-backup-ident {
     background-color: #241d10;

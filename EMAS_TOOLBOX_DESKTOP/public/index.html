@@ -209,12 +209,46 @@
                     <!-- Factory Safety & Tools -->
                     <div class="preset-group mt-16">
                         <div class="group-label">KESELAMATAN &amp; SERVIS KILANG</div>
-                        
+
                         <button class="btn btn-stealth" id="btnStealth">
                             <span class="icon">🛡️</span>
                             <div class="btn-text">
-                                <strong>KEMBALIKAN STANDARD KILANG (STEALTH MODE)</strong>
-                                <small>Nyah-pasang semua mount sebelum hantar servis di Proton SC</small>
+                                <strong>AKTIFKAN STEALTH MODE (KE STANDBY SERVIS)</strong>
+                                <small>Sembunyi 10 apps · AVAS kilang · daemon mati · <b>bertahan selepas reboot</b></small>
+                            </div>
+                        </button>
+
+                        <button class="btn btn-stealth-off mt-8" id="btnStealthOff">
+                            <span class="icon">🔓</span>
+                            <div class="btn-text">
+                                <strong>MATIKAN STEALTH (PULIH MOD NORMAL)</strong>
+                                <small>Hidupkan semula semua apps, AVAS custom, dan daemon</small>
+                            </div>
+                        </button>
+
+                        <button class="btn btn-status mt-8" id="btnStealthStatus">
+                            <span class="icon">🔍</span>
+                            <div class="btn-text">
+                                <strong>SEMAK STATUS SISTEM</strong>
+                                <small>Stealth / normal · bilangan apps tersembunyi · mount · daemon stereng</small>
+                            </div>
+                        </button>
+
+                        <div class="group-label mt-16">KAWALAN STERENG (DRIVE MODE)</div>
+
+                        <button class="btn btn-action mt-8" id="btnDriveInstall">
+                            <span class="icon">🎛️</span>
+                            <div class="btn-text">
+                                <strong>MULAKAN KAWALAN STERENG</strong>
+                                <small>Kanan 800ms = Drive Mode · Kiri 800ms = Regen · Bawah 5s = Stealth</small>
+                            </div>
+                        </button>
+
+                        <button class="btn btn-danger-soft mt-8" id="btnDriveRemove">
+                            <span class="icon">⏹️</span>
+                            <div class="btn-text">
+                                <strong>HENTIKAN KAWALAN STERENG</strong>
+                                <small>Butang kembali jadi volume biasa</small>
                             </div>
                         </button>
 
