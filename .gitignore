@@ -148,3 +148,6 @@ EmasWirelessGameHub/APKS_SIAP_PASANG/
 # Snapshot APK / attachment pihak ketiga
 .codex-remote-attachments/
 .netlify/
+
+# Sandaran save emulator (jangan masuk repo)
+GBA_Saves_Backup_*/
