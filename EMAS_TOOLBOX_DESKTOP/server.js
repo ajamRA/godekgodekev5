@@ -73,7 +73,7 @@ log(`FFmpeg binary sedia ada di: ${FFMPEG}`);
 
 function runAdb(args, timeoutMs = 25000) {
     return new Promise((resolve) => {
-        exec(`"${ADB}" ${args}`, { timeout: timeoutMs, encoding: 'utf8' }, (err, stdout, stderr) => {
+        exec(`"${ADB}" ${args}`, { timeout: timeoutMs, encoding: 'utf8', windowsHide: true }, (err, stdout, stderr) => {
             resolve({
                 success: !err,
                 stdout: (stdout || '').trim(),
@@ -608,6 +608,22 @@ const server = http.createServer(async (req, res) => {
             task: currentTask,
             logs
         });
+        return;
+    }
+
+    if (pathname === '/api/window/close' && req.method === 'POST') {
+        sendJson({ success: true });
+        setTimeout(() => {
+            log('Menutup aplikasi atas arahan pengguna...');
+            process.exit(0);
+        }, 100);
+        return;
+    }
+
+    if (pathname === '/api/window/minimize' && req.method === 'POST') {
+        // Pada Windows, minimize active window via powershell command senyap
+        exec('powershell -command "(New-Object -ComObject Shell.Application).MinimizeAll()"', { windowsHide: true });
+        sendJson({ success: true });
         return;
     }
 

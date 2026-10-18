@@ -2,6 +2,30 @@
 let currentSlots = [];
 let selectedSlot = null;
 
+// Task navigation keeps forms and running operations intact when switching pages.
+const pageIds = ['mula', 'aplikasi', 'audio', 'servis'];
+function showPage() {
+    const requested = window.location.hash.slice(1);
+    const activePage = pageIds.includes(requested) ? requested : 'mula';
+    document.querySelectorAll('.page').forEach(page => {
+        page.hidden = page.id !== activePage;
+    });
+    document.querySelectorAll('.nav-link').forEach(link => {
+        const active = link.hash === `#${activePage}`;
+        link.classList.toggle('active', active);
+        if (active) link.setAttribute('aria-current', 'page');
+        else link.removeAttribute('aria-current');
+    });
+}
+window.addEventListener('hashchange', () => {
+    showPage();
+    window.scrollTo(0, 0);
+    const heading = document.querySelector('.page:not([hidden]) h1');
+    heading.setAttribute('tabindex', '-1');
+    heading.focus({ preventScroll: true });
+});
+showPage();
+
 const statusBulb = document.getElementById('statusBulb');
 const connTitle = document.getElementById('connTitle');
 const connSub = document.getElementById('connSub');
@@ -47,29 +71,32 @@ function logToUi(msg) {
     const div = document.createElement('div');
     div.textContent = `[${time}] ${msg}`;
     consoleLogs.appendChild(div);
+    document.getElementById('latestLog').textContent = msg;
     consoleLogs.scrollTop = consoleLogs.scrollHeight;
 }
 
 function setConnected(ip, model = 'IHU801P') {
     statusBulb.classList.add('connected');
-    connTitle.textContent = `BERSAMBUNG KE PROTON e.MAS 5 (${ip}:5555)`;
+    connTitle.textContent = `Bersambung ke e.MAS 5 · ${ip}:5555`;
     connTitle.style.color = 'var(--status-green)';
     connSub.textContent = `Model: ${model} · Port ADB 5555 Aktif · Akses Root Disahkan`;
     inputCarIp.value = ip;
+    document.getElementById('connectionChip').textContent = 'Kereta bersambung';
 }
 
 function setDisconnected() {
     statusBulb.classList.remove('connected');
-    connTitle.textContent = 'TERPUTUS / MENCARI KERETA...';
-    connTitle.style.color = '#FFFFFF';
-    connSub.textContent = 'Menunggu sambungan Wi-Fi kereta...';
+    connTitle.textContent = 'Kereta belum dijumpai';
+    connTitle.style.color = 'var(--ink)';
+    connSub.textContent = 'Semak laptop dan kereta menggunakan Wi-Fi yang sama, kemudian cuba cari semula atau masukkan IP secara manual.';
+    document.getElementById('connectionChip').textContent = 'Belum bersambung';
 }
 
 // Auto-Scan Wi-Fi
 async function autoScan() {
     logToUi('🔍 Memulakan imbasan automatik Wi-Fi untuk mencari kereta...');
     btnAutoScan.disabled = true;
-    btnAutoScan.textContent = '⏳ MENGIMBAS...';
+    btnAutoScan.textContent = 'Sedang mencari kereta…';
 
     try {
         const res = await fetch('/api/scan');
@@ -86,7 +113,7 @@ async function autoScan() {
         logToUi(`Ralat imbasan: ${e.message}`);
     } finally {
         btnAutoScan.disabled = false;
-        btnAutoScan.textContent = '🔍 AUTO-SCAN WI-FI';
+        btnAutoScan.textContent = 'Cari kereta di Wi-Fi';
     }
 }
 
@@ -144,6 +171,7 @@ async function refreshSlots() {
 
 function renderSlots(slots) {
     slotsList.innerHTML = '';
+    selectedSlot = null;
     selectTargetSlot.innerHTML = '<option value="">-- Pilih slot sasaran dari senarai --</option>';
 
     if (!slots || slots.length === 0) {
@@ -152,11 +180,12 @@ function renderSlots(slots) {
     }
 
     slots.forEach((slot, index) => {
-        const statusText = slot.isOverwritten ? `DITIMPA: ${slot.overwrittenBy}` : 'SLOT KOSONG';
+        const statusText = slot.isOverwritten ? `Diganti: ${slot.overwrittenBy}` : 'Aplikasi asal';
         const isOccupied = slot.isOverwritten;
 
         // Create Slot Item in ListBox
-        const item = document.createElement('div');
+        const item = document.createElement('button');
+        item.type = 'button';
         item.className = 'slot-item';
         item.innerHTML = `
             <div class="slot-meta">
@@ -168,7 +197,7 @@ function renderSlots(slots) {
             </div>
             <div>
                 <span class="slot-badge-status ${isOccupied ? '' : 'empty'}">
-                    ${isOccupied ? `[x] ${statusText}` : '[ ] SLOT KOSONG'}
+                    ${isOccupied ? statusText : 'Aplikasi asal'}
                 </span>
             </div>
         `;
@@ -257,16 +286,16 @@ fileApkInput.addEventListener('change', (e) => {
 
 dropzone.addEventListener('dragover', (e) => {
     e.preventDefault();
-    dropzone.style.borderColor = 'var(--swiss-red)';
+    dropzone.style.borderColor = 'var(--accent)';
 });
 
 dropzone.addEventListener('dragleave', () => {
-    dropzone.style.borderColor = '#444';
+    dropzone.style.borderColor = 'var(--border)';
 });
 
 dropzone.addEventListener('drop', (e) => {
     e.preventDefault();
-    dropzone.style.borderColor = '#444';
+    dropzone.style.borderColor = 'var(--border)';
     if (e.dataTransfer.files.length > 0) handleApkPicked(e.dataTransfer.files[0]);
 });
 
@@ -307,7 +336,7 @@ btnInstallCustom.addEventListener('click', async () => {
         logToUi(`Ralat pemasangan: ${e.message}`);
     } finally {
         btnInstallCustom.disabled = false;
-        btnInstallCustom.textContent = '🚀 TIMPA & PASANG KE SLOT KERETA';
+        btnInstallCustom.textContent = 'Gantikan slot & pasang APK';
     }
 });
 
@@ -389,7 +418,7 @@ fileUploadLock.addEventListener('change', async (e) => {
             logToUi(`Ralat: ${err.message}`);
         } finally {
             btnBrowseLock.disabled = false;
-            btnBrowseLock.textContent = '📂 UPLOAD MP3/WAV NADA KUNCI (AUTO-CONVERT)';
+            btnBrowseLock.textContent = 'Pilih & pasang audio sendiri';
             fileUploadLock.value = '';
         }
     }
@@ -429,7 +458,7 @@ fileUploadAvas.addEventListener('change', async (e) => {
             logToUi(`Ralat: ${err.message}`);
         } finally {
             btnBrowseAvas.disabled = false;
-            btnBrowseAvas.textContent = '📂 UPLOAD MP3/WAV AVAS (AUTO-CONVERT IKUT SLOT)';
+            btnBrowseAvas.textContent = 'Pilih & pasang audio sendiri';
             fileUploadAvas.value = '';
         }
     }
@@ -528,5 +557,19 @@ async function startup() {
     // Automatik jalankan self-scan terus!
     await autoScan();
 }
+
+// Window control handlers (Minimize & Close)
+document.getElementById('winBtnClose')?.addEventListener('click', async () => {
+    try {
+        await fetch('/api/window/close', { method: 'POST' });
+    } catch (e) {}
+    window.close();
+});
+
+document.getElementById('winBtnMin')?.addEventListener('click', async () => {
+    try {
+        await fetch('/api/window/minimize', { method: 'POST' });
+    } catch (e) {}
+});
 
 window.addEventListener('DOMContentLoaded', startup);

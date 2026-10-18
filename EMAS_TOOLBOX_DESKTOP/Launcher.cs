@@ -54,10 +54,11 @@ namespace EmasTool
 
                 if (browserExe != null)
                 {
+                    string userDataDir = Path.Combine(baseDir, "cache_profile");
                     var psiBrowser = new ProcessStartInfo
                     {
                         FileName = browserExe,
-                        Arguments = "--app=http://127.0.0.1:5500 --window-size=1280,820",
+                        Arguments = string.Format("--app=http://127.0.0.1:5500 --window-size=1280,820 --user-data-dir=\"{0}\" --no-first-run --no-default-browser-check", userDataDir),
                         UseShellExecute = false
                     };
                     Process.Start(psiBrowser);
