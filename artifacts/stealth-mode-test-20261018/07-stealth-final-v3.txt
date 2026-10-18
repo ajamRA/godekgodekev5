@@ -1,0 +1,33 @@
+# STEALTH FINAL v3 — Sun Oct 18 19:07:46 +08 2026
+
+## status
+SERVICE_MODE_ACTIVE
+## flags
+/data/local/window/.service_mode
+/data/local/window/SERVICE_MODE_ACTIVE
+
+## daemons
+app_process /data/local/window com.emas.steering.SteeringModeDaemon
+
+## mount slot
+0
+
+## apps disabled
+package:com.vivaldi.browser.automotive
+package:org.smarttube.stable
+package:me.zhanghai.android.files
+package:com.emas.dvrprobe
+package:com.malaysia.syok
+package:com.thisisaim.hotfm
+package:com.cybercat.acbridge
+package:com.netflix.mediaclient
+package:com.retroarch.aarch64
+package:com.noor.thenoorcar
+
+## avas
+  1: FACTORY
+  2: FACTORY
+  3: FACTORY
+
+## port LISTEN
+(kosong = tutup)

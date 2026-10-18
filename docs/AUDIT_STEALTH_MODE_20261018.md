@@ -370,7 +370,62 @@ argumennya. Ujian pengesahan perlu menggunakan `kill` mengikut PID, bukan `pkill
 
 ---
 
-## 12. Kesimpulan
+## 13. Semakan Audit Kedua (B1–B8) — Verdict Setelah Diuji
+
+Audit kedua mengenal pasti 8 isu dan menyimpulkan "TIDAK SELAMAT". Sebahagian
+daripadanya **sudah dibetulkan** sebelum audit itu sampai. Berikut verdict sebenar
+selepas semakan pada kereta.
+
+| # | Dakwaan audit | Verdict sebenar | Bukti |
+| :--- | :--- | :--- | :--- |
+| B1 | Bendera berbeza | **SAH** — sudah dibetulkan | `avas_boot.sh` baris 19 semak `.service_mode` sahaja. Kini kedua-dua bendera ditulis. |
+| B2 | TelemetryDaemon tidak di-restart | **SAH** — sudah dibetulkan | `off` kini panggil `start_telemetry.sh`; port 8888 LISTEN semula |
+| B3 | RetroArch tidak dilumpuhkan | **SAH** — sudah dibetulkan | `com.retroarch.aarch64` ditambah ke `APPS` |
+| B4 | Bind mount tidak dibatalkan | **SAH** — sudah dibetulkan | `umount` ditambah; disahkan `mount | grep -c ttincar = 0` |
+| B5 | AVAS slot 2 tidak disentuh | **SAH** — sudah dibetulkan | Ketiga-tiga slot kini bind ke `factory_backup`, MD5 padan |
+| B6 | `stock_lock.wav` di `/data/local/tmp` | **SAH** — **audit ini betul, saya terlepas** | MD5 berbeza: `c09518be` (tmp) vs `d55c3347` (lock_original). Kini guna `lock_original.wav` |
+| B7 | `avas_boot_new.sh` dormant | **SALAH SEBAHAGIAN** | Fail **memang wujud** (5558 bait, 2026-10-01). Tetapi laluan `/data/local/tmp` tetap rapuh — kini `/data/local/avas/avas_boot.sh` diutamakan |
+| B8 | `tinyplay` tiada | **SALAH** | `/data/local/window/tinyplay` **wujud**, 777552 bait, 2026-09-26 |
+
+### Pembetulan tambahan yang audit tidak jumpa
+
+**Urutan `pkill` salah.** Skrip pelancar (`start_salam.sh`) kekal berjalan dan
+menghidupkan semula `SalamBoot` selepas ia dibunuh. Pembetulan: bunuh skrip
+pelancar dahulu, kemudian daemon, dengan dua pusingan.
+
+**`umount` gagal jika aplikasi masih berjalan.** `pm disable-user` mesti dijalankan
+**sebelum** `umount`, bukan selepas. Ditambah `am force-stop` sebelum lumpuhkan.
+
+### Keadaan akhir disahkan
+
+```
+status          : SERVICE_MODE_ACTIVE
+flags           : SERVICE_MODE_ACTIVE + .service_mode  (kedua-dua)
+
+daemon hidup    : 1 — SteeringModeDaemon sahaja
+mount slot      : 0  (dibatalkan)
+pakej disabled  : 10 (termasuk RetroArch)
+
+AVAS slot 1/2/3 : FACTORY (MD5 padan factory_backup)
+port 8888/8890  : tiada LISTEN
+```
+
+### Mengenai kesimpulan "TIDAK SELAMAT"
+
+Kesimpulan itu **wajar** berdasarkan kod sebelum 18:58. Selepas pembetulan, isu B1–B6
+tidak lagi terpakai. Namun tiga perkara kekal sebagai batasan yang perlu diketahui:
+
+1. **`/vendor` ialah partisi dinamik** — AVAS mesti bind mount, bukan sekadar umount.
+   Jika `factory_backup` hilang, pemulihan gagal senyap.
+2. **Stealth bertahan sehingga reboot** — `zzz_custom_apps.rc` memasang semula bind
+   mount pada `post-fs-data` tanpa semakan bendera. Jika kereta but semula di SC,
+   mount kembali dan hanya bendera yang kekal.
+3. **Dua laluan skrip** masih wujud. Gunakan `service_mode.sh` (dalam kereta), bukan
+   `sc_stealth_mode.ps1`, supaya tingkah laku konsisten.
+
+---
+
+## 14. Kesimpulan
 
 **Selepas pembetulan, Mod Servis kini berfungsi sepenuhnya.**
 
