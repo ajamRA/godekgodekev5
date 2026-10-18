@@ -67,6 +67,7 @@ payload_properties.txt
 
 # Screenshots / UI Dumps
 *.png
+!docs/images/*.png
 *.xml
 
 # Python & Environment
