@@ -1,66 +1,112 @@
 # ==============================================================================
-# sc_stealth_mode.ps1 — 1-Click Proton SC Stealth Service Mode for Proton e.MAS 5
+# sc_stealth_mode.ps1 - Mod Servis Proton SC (versi laptop)
+#
+# Selaras dengan /data/local/window/service_mode.sh pada kereta.
+# Skrip ini hanya PEMBALUT: ia memanggil skrip dalam kereta supaya logik
+# tidak bercabang dua.
+#
+# Guna:
+#   .\sc_stealth_mode.ps1
+#   .\sc_stealth_mode.ps1 -Target 192.168.1.20
+#   .\sc_stealth_mode.ps1 -Status
 # ==============================================================================
-# Kegunaan:
-# 1. Sembunyikan aplikasi kustom (Netflix, SmartTube, NoorEnergy, AcBridge) dari skrin.
-# 2. Matikan semua daemon latar belakang (Megaphone, Telemetry, GearAudio, Doa).
-# 3. Kunci sistem dalam mod asal kilang (Showroom Condition) untuk lawatan SC.
-# ==============================================================================
 
-$targetIp = "192.168.1.20"
-if ($args.Count -gt 0) { $targetIp = $args[0] }
-$device = "${targetIp}:5555"
-
-Write-Host "==========================================================" -ForegroundColor Cyan
-Write-Host " [SC STEALTH MODE] Menukar Kenderaan ke Mod Asal Kilang... " -ForegroundColor Yellow
-Write-Host "==========================================================" -ForegroundColor Cyan
-
-# 1. Pastikan ADB bersambung
-Write-Host "`n[1/4] Menyemak sambungan ADB ke $device..." -ForegroundColor White
-adb connect $device | Out-Null
-$devList = adb devices
-if ($devList -notmatch $targetIp) {
-    Write-Host "RALAT: Tidak dapat menyambung ke $device. Pastikan kereta hidup dan Wi-Fi aktif." -ForegroundColor Red
-    exit 1
-}
-Write-Host " -> Sambungan ADB disahkan AKTIF." -ForegroundColor Green
-
-# 2. Sembunyikan aplikasi kustom daripada skrin
-Write-Host "`n[2/4] Menyembunyikan aplikasi kustom daripada menu skrin IHU..." -ForegroundColor White
-$appsToHide = @(
-    "com.netflix.mediaclient",
-    "org.smarttube.stable",
-    "com.noor.thenoorcar",
-    "com.cybercat.acbridge",
-    "com.retroarch.aarch64"
+param(
+    [string]$Target = "192.168.1.20",
+    [switch]$Status,
+    [string]$Adb = ""
 )
 
-foreach ($pkg in $appsToHide) {
-    $res = adb -s $device shell "pm disable-user --user 0 $pkg 2>&1"
-    if ($res -match "disabled") {
-        Write-Host " -> [HIDDEN] $pkg" -ForegroundColor Green
-    } else {
-        Write-Host " -> [SKIP/NOT FOUND] $pkg ($res)" -ForegroundColor DarkGray
+$ErrorActionPreference = 'Stop'
+$device = "${Target}:5555"
+
+# --- cari adb ---------------------------------------------------------------
+if (-not $Adb) {
+    $c = @(
+        "$PSScriptRoot\EMAS_TOOLBOX_DESKTOP\tools\adb.exe",
+        "$env:USERPROFILE\scoop\apps\android-clt\current\platform-tools\adb.exe"
+    )
+    foreach ($p in $c) { if (Test-Path $p) { $Adb = $p; break } }
+    if (-not $Adb) {
+        $cmd = Get-Command adb -ErrorAction SilentlyContinue
+        if ($cmd) { $Adb = $cmd.Source }
     }
 }
-Write-Host " (Aplikasi rasmi Vivaldi, Spotify, SYOK & HotFM dikekalkan terlihat)" -ForegroundColor DarkCyan
+if (-not $Adb) { throw "adb tidak dijumpai. Guna -Adb <laluan>" }
 
-# 3. Matikan semua daemon kustom & wujudkan fail bendera .service_mode
-Write-Host "`n[3/4] Menghentikan semua daemon kustom & mengaktifkan bendera Service Mode..." -ForegroundColor White
-adb -s $device shell "touch /data/local/window/.service_mode"
-adb -s $device shell "pkill -f 'GearAudioPoc'; pkill -f 'DoorDoaPoc'; pkill -f 'MegaphoneDaemon'; pkill -f 'TelemetryDaemon'; pkill -f 'DoorPressureReliefDaemon'"
+function Invoke-Adb { param([string]$Cmd) & $Adb -s $device shell $Cmd 2>&1 }
 
-# 4. Pengesahan status akhir
-Write-Host "`n[4/4] Memeriksa status akhir sistem..." -ForegroundColor White
-$disabledCheck = adb -s $device shell "pm list packages -d | grep -iE 'netflix|smarttube|noor|acbridge|retroarch'"
-$processCheck = adb -s $device shell "ps -A | grep -iE 'GearAudio|Megaphone|TelemetryDaemon'"
+Write-Host "==========================================================" -ForegroundColor Cyan
+Write-Host " [SC MODE] Proton e.MAS 5 - $device" -ForegroundColor Yellow
+Write-Host "==========================================================" -ForegroundColor Cyan
+
+# --- sambung ----------------------------------------------------------------
+Write-Host "`n[1/3] Menyambung..." -ForegroundColor White
+& $Adb connect $device | Out-Null
+Start-Sleep -Milliseconds 1200
+$devRaw = (& $Adb devices) -join "`n"
+if ($devRaw -notmatch [regex]::Escape($Target)) {
+    Write-Host "RALAT: tidak dapat sambung ke $device" -ForegroundColor Red
+    Write-Host $devRaw -ForegroundColor DarkGray
+    exit 1
+}
+Write-Host " -> ADB AKTIF" -ForegroundColor Green
+
+# --- sahkan skrip ada -------------------------------------------------------
+$check = Invoke-Adb "if [ -f /data/local/window/service_mode.sh ]; then echo OK; else echo MISSING; fi"
+if ($check -notmatch "OK") {
+    Write-Host "RALAT: /data/local/window/service_mode.sh tiada pada kereta." -ForegroundColor Red
+    Write-Host " Jalankan dahulu: pasang_stealth.ps1" -ForegroundColor Yellow
+    exit 1
+}
+
+# --- mod status -------------------------------------------------------------
+if ($Status) {
+    Write-Host "`n[2/2] Status mod servis..." -ForegroundColor White
+    Invoke-Adb "sh /data/local/window/service_mode.sh status" | Write-Host
+    Write-Host "`nDaemon aktif:" -ForegroundColor Cyan
+    Invoke-Adb "ps -A -o ARGS | grep app_process | grep -v grep" | Write-Host
+    exit 0
+}
+
+# --- tentukan arah ----------------------------------------------------------
+$cur = Invoke-Adb "sh /data/local/window/service_mode.sh status"
+$isStealth = $cur -match "SERVICE_MODE_ACTIVE"
+
+if ($isStealth) {
+    Write-Host "`n[2/3] Keadaan sekarang: STEALTH - memulihkan mod normal..." -ForegroundColor Yellow
+    $out = Invoke-Adb "sh /data/local/window/service_mode.sh off"
+} else {
+    Write-Host "`n[2/3] Keadaan sekarang: NORMAL - mengaktifkan Stealth..." -ForegroundColor Yellow
+    $out = Invoke-Adb "sh /data/local/window/service_mode.sh on"
+}
+
+$out | Where-Object { $_ -match 'SERVICE_MODE|error|RALAT' } | ForEach-Object {
+    Write-Host " -> $_" -ForegroundColor DarkGray
+}
+
+# --- pengesahan -------------------------------------------------------------
+Write-Host "`n[3/3] Pengesahan..." -ForegroundColor White
+Start-Sleep -Seconds 2
+
+$finalState = Invoke-Adb "sh /data/local/window/service_mode.sh status"
+$disabled   = Invoke-Adb "pm list packages -d | wc -l"
+$daemons    = Invoke-Adb "ps -A -o ARGS | grep app_process | grep -v grep | wc -l"
+$mounts     = Invoke-Adb "mount | grep -cE 'ttincar|JOOX'"
+$port       = Invoke-Adb "netstat -tln 2>/dev/null | grep -E ':8888|:8890' | grep -c LISTEN"
+
+Write-Host ""
+Write-Host "  Status        : $($finalState -join '')" -ForegroundColor Cyan
+Write-Host "  Pakej disable : $($disabled -join '')"
+Write-Host "  Daemon        : $($daemons -join '')"
+Write-Host "  Mount slot    : $($mounts -join '')"
+Write-Host "  Port 8888/90  : $($port -join '')"
 
 Write-Host "`n==========================================================" -ForegroundColor Green
-Write-Host " STATUS: KERETA KINI 100% DALAM MOD KILANG (STEALTH MODE)" -ForegroundColor Green
+if ($finalState -match "STEALTH") {
+    Write-Host " STEALTH AKTIF - kereta dalam keadaan kilang" -ForegroundColor Green
+    Write-Host " Keluar: tahan Volume Down 5 saat, atau jalankan skrip ini lagi" -ForegroundColor DarkCyan
+} else {
+    Write-Host " MOD NORMAL - semua ciri kustom dipulihkan" -ForegroundColor Green
+}
 Write-Host "==========================================================" -ForegroundColor Green
-Write-Host " * Ikon Netflix, SmartTube & Noor: Ghaib dari skrin."
-Write-Host " * Bunyi Coin Gear D & Doa Pintu : Dimatikan sepenuhnya."
-Write-Host " * Port & Daemon Latar Belakang  : Sifar (Zero active ports)."
-Write-Host " * Bunyi AVAS Pejalan Kaki       : 100% Asal Kilang Proton."
-Write-Host " * Selamat untuk pemeriksaan mekanik & servis Proton SC!" -ForegroundColor Yellow
-Write-Host "`nBila selesai servis nanti, jalankan: .\sc_restore_mode.ps1`n" -ForegroundColor Cyan

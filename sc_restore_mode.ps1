@@ -1,63 +1,75 @@
 # ==============================================================================
-# sc_restore_mode.ps1 — 1-Click Restore Mode for Proton e.MAS 5
+# sc_restore_mode.ps1 - Pulihkan mod normal (versi laptop)
+#
+# Selaras dengan service_mode.sh pada kereta. Skrip ini hanya memanggil
+# `service_mode.sh off` supaya logik tidak bercabang dua.
+#
+# Guna:
+#   .\sc_restore_mode.ps1
+#   .\sc_restore_mode.ps1 -Target 192.168.1.20
 # ==============================================================================
-# Kegunaan:
-# 1. Munculkan semula aplikasi kustom (Netflix, SmartTube, NoorEnergy, AcBridge).
-# 2. Padamkan bendera .service_mode.
-# 3. Hidupkan semula daemon (GearAudio, Megaphone, Telemetry).
-# ==============================================================================
 
-$targetIp = "192.168.1.20"
-if ($args.Count -gt 0) { $targetIp = $args[0] }
-$device = "${targetIp}:5555"
-
-Write-Host "==========================================================" -ForegroundColor Cyan
-Write-Host " [SC RESTORE MODE] Mengembalikan Ciri Kustom Kereta...    " -ForegroundColor Green
-Write-Host "==========================================================" -ForegroundColor Cyan
-
-# 1. Pastikan ADB bersambung
-Write-Host "`n[1/3] Menyemak sambungan ADB ke $device..." -ForegroundColor White
-adb connect $device | Out-Null
-$devList = adb devices
-if ($devList -notmatch $targetIp) {
-    Write-Host "RALAT: Tidak dapat menyambung ke $device. Pastikan kereta hidup dan Wi-Fi aktif." -ForegroundColor Red
-    exit 1
-}
-Write-Host " -> Sambungan ADB disahkan AKTIF." -ForegroundColor Green
-
-# 2. Munculkan semula aplikasi di skrin
-Write-Host "`n[2/3] Memunculkan semula aplikasi kustom pada menu skrin..." -ForegroundColor White
-$appsToEnable = @(
-    "com.netflix.mediaclient",
-    "org.smarttube.stable",
-    "com.noor.thenoorcar",
-    "com.cybercat.acbridge",
-    "com.retroarch.aarch64"
+param(
+    [string]$Target = "192.168.1.20",
+    [string]$Adb = ""
 )
 
-foreach ($pkg in $appsToEnable) {
-    $res = adb -s $device shell "pm enable $pkg 2>&1"
-    if ($res -match "enabled") {
-        Write-Host " -> [RESTORED] $pkg" -ForegroundColor Green
-    } else {
-        Write-Host " -> [STATUS] $pkg ($res)" -ForegroundColor DarkGray
+$ErrorActionPreference = 'Stop'
+$device = "${Target}:5555"
+
+if (-not $Adb) {
+    $c = @(
+        "$PSScriptRoot\EMAS_TOOLBOX_DESKTOP\tools\adb.exe",
+        "$env:USERPROFILE\scoop\apps\android-clt\current\platform-tools\adb.exe"
+    )
+    foreach ($p in $c) { if (Test-Path $p) { $Adb = $p; break } }
+    if (-not $Adb) {
+        $cmd = Get-Command adb -ErrorAction SilentlyContinue
+        if ($cmd) { $Adb = $cmd.Source }
     }
 }
+if (-not $Adb) { throw "adb tidak dijumpai. Guna -Adb <laluan>" }
 
-# 3. Padamkan bendera .service_mode & mulakan semula daemon kustom
-Write-Host "`n[3/3] Memadamkan bendera Service Mode & memulakan semula daemon kustom..." -ForegroundColor White
-adb -s $device shell "rm -f /data/local/window/.service_mode"
+function Invoke-Adb { param([string]$Cmd) & $Adb -s $device shell $Cmd 2>&1 }
 
-# Mulakan daemon
-adb -s $device shell "sh /data/local/window/start_telemetry.sh 2>&1" | Out-Null
-adb -s $device shell "sh /data/local/window/start_megaphone.sh 2>&1" | Out-Null
-adb -s $device shell "sh /data/local/window/start_gear_audio.sh 2>&1" | Out-Null
+Write-Host "==========================================================" -ForegroundColor Cyan
+Write-Host " [SC RESTORE] Memulihkan mod normal - $device" -ForegroundColor Green
+Write-Host "==========================================================" -ForegroundColor Cyan
+
+Write-Host "`n[1/3] Menyambung..." -ForegroundColor White
+& $Adb connect $device | Out-Null
+Start-Sleep -Milliseconds 1200
+$devRaw = (& $Adb devices) -join "`n"
+if ($devRaw -notmatch [regex]::Escape($Target)) {
+    Write-Host "RALAT: tidak dapat sambung ke $device" -ForegroundColor Red
+    exit 1
+}
+Write-Host " -> ADB AKTIF" -ForegroundColor Green
+
+Write-Host "`n[2/3] Menjalankan service_mode.sh off..." -ForegroundColor White
+$out = Invoke-Adb "sh /data/local/window/service_mode.sh off"
+$out | Where-Object { $_ -match 'SERVICE_MODE' } | ForEach-Object {
+    Write-Host " -> $_" -ForegroundColor DarkGray
+}
+
+Write-Host "`n[3/3] Pengesahan..." -ForegroundColor White
+Start-Sleep -Seconds 3
+
+$state    = Invoke-Adb "sh /data/local/window/service_mode.sh status"
+$disabled = Invoke-Adb "pm list packages -d | wc -l"
+$daemons  = Invoke-Adb "ps -A -o ARGS | grep app_process | grep -v grep | wc -l"
+$mounts   = Invoke-Adb "mount | grep -cE 'ttincar|JOOX'"
+
+Write-Host ""
+Write-Host "  Status        : $($state -join '')" -ForegroundColor Cyan
+Write-Host "  Pakej disable : $($disabled -join '')"
+Write-Host "  Daemon        : $($daemons -join '')"
+Write-Host "  Mount slot    : $($mounts -join '')"
 
 Write-Host "`n==========================================================" -ForegroundColor Green
-Write-Host " STATUS: SEMUA CIRI KUSTOM TELAH DIKEMBALIKAN (RESTORED)!" -ForegroundColor Green
+if ($state -match "NORMAL") {
+    Write-Host " MOD NORMAL - semua ciri kustom dipulihkan" -ForegroundColor Green
+} else {
+    Write-Host " AMARAN: masih dalam Stealth - semak log di atas" -ForegroundColor Yellow
+}
 Write-Host "==========================================================" -ForegroundColor Green
-Write-Host " * Ikon Netflix, SmartTube & Noor : Muncul semula di skrin."
-Write-Host " * Data akaun & login             : 100% Kekal selamat."
-Write-Host " * Bunyi Coin Gear D (One-shot)   : Aktif sedia menunggu."
-Write-Host " * Daemon Megaphone & Telemetri   : Berjalan normal." -ForegroundColor Cyan
-Write-Host ""
