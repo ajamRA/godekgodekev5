@@ -1,0 +1,1123 @@
+/* ==========================================================================
+   PROTON e.MAS 5 — OBSIDIAN LUXURY EV COCKPIT THEME
+   Tailored for ACO Tech IHU801P 15.6" Cockpit Display
+   Zero external dependencies · 100% Offline Standalone · Edge-to-Edge
+   ========================================================================== */
+
+:root {
+  color-scheme: dark;
+  --cockpit-bg: #05080b;
+  --cockpit-surface: #070b0e;
+  --cockpit-panel-bg: radial-gradient(130% 100% at 50% 0%, rgba(18, 28, 36, 0.8) 0%, rgba(9, 14, 19, 0.92) 100%);
+  --cockpit-battery-bg: radial-gradient(130% 100% at 50% 0%, rgba(15, 34, 26, 0.9) 0%, rgba(7, 16, 13, 0.96) 100%);
+  --cockpit-border: rgba(255, 255, 255, 0.08);
+  --cockpit-border-subtle: rgba(255, 255, 255, 0.04);
+  --cockpit-border-emerald: rgba(16, 185, 129, 0.25);
+  
+  --cockpit-text-bright: #ffffff;
+  --cockpit-text-main: #f1f5f9;
+  --cockpit-text-sub: rgba(241, 245, 249, 0.65);
+  --cockpit-text-dim: rgba(241, 245, 249, 0.40);
+
+  --cockpit-emerald: #10b981;
+  --cockpit-emerald-bright: #34d399;
+  --cockpit-cyan: #38bdf8;
+  --cockpit-amber: #f59e0b;
+  --cockpit-red: #ef4444;
+}
+
+/* ==========================================================================
+   RESET & SYSTEM DEFAULTS
+   ========================================================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: var(--cockpit-bg) !important;
+  color: var(--cockpit-text-main) !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body.flat-app {
+  min-height: 100vh !important;
+  min-height: 100dvh !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: var(--cockpit-bg) !important;
+  display: flex !important;
+  align-items: stretch !important;
+  justify-content: stretch !important;
+  overflow: hidden !important;
+}
+
+/* ==========================================================================
+   CORE FLEX & GRID UTILITY ENGINE (STANDALONE OFFLINE REPLACEMENT)
+   ========================================================================== */
+.flex { display: flex !important; }
+.inline-flex { display: inline-flex !important; }
+.flex-col { flex-direction: column !important; }
+.flex-row { flex-direction: row !important; }
+.flex-1 { flex: 1 1 0% !important; }
+.flex-wrap { flex-wrap: wrap !important; }
+
+.items-start { align-items: flex-start !important; }
+.items-center { align-items: center !important; }
+.items-end { align-items: flex-end !important; }
+.items-baseline { align-items: baseline !important; }
+
+.justify-start { justify-content: flex-start !important; }
+.justify-center { justify-content: center !important; }
+.justify-end { justify-content: flex-end !important; }
+.justify-between { justify-content: space-between !important; }
+
+.grid { display: grid !important; }
+.grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
+.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+.grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+.grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+.grid-cols-8 { grid-template-columns: repeat(8, minmax(0, 1fr)) !important; }
+.grid-cols-10 { grid-template-columns: repeat(10, minmax(0, 1fr)) !important; }
+.grid-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)) !important; }
+
+.gap-1 { gap: 4px !important; }
+.gap-1\.5 { gap: 6px !important; }
+.gap-2 { gap: 8px !important; }
+.gap-2\.5 { gap: 10px !important; }
+.gap-3 { gap: 12px !important; }
+.gap-4 { gap: 16px !important; }
+.gap-5 { gap: 20px !important; }
+.gap-6 { gap: 24px !important; }
+
+.hidden { display: none !important; }
+.block { display: block !important; }
+.relative { position: relative !important; }
+.absolute { position: absolute !important; }
+.text-left { text-align: left !important; }
+.text-center { text-align: center !important; }
+.text-right { text-align: right !important; }
+
+.w-full { width: 100% !important; }
+.h-full { height: 100% !important; }
+
+.font-mono {
+  font-family: "SF Mono", Monaco, Consolas, "Liberation Mono", monospace !important;
+}
+
+/* ==========================================================================
+   FULLSCREEN COCKPIT SHELL
+   ========================================================================== */
+.cockpit-shell {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  height: 100vh !important;
+  min-height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: var(--cockpit-surface) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+/* ==========================================================================
+   TOP STATUS HEADER
+   ========================================================================== */
+.cockpit-header {
+  height: 56px !important;
+  min-height: 56px !important;
+  padding: 0 24px !important;
+  background: rgba(8, 13, 18, 0.96) !important;
+  color: var(--cockpit-text-bright) !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--cockpit-border) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  z-index: 30 !important;
+}
+
+.cockpit-header .text-white { color: var(--cockpit-text-bright) !important; }
+.cockpit-header .text-emerald-400 { color: var(--cockpit-emerald-bright) !important; }
+
+/* Status Live Pill */
+#live-indicator {
+  padding: 6px 14px !important;
+  border-radius: 999px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  transition: all 0.25s ease !important;
+}
+#live-indicator #status-dot {
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50% !important;
+  display: inline-block !important;
+}
+#live-indicator[data-state="live"] {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  color: var(--cockpit-emerald-bright) !important;
+}
+#live-indicator[data-state="live"] #status-dot {
+  background: var(--cockpit-emerald-bright) !important;
+  box-shadow: 0 0 8px var(--cockpit-emerald) !important;
+}
+#live-indicator[data-state="waiting"],
+#live-indicator[data-state="simulation"] {
+  background: rgba(56, 189, 248, 0.15) !important;
+  border: 1px solid rgba(56, 189, 248, 0.35) !important;
+  color: var(--cockpit-cyan) !important;
+}
+#live-indicator[data-state="waiting"] #status-dot,
+#live-indicator[data-state="simulation"] #status-dot {
+  background: var(--cockpit-cyan) !important;
+  box-shadow: 0 0 8px var(--cockpit-cyan) !important;
+}
+#live-indicator[data-state="stale"] {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+  color: #f87171 !important;
+}
+#live-indicator[data-state="stale"] #status-dot {
+  background: var(--cockpit-red) !important;
+  box-shadow: 0 0 8px var(--cockpit-red) !important;
+}
+
+/* Gear Cluster */
+.cockpit-header .bg-\[\#0d141b\] {
+  background: #0d141b !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 12px !important;
+  padding: 3px 5px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+}
+
+.cockpit-header #gear-P,
+.cockpit-header #gear-R,
+.cockpit-header #gear-N,
+.cockpit-header #gear-D {
+  min-width: 36px !important;
+  height: 30px !important;
+  padding: 0 10px !important;
+  text-align: center !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 8px !important;
+  font-family: "SF Mono", Monaco, Consolas, monospace !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: rgba(255, 255, 255, 0.35) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Active Gear Highlighting */
+.cockpit-header #gear-P:not(.text-white\/40),
+.cockpit-header #gear-P.bg-amber-400 {
+  background: #f59e0b !important;
+  color: #000000 !important;
+  font-weight: 900 !important;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.6) !important;
+}
+.cockpit-header #gear-R:not(.text-white\/40),
+.cockpit-header #gear-R.bg-amber-400 {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+  font-weight: 900 !important;
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.6) !important;
+}
+.cockpit-header #gear-N:not(.text-white\/40),
+.cockpit-header #gear-N.bg-amber-400 {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  font-weight: 900 !important;
+  box-shadow: 0 0 14px rgba(2, 132, 199, 0.6) !important;
+}
+.cockpit-header #gear-D:not(.text-white\/40),
+.cockpit-header #gear-D.bg-amber-400 {
+  background: #10b981 !important;
+  color: #000000 !important;
+  font-weight: 900 !important;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.6) !important;
+}
+
+/* ==========================================================================
+   MAIN COCKPIT FLEX / SPLIT-SCREEN LAYOUT
+   ========================================================================== */
+.cockpit-grid {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: stretch !important;
+  padding: 14px 18px !important;
+  gap: 12px !important;
+  overflow: hidden !important;
+  min-height: 0 !important;
+  background: var(--cockpit-surface) !important;
+  position: relative !important;
+}
+
+.cockpit-media,
+.cockpit-battery,
+.cockpit-climate {
+  border-radius: 20px !important;
+  border: 1px solid var(--cockpit-border) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35) !important;
+  overflow: hidden !important;
+}
+
+/* Draggable Split Divider */
+.split-divider {
+  width: 14px !important;
+  margin: 0 -2px !important;
+  cursor: col-resize !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  z-index: 25 !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  touch-action: none !important;
+}
+
+.split-divider::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -20px;
+  right: -20px;
+  cursor: col-resize;
+  z-index: 30;
+}
+
+.split-divider-line {
+  flex: 1 !important;
+  width: 2px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-radius: 1px !important;
+  transition: background 0.2s ease !important;
+}
+
+.split-divider-handle {
+  width: 18px !important;
+  height: 44px !important;
+  border-radius: 9px !important;
+  background: rgba(18, 28, 36, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 14px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+  transition: all 0.2s ease !important;
+}
+
+.split-divider:hover .split-divider-line,
+.split-divider.dragging .split-divider-line {
+  background: var(--cockpit-emerald) !important;
+  box-shadow: 0 0 6px var(--cockpit-emerald) !important;
+}
+
+.split-divider:hover .split-divider-handle,
+.split-divider.dragging .split-divider-handle {
+  background: var(--cockpit-emerald) !important;
+  color: #000000 !important;
+  border-color: var(--cockpit-emerald-bright) !important;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.6) !important;
+  transform: scale(1.08) !important;
+}
+
+/* ==========================================================================
+   LEFT COLUMN: MEDIA & HUB
+   ========================================================================== */
+.cockpit-media {
+  flex: 1.05 1 0px !important;
+  min-width: 320px !important;
+  background: var(--cockpit-panel-bg) !important;
+  padding: 18px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  min-height: 0 !important;
+  color: var(--cockpit-text-main) !important;
+}
+
+.cockpit-media .text-white { color: var(--cockpit-text-bright) !important; }
+.cockpit-media .text-white\/60,
+.cockpit-media .text-white\/50,
+.cockpit-media .text-white\/40 { color: var(--cockpit-text-sub) !important; }
+.cockpit-media .text-emerald-300,
+.cockpit-media .text-emerald-400 { color: var(--cockpit-emerald-bright) !important; }
+
+/* Segmented tab bar */
+.cockpit-media .flex.items-center.justify-between.pb-2\.5 {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding-bottom: 10px !important;
+  border-bottom: 1px solid var(--cockpit-border) !important;
+}
+
+.cockpit-media #tab-btn-power,
+.cockpit-media #tab-btn-health,
+.cockpit-media #tab-btn-cells,
+.cockpit-media #tab-btn-hub {
+  min-height: 36px !important;
+  padding: 6px 14px !important;
+  border-radius: 10px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: var(--cockpit-text-sub) !important;
+  transition: all 0.2s ease !important;
+}
+
+.cockpit-media #tab-btn-power:not(.text-white\/60),
+.cockpit-media #tab-btn-health:not(.text-white\/60),
+.cockpit-media #tab-btn-cells:not(.text-white\/60),
+.cockpit-media #tab-btn-hub:not(.text-white\/60) {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: var(--cockpit-emerald-bright) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2) !important;
+}
+
+/* Quick launch buttons */
+.cockpit-media button {
+  border-radius: 12px !important;
+  cursor: pointer !important;
+}
+
+.cockpit-media .bg-\[\#0d141b\] {
+  background: rgba(13, 20, 27, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 10px !important;
+  border-radius: 12px !important;
+}
+.cockpit-media .bg-\[\#0d141b\]:hover {
+  background: rgba(20, 32, 44, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+/* Canvas & Graph in sensors tab */
+.cockpit-media #energyCanvas {
+  border-radius: 10px !important;
+}
+
+/* ==========================================================================
+   RIGHT COLUMN: TELEMETRY & CLIMATE
+   ========================================================================== */
+.cockpit-telemetry {
+  flex: 0.95 1 0px !important;
+  min-width: 260px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+  min-height: 0 !important;
+}
+
+/* 1. BATTERY CARD — LUXURY OBSIDIAN DARK GLASS (FIXES WHITE BOX!) */
+.cockpit-battery {
+  flex: 1.05 1 0 !important;
+  background: var(--cockpit-battery-bg) !important;
+  border: 1px solid var(--cockpit-border-emerald) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(16, 185, 129, 0.15) !important;
+  padding: 16px 20px !important;
+  color: var(--cockpit-text-bright) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+}
+
+.cockpit-battery .text-white { color: #ffffff !important; }
+.cockpit-battery .text-white\/70,
+.cockpit-battery .text-white\/60,
+.cockpit-battery .text-white\/50,
+.cockpit-battery .text-white\/40 { color: var(--cockpit-text-sub) !important; }
+.cockpit-battery .text-emerald-400 { color: var(--cockpit-emerald-bright) !important; }
+.cockpit-battery .text-cyan-300,
+.cockpit-battery .text-cyan-400 { color: var(--cockpit-cyan) !important; }
+
+/* Battery Top Row */
+.cockpit-battery .flex.items-center.justify-between.pb-2\.5 {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  border-bottom: 1px solid var(--cockpit-border) !important;
+  padding-bottom: 8px !important;
+}
+
+/* Big SoC & Power Row */
+.cockpit-battery .my-3.flex.items-center.justify-between {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin: 8px 0 !important;
+}
+
+.cockpit-battery .flex.items-baseline.gap-2 {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 6px !important;
+}
+
+#soc-display {
+  font-size: clamp(52px, 5vw, 68px) !important;
+  font-weight: 800 !important;
+  font-family: "SF Mono", Monaco, Consolas, monospace !important;
+  color: #ffffff !important;
+  line-height: 1 !important;
+  text-shadow: 0 0 24px rgba(16, 185, 129, 0.3) !important;
+}
+
+#power-display {
+  font-size: clamp(32px, 3.4vw, 44px) !important;
+  font-weight: 800 !important;
+  font-family: "SF Mono", Monaco, Consolas, monospace !important;
+  line-height: 1 !important;
+}
+
+.cockpit-battery .flex.items-baseline.justify-end.gap-1\.5 {
+  display: flex !important;
+  align-items: baseline !important;
+  justify-content: flex-end !important;
+  gap: 4px !important;
+}
+
+/* Dual Regen / Traction Energy Ribbon */
+.cockpit-battery .space-y-1 {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+
+.cockpit-battery .bg-\[\#080d11\] {
+  background: #080d11 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  height: 11px !important;
+  border-radius: 999px !important;
+  display: flex !important;
+  overflow: hidden !important;
+  padding: 1px !important;
+}
+
+.cockpit-battery #ribbon-regen {
+  background: linear-gradient(90deg, #059669, #10b981) !important;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5) !important;
+  border-radius: 999px 0 0 999px !important;
+}
+
+.cockpit-battery #ribbon-traction {
+  background: linear-gradient(90deg, #0284c7, #38bdf8) !important;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.5) !important;
+  border-radius: 0 999px 999px 0 !important;
+}
+
+.cockpit-battery .flex.justify-between.text-\[9px\] {
+  display: flex !important;
+  justify-content: space-between !important;
+  font-size: 11px !important;
+  color: var(--cockpit-text-dim) !important;
+}
+
+/* Trip Reset Row */
+.cockpit-battery .mt-2\.5.pt-2.border-t {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  border-top: 1px solid var(--cockpit-border) !important;
+  padding-top: 8px !important;
+  margin-top: 6px !important;
+}
+
+.cockpit-battery button {
+  min-height: 32px !important;
+  background: rgba(16, 185, 129, 0.12) !important;
+  color: var(--cockpit-emerald-bright) !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  border-radius: 8px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  padding: 4px 12px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+.cockpit-battery button:hover {
+  background: rgba(16, 185, 129, 0.22) !important;
+  border-color: rgba(16, 185, 129, 0.5) !important;
+}
+
+/* 2. SMART CLIMATE CARD */
+.cockpit-climate {
+  flex: 0.95 1 0 !important;
+  background: var(--cockpit-panel-bg) !important;
+  border: 1px solid var(--cockpit-border) !important;
+  padding: 16px 20px !important;
+  color: var(--cockpit-text-bright) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+}
+
+.cockpit-climate .text-white { color: #ffffff !important; }
+.cockpit-climate .text-white\/70,
+.cockpit-climate .text-white\/60,
+.cockpit-climate .text-white\/50 { color: var(--cockpit-text-sub) !important; }
+.cockpit-climate .text-emerald-300,
+.cockpit-climate .text-emerald-400 { color: var(--cockpit-emerald-bright) !important; }
+
+/* Climate Header */
+.cockpit-climate .flex.items-center.justify-between.pb-2\.5 {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  border-bottom: 1px solid var(--cockpit-border) !important;
+  padding-bottom: 8px !important;
+}
+
+/* Climate Mode Cards (Adaptive, Quick Cool, Comfort, Manual) */
+.cockpit-climate .grid.grid-cols-4.gap-2 {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 8px !important;
+  margin: 8px 0 !important;
+}
+
+.cockpit-climate #cm-adaptive,
+.cockpit-climate #cm-quick_cool,
+.cockpit-climate #cm-comfort,
+.cockpit-climate #cm-off {
+  min-height: 48px !important;
+  padding: 8px !important;
+  border-radius: 12px !important;
+  cursor: pointer !important;
+  text-align: left !important;
+  transition: all 0.2s ease !important;
+}
+
+.cockpit-climate .bg-\[\#0c141c\] {
+  background: rgba(12, 20, 28, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+.cockpit-climate .bg-\[\#0c141c\]:hover {
+  background: rgba(18, 30, 42, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+/* Temperature and Fan 2-Column Split */
+/* Temperature and Fan Stacked Layout */
+.cockpit-climate .climate-controls-stack {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  border-top: 1px solid var(--cockpit-border) !important;
+  padding-top: 8px !important;
+}
+
+.cockpit-climate .climate-temp-card,
+.cockpit-climate .climate-fan-card {
+  background: rgba(11, 18, 24, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 16px !important;
+  padding: 10px 16px !important;
+}
+
+#temp-val {
+  font-size: 30px !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+}
+
+.cockpit-climate .bg-\[\#14202b\] {
+  background: rgba(20, 32, 43, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 12px !important;
+  cursor: pointer !important;
+}
+
+.cockpit-climate button.climate-temp-btn,
+.cockpit-climate button.w-9.h-9 {
+  width: 52px !important;
+  height: 46px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 24px !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  border-radius: 12px !important;
+}
+
+.cockpit-climate .bg-\[\#14202b\]:hover {
+  background: rgba(28, 45, 61, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+/* Blower Fan Speed Dots - Full Width 8 Buttons */
+.cockpit-climate .fan-dot {
+  min-height: 40px !important;
+  height: 40px !important;
+  border-radius: 10px !important;
+  cursor: pointer !important;
+  font-weight: 800 !important;
+  font-size: 14px !important;
+  border: none !important;
+  transition: all 0.15s ease !important;
+}
+
+.cockpit-climate .fan-dot.bg-emerald-400 {
+  background: var(--cockpit-emerald-bright) !important;
+  color: #000000 !important;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4) !important;
+}
+
+/* Bottom Dock: Window Controls */
+.cockpit-media .mt-2.pt-2.border-t {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  border-top: 1px solid var(--cockpit-border) !important;
+  padding-top: 10px !important;
+  margin-top: 8px !important;
+}
+
+.cockpit-media .mt-2.pt-2.border-t .flex.gap-2 {
+  display: flex !important;
+  gap: 8px !important;
+}
+
+.cockpit-media .mt-2.pt-2.border-t button {
+  min-height: 32px !important;
+  padding: 6px 14px !important;
+  border-radius: 8px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  background: rgba(20, 32, 43, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: var(--cockpit-text-bright) !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+.cockpit-media .mt-2.pt-2.border-t button:hover {
+  background: rgba(28, 45, 61, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+/* ==========================================================================
+   TOAST NOTIFICATION (BOTTOM-CENTER FIXED PILL)
+   ========================================================================== */
+#toast {
+  position: fixed !important;
+  bottom: 24px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  top: auto !important;
+  right: auto !important;
+  z-index: 9999 !important;
+  background: rgba(14, 23, 32, 0.95) !important;
+  border: 1px solid rgba(16, 185, 129, 0.4) !important;
+  color: var(--cockpit-emerald-bright) !important;
+  padding: 10px 24px !important;
+  border-radius: 999px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6) !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  transition: opacity 0.3s ease !important;
+}
+
+#toast.opacity-100 {
+  opacity: 1 !important;
+}
+#toast.opacity-0 {
+  opacity: 0 !important;
+}
+
+/* Universal Button Focus and Animations */
+button, input {
+  font: inherit;
+  outline: none;
+}
+button:focus-visible {
+  outline: 2px solid var(--cockpit-emerald-bright) !important;
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   EDGE DRAWER OVERLAY & CLIMATE POWER EXTENSION
+   ========================================================================== */
+
+/* Climate Power Button */
+#btn-climate-power {
+  transition: all 0.2s ease !important;
+}
+#btn-climate-power.power-on {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
+  color: #6ee7b7 !important;
+}
+#btn-climate-power.power-off {
+  background: rgba(244, 63, 94, 0.25) !important;
+  border-color: rgba(244, 63, 94, 0.5) !important;
+  color: #fecdd3 !important;
+  box-shadow: 0 0 12px rgba(244, 63, 94, 0.3) !important;
+}
+
+/* Edge Drawer Mode */
+.cockpit-grid.edge-drawer-mode {
+  position: relative !important;
+}
+
+.cockpit-grid.edge-drawer-mode .cockpit-media {
+  flex: 1 1 100% !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.cockpit-grid.edge-drawer-mode .split-divider {
+  display: none !important;
+}
+
+.cockpit-grid.edge-drawer-mode .cockpit-telemetry {
+  position: fixed !important;
+  top: 10px !important;
+  bottom: 10px !important;
+  right: 12px !important;
+  width: 440px !important;
+  max-width: 90vw !important;
+  z-index: 1000 !important;
+  background: rgba(8, 14, 20, 0.96) !important;
+  backdrop-filter: blur(28px) !important;
+  -webkit-backdrop-filter: blur(28px) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  border-radius: 28px !important;
+  padding: 18px !important;
+  box-shadow: -15px 0 50px rgba(0, 0, 0, 0.85), 0 0 30px rgba(16, 185, 129, 0.15) !important;
+  transform: translateX(calc(100% + 35px)) !important;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  pointer-events: none !important;
+  overflow-y: auto !important;
+}
+
+.cockpit-grid.edge-drawer-mode .cockpit-telemetry.drawer-open {
+  transform: translateX(0) !important;
+  pointer-events: auto !important;
+}
+
+.cockpit-grid.edge-drawer-mode #drawer-top-bar {
+  display: flex !important;
+}
+
+/* Edge Drawer Tab (Docked at Far Right Edge) */
+.edge-drawer-tab {
+  position: fixed !important;
+  right: 0 !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  z-index: 999 !important;
+  cursor: pointer !important;
+  touch-action: manipulation !important;
+}
+
+.edge-tab-handle {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  background: rgba(11, 20, 27, 0.94) !important;
+  border: 1px solid rgba(16, 185, 129, 0.4) !important;
+  border-right: none !important;
+  border-radius: 16px 0 0 16px !important;
+  padding: 12px 6px 12px 8px !important;
+  box-shadow: -6px 0 20px rgba(0, 0, 0, 0.6), 0 0 12px rgba(16, 185, 129, 0.2) !important;
+  transition: all 0.25s ease !important;
+}
+
+.edge-drawer-tab:hover .edge-tab-handle,
+.edge-drawer-tab:active .edge-tab-handle {
+  background: rgba(16, 185, 129, 0.25) !important;
+  border-color: var(--cockpit-emerald-bright) !important;
+  transform: scale(1.05) translateX(-2px) !important;
+}
+
+.edge-tab-pulse {
+  width: 6px !important;
+  height: 6px !important;
+  border-radius: 50% !important;
+  background: var(--cockpit-emerald-bright) !important;
+  box-shadow: 0 0 8px var(--cockpit-emerald-bright) !important;
+  animation: tabPulse 2s infinite !important;
+}
+
+@keyframes tabPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+.edge-tab-icon {
+  font-size: 13px !important;
+}
+
+.edge-tab-label {
+  writing-mode: vertical-rl !important;
+  text-orientation: mixed !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.1em !important;
+  color: #a7f3d0 !important;
+  text-transform: uppercase !important;
+}
+
+.edge-tab-arrow {
+  font-size: 14px !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-weight: bold !important;
+  margin-top: 2px !important;
+}
+
+/* Backdrop */
+.edge-drawer-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(3px) !important;
+  -webkit-backdrop-filter: blur(3px) !important;
+  z-index: 998 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.3s ease !important;
+}
+
+.edge-drawer-backdrop.active {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* ==========================================================================
+   SWISS DESIGN SYSTEM (INTERNATIONAL TYPOGRAPHIC STYLE)
+   - Generous structural whitespace / negative space (Form follows function)
+   - Strict mathematical grid with flush-left typography (Never centered)
+   - High typographic contrast: Massive hero numbers paired with crisp labels
+   - Industrial Chic Obsidian Slate palette with subtle precision borders
+   ========================================================================== */
+
+/* Typography & Layout Foundation */
+html, body, button, input {
+  font-family: "Helvetica Neue", Helvetica, Inter, "Segoe UI", Arial, sans-serif !important;
+  letter-spacing: -0.015em !important;
+}
+
+.cockpit-grid {
+  padding: 16px 20px !important;
+  gap: 16px !important;
+}
+
+.cockpit-media,
+.cockpit-battery,
+.cockpit-climate {
+  border-radius: 16px !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: none !important;
+  padding: 20px 22px !important;
+  background: #070c11 !important;
+}
+
+/* Swiss Segmented Tabs with Clean Whitespace */
+.cockpit-media #tab-btn-power,
+.cockpit-media #tab-btn-health,
+.cockpit-media #tab-btn-cells,
+.cockpit-media #tab-btn-hub {
+  min-height: 36px !important;
+  padding: 8px 16px !important;
+  border-radius: 8px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  box-shadow: none !important;
+  transition: all 0.2s ease !important;
+}
+
+.cockpit-media #tab-btn-power:not(.text-white\/60),
+.cockpit-media #tab-btn-health:not(.text-white\/60),
+.cockpit-media #tab-btn-cells:not(.text-white\/60),
+.cockpit-media #tab-btn-hub:not(.text-white\/60) {
+  background: #ffffff !important;
+  color: #05080b !important;
+  border-color: #ffffff !important;
+  font-weight: 800 !important;
+  box-shadow: none !important;
+}
+
+/* Swiss Spacious Cards */
+.swiss-card {
+  background: #090e15 !important;
+  border: 1px solid rgba(255, 255, 255, 0.11) !important;
+  border-radius: 12px !important;
+  padding: 20px 22px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  position: relative !important;
+}
+
+.swiss-card:hover {
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+/* Swiss Typographic Scale */
+.swiss-eyebrow {
+  font-size: 10px !important;
+  font-family: "SF Mono", Monaco, Consolas, monospace !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.14em !important;
+  color: rgba(255, 255, 255, 0.45) !important;
+  margin-bottom: 6px !important;
+  display: block !important;
+}
+
+.swiss-hero-number {
+  font-size: 42px !important;
+  font-weight: 900 !important;
+  line-height: 1.0 !important;
+  letter-spacing: -0.04em !important;
+  color: #ffffff !important;
+  margin: 6px 0 10px 0 !important;
+  display: block !important;
+}
+
+.swiss-sublabel {
+  font-size: 11px !important;
+  font-family: "SF Mono", Monaco, Consolas, monospace !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  display: block !important;
+  margin-bottom: 12px !important;
+}
+
+.swiss-divider {
+  height: 1px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  margin: 14px 0 !important;
+  width: 100% !important;
+}
+
+.swiss-data-row {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 5px 0 !important;
+  font-size: 11px !important;
+  font-family: "SF Mono", Monaco, Consolas, monospace !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+}
+
+.swiss-data-row:last-child {
+  border-bottom: none !important;
+}
+
+.swiss-data-key {
+  color: rgba(255, 255, 255, 0.45) !important;
+  text-transform: uppercase !important;
+}
+
+.swiss-data-val {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+/* Flush-Left Alignment Everywhere */
+#tab-content-health *,
+#tab-content-power *,
+#tab-content-cells * {
+  text-align: left !important;
+}
+
+/* Swiss 120-Cell Matrix - High Precision 120s LFP Grid */
+#cells-grid-container {
+  display: grid !important;
+  grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+  gap: 5px !important;
+  padding: 10px !important;
+  background: #080d12 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 10px !important;
+}
+
+#cells-grid-container button {
+  min-height: 32px !important;
+  height: 32px !important;
+  border-radius: 6px !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: #0d141c !important;
+  color: #e2e8f0 !important;
+  padding: 3px 6px !important;
+  box-shadow: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+#cells-grid-container button:hover {
+  background: #182330 !important;
+  border-color: #38bdf8 !important;
+}
+
+#cells-grid-container button.selected-cell {
+  background: #102a3a !important;
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.25) !important;
+}
+
+/* Compact Sub-header Badges */
+.swiss-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+

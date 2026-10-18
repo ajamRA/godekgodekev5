@@ -1,85 +1,583 @@
-<!doctype html>
-<html lang="ms" data-theme="dark">
+<!DOCTYPE html>
+<html lang="ms">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#eef0ed">
-  <title>EmasEnergy · Proton e.MAS 5</title>
-  <link rel="stylesheet" href="style.css?v=15">
-  <link rel="stylesheet" href="premium.css?v=3">
-  <link rel="stylesheet" href="pages.css?v=3">
-  <link rel="stylesheet" href="companion.css?v=1">
+  <meta name="theme-color" content="#17231b">
+  <title>Proton e.MAS 5 · Cockpit EV</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    
+    .glass-panel {
+      background: #18221b;
+      border: 1px solid rgba(226, 235, 220, 0.12);
+      box-shadow: 0 8px 24px rgba(39, 54, 41, 0.08);
+    }
 
+    .pip-dock-guide {
+      background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.03) 0, rgba(255, 255, 255, 0.03) 10px, transparent 10px, transparent 20px);
+    }
+
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+  </style>
+  <link rel="stylesheet" href="flat-cockpit.css?v=6">
 </head>
-<body>
-<aside>
-  <a class="brand" href="#overview" aria-label="EmasEnergy Main"><span class="brand-mark">e<span>⚡</span></span></a>
-  <nav aria-label="Vehicle Telemetry Categories" id="navigation"></nav>
-  <div class="rail-bottom"><span class="connection-dot"></span><small>IHU</small></div>
-</aside>
-<div class="shell">
-  <header>
-    <a class="wordmark" href="#overview">emas<span>energy</span><small>EV TELEMETRY</small></a>
-    <div class="header-right">
-      <span class="demo" id="status-pill"><i></i> MENYAMBUNG</span>
-      <button id="theme" class="icon-button" aria-label="Toggle theme">☾</button>
-      <time id="clock"></time>
+<body class="flat-app bg-[#05080b] text-[#f1f5f9] antialiased p-2 sm:p-4 min-h-screen flex items-center justify-center select-none overflow-hidden">
+
+  <!-- MAIN SCREEN CONTAINER -->
+  <div class="cockpit-shell w-full h-full max-w-6xl bg-[#070b0e] border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col justify-between relative min-h-[640px]">
+    
+    <!-- TOP SLIM STATUS HEADER -->
+    <header class="cockpit-header px-6 py-3 flex items-center justify-between border-b border-white/5 bg-[#090e13]/80 backdrop-blur-md z-10">
+      <div class="flex items-center gap-4">
+        <!-- LOGO -->
+        <div class="flex items-center gap-2.5">
+          <span class="w-7 h-7 rounded-lg bg-gradient-to-tr from-emerald-500 to-teal-300 flex items-center justify-center text-black font-extrabold text-sm shadow-md shadow-emerald-500/30">
+            e⚡
+          </span>
+          <span class="text-sm font-extrabold tracking-widest text-white uppercase">PROTON <span class="text-emerald-400">e.MAS 5</span></span>
+        </div>
+
+        <span class="w-px h-4 bg-white/15"></span>
+
+        <!-- STATUS -->
+        <div class="flex items-center gap-2 text-xs font-semibold text-emerald-400" id="live-indicator" data-state="waiting">
+          <span class="relative flex h-2 w-2">
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" id="status-dot"></span>
+          </span>
+          <span class="tracking-wide" id="status-pill-text">MENUNGGU DATA KENDERAAN</span>
+        </div>
+      </div>
+
+      <!-- GEAR & AMBIENT -->
+      <div class="flex items-center gap-6">
+        <div class="flex items-center bg-[#0d141b] p-1 rounded-xl border border-white/10 text-xs font-mono font-bold">
+          <span id="gear-P" class="px-3 py-0.5 rounded-lg text-white/40">P</span>
+          <span id="gear-R" class="px-3 py-0.5 rounded-lg text-white/40">R</span>
+          <span id="gear-N" class="px-3 py-0.5 rounded-lg text-white/40">N</span>
+          <span id="gear-D" class="px-3 py-0.5 rounded-lg text-white/40">D</span>
+        </div>
+
+        <div class="flex items-center gap-4 text-xs font-mono text-white/70">
+          <span>LUAR <b class="text-white" id="ambient-temp">—°C</b></span>
+          <span>🕒 <b class="text-white font-bold" id="clock">--:--</b></span>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN COCKPIT VIEWPORT -->
+    <div class="cockpit-grid flex-1 overflow-hidden" id="cockpit-grid">
+      
+      <!-- ==================== LEFT COLUMN: SPLIT-SCREEN & IN-APP VIEWPORT ==================== -->
+      <div class="cockpit-media glass-panel rounded-3xl p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden" id="cockpit-media">
+        
+        <!-- TOP SEGMENTED TAB BAR & SIZE PRESETS -->
+        <div class="flex items-center justify-between pb-3 border-b border-white/10 z-10">
+          <div class="flex items-center gap-2 bg-[#080d12] p-1 rounded-xl border border-white/10 text-xs">
+            <button onclick="window.switchSplitTab('power')" id="tab-btn-power" class="px-4 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold transition-all flex items-center gap-2 shadow-sm">
+              <span>📈</span> Graf Kuasa &amp; Aliran
+            </button>
+            <button onclick="window.switchSplitTab('health')" id="tab-btn-health" class="px-4 py-1.5 rounded-lg text-white/50 hover:text-white transition-all flex items-center gap-2 font-semibold border border-transparent">
+              <span>🔋</span> SOH &amp; Kesihatan
+            </button>
+            <button onclick="window.switchSplitTab('cells')" id="tab-btn-cells" class="px-4 py-1.5 rounded-lg text-white/50 hover:text-white transition-all flex items-center gap-2 font-semibold border border-transparent">
+              <span>⚡</span> Matriks 120 Sel
+            </button>
+          </div>
+
+          <!-- QUICK SPLIT RATIO PRESETS -->
+          <div class="flex items-center gap-1 bg-[#0a1016] p-1 rounded-xl border border-white/10 text-xs font-mono font-bold">
+            <button onclick="window.setSplitRatio(0.52)" id="btn-split-50" class="px-2 py-0.5 rounded-lg text-white/50 hover:text-white transition-all" title="Seimbang 50:50">50:50</button>
+            <button onclick="window.setSplitRatio(0.75)" id="btn-split-75" class="px-2 py-0.5 rounded-lg text-white/50 hover:text-white transition-all" title="Besar 75:25">75:25</button>
+            <button onclick="window.setSplitRatio(1.0)" id="btn-split-100" class="px-2 py-0.5 rounded-lg text-white/50 hover:text-white transition-all" title="Skrin Penuh">Penuh ↗</button>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT CONTAINER -->
+        <div class="my-2 flex-1 flex flex-col justify-between overflow-hidden relative min-h-[350px]">
+          
+          <!-- ================= TAB 1: DYNAMIC POWER & RECUPERATION (+ / - kW) ================= -->
+          <div id="tab-content-power" class="flex-1 flex flex-col justify-between py-1">
+            <!-- DUAL DIRECTION POWER CANVAS (INSTRUMENT CARD) -->
+            <div class="swiss-card flex-1 flex flex-col justify-between" style="padding: 16px 20px !important;">
+              <div class="flex items-center justify-between border-b border-white/10 pb-2 mb-2">
+                <div>
+                  <span class="swiss-eyebrow mb-0.5">01 / TELEMETRI KUASA LFP</span>
+                  <h3 class="text-sm font-black text-white tracking-tight uppercase">Aliran Kuasa Dinamik (+ / − kW)</h3>
+                </div>
+                <div class="flex items-center gap-6 font-mono text-xs">
+                  <div>
+                    <span class="text-[9px] text-cyan-400 font-bold block uppercase tracking-wider">Traksi (+)</span>
+                    <span id="power-graph-live-traction" class="font-black text-white text-base">+0.0 kW</span>
+                  </div>
+                  <div class="w-[1px] h-6 bg-white/10"></div>
+                  <div>
+                    <span class="text-[9px] text-emerald-400 font-bold block uppercase tracking-wider">Recuperate (−)</span>
+                    <span id="power-graph-live-regen" class="font-black text-emerald-400 text-base">−0.0 kW</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Canvas area -->
+              <div class="relative flex-1 w-full" style="min-height: 180px;">
+                <canvas id="energyCanvas" class="w-full h-full block absolute inset-0"></canvas>
+              </div>
+
+              <!-- Canvas Legend -->
+              <div class="flex justify-between items-center text-[10px] font-mono border-t border-white/10 pt-2 mt-2">
+                <span class="text-cyan-400 font-bold tracking-wider uppercase">+Traksi (Motor Elektrik)</span>
+                <span class="text-white/40 text-[9px] uppercase tracking-widest">0 kW Garisan Asas</span>
+                <span class="text-emerald-400 font-bold tracking-wider uppercase">−Recuperate (Brek Regeneratif)</span>
+              </div>
+            </div>
+
+            <!-- KATEGORI STATISTIK: DIASINGKAN MENGIKUT KATEGORI -->
+            <div class="grid grid-cols-2 gap-3 mt-3">
+              
+              <!-- KATEGORI 1: PRESTASI & ALIRAN KUASA -->
+              <div class="swiss-card" style="padding: 12px 16px !important;">
+                <div class="flex items-center justify-between border-b border-white/10 pb-1.5 mb-2">
+                  <span class="swiss-eyebrow text-cyan-400">01 / PRESTASI &amp; ALIRAN KUASA</span>
+                  <span class="text-[9px] font-mono text-cyan-300/70 uppercase">Traksi &amp; Regen</span>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                  <div>
+                    <span class="text-[9px] text-white/50 uppercase font-mono block">Puncak Traksi</span>
+                    <strong class="text-sm font-mono text-cyan-300 font-black" id="power-peak-traction">+0.0 kW</strong>
+                  </div>
+                  <div>
+                    <span class="text-[9px] text-white/50 uppercase font-mono block">Puncak Regen</span>
+                    <strong class="text-sm font-mono text-emerald-400 font-black" id="power-peak-regen">−0.0 kW</strong>
+                  </div>
+                  <div>
+                    <span class="text-[9px] text-white/50 uppercase font-mono block">Dikutip Semula</span>
+                    <strong class="text-sm font-mono text-emerald-300 font-black" id="power-regen-pct">0.0%</strong>
+                  </div>
+                </div>
+              </div>
+
+              <!-- KATEGORI 2: ANALITIK JARAK & BATERI -->
+              <div class="swiss-card" style="padding: 12px 16px !important;">
+                <div class="flex items-center justify-between border-b border-white/10 pb-1.5 mb-2">
+                  <span class="swiss-eyebrow text-emerald-400">02 / ANALITIK JARAK &amp; BATERI</span>
+                  <span class="text-[9px] font-mono text-emerald-400/90 uppercase" id="power-range-diff">Dinamik (SoC)</span>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                  <div>
+                    <span class="text-[9px] text-white/50 uppercase font-mono block">Jarak Realiti (Gaya)</span>
+                    <strong class="text-sm font-mono text-white font-black" id="power-real-range">— km</strong>
+                  </div>
+                  <div>
+                    <span class="text-[9px] text-white/50 uppercase font-mono block">Meter Kereta</span>
+                    <strong class="text-sm font-mono text-white/70 font-black" id="power-meter-range">— km</strong>
+                  </div>
+                  <div>
+                    <span class="text-[9px] text-white/50 uppercase font-mono block">Baki Tenaga Pek</span>
+                    <strong class="text-sm font-mono text-cyan-300 font-black" id="power-real-kwh">— kWh</strong>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Energy Breakdown Strip (Dinamik mengikut beban semasa) -->
+            <div class="swiss-card mt-2.5" style="padding: 10px 18px !important;">
+              <div class="flex justify-between items-center text-[10px] font-mono text-white/60 mb-1.5">
+                <span class="uppercase tracking-wider text-white/40">Pecahan Beban Tenaga Semasa:</span>
+                <span class="text-emerald-400 font-bold" id="power-breakdown-text">Motor Traksi · Aircond HVAC · Kabin</span>
+              </div>
+              <div class="h-2 w-full bg-white/5 rounded-full overflow-hidden flex" id="power-breakdown-bar">
+                <div id="bar-motor" class="h-full bg-cyan-400 transition-all duration-300" style="width: 75%;" title="Motor Traksi"></div>
+                <div id="bar-hvac" class="h-full bg-emerald-400 transition-all duration-300" style="width: 20%;" title="Aircond / HVAC"></div>
+                <div id="bar-cabin" class="h-full bg-amber-400 transition-all duration-300" style="width: 5%;" title="Elektronik Kabin"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ================= TAB 2: BATTERY HEALTH & STATE OF HEALTH (SOH) ================= -->
+          <div id="tab-content-health" class="hidden flex-1 flex flex-col justify-between py-1">
+            <div class="grid grid-cols-3 gap-4 flex-1">
+              
+              <!-- SOH Main Gauge Card (Swiss) -->
+              <div class="swiss-card">
+                <div>
+                  <span class="swiss-eyebrow">01 / INTEGRITI BATERI</span>
+                  <span class="text-xs font-mono uppercase text-white/50 block">State of Health</span>
+                  <span class="swiss-hero-number" id="soh-main-pct">99.8%</span>
+                  <div class="inline-flex items-center gap-2 mb-3">
+                    <span class="swiss-badge text-emerald-400 border-emerald-500/30 bg-emerald-500/10">CEMERLANG</span>
+                    <span class="text-[10px] font-mono text-emerald-400">Degradasi &lt; 0.2%</span>
+                  </div>
+                  <div class="swiss-divider"></div>
+                  <div class="swiss-data-row">
+                    <span class="swiss-data-key">Kitaran Pengecasan</span>
+                    <span class="swiss-data-val">14 / 3,500 Cycles</span>
+                  </div>
+                  <div class="swiss-data-row">
+                    <span class="swiss-data-key">Integriti Pek</span>
+                    <span class="swiss-data-val text-emerald-400">120/120 Sel Stabil</span>
+                  </div>
+                  <div class="swiss-data-row">
+                    <span class="swiss-data-key">Anggaran Jangka Hayat</span>
+                    <span class="swiss-data-val text-white">&gt; 1,000,000 km</span>
+                  </div>
+                </div>
+                <div class="pt-2">
+                  <p class="text-[11px] text-white/40 leading-relaxed">Pek Aegis Short Blade beroperasi dalam profil degradasi optimum minimum.</p>
+                </div>
+              </div>
+
+              <!-- Pack Parameters Card (Swiss) -->
+              <div class="swiss-card">
+                <div>
+                  <span class="swiss-eyebrow">02 / SENI BINA PEK</span>
+                  <span class="text-xs font-mono uppercase text-white/50 block">Kapasiti &amp; Jenis</span>
+                  <span class="swiss-hero-number">49.5<span class="text-lg font-normal text-white/50 ml-1">kWh</span></span>
+                  <div class="inline-flex items-center gap-2 mb-3">
+                    <span class="swiss-badge text-cyan-400 border-cyan-500/30 bg-cyan-500/10">AEGIS SHORT BLADE</span>
+                    <span class="text-[10px] font-mono text-cyan-300">120s LFP</span>
+                  </div>
+                  <div class="swiss-divider"></div>
+                  <div class="swiss-data-row">
+                    <span class="swiss-data-key">Kapasiti Baki</span>
+                    <span class="swiss-data-val text-cyan-300" id="soh-capacity-left">49.42 kWh</span>
+                  </div>
+                  <div class="swiss-data-row">
+                    <span class="swiss-data-key">Voltan Nominal</span>
+                    <span class="swiss-data-val text-white">394.4 V (120S)</span>
+                  </div>
+                  <div class="swiss-data-row">
+                    <span class="swiss-data-key">Rintangan Dalaman</span>
+                    <span class="swiss-data-val text-emerald-400">18.2 mΩ (Optimum)</span>
+                  </div>
+                </div>
+                <div class="pt-2">
+                  <p class="text-[11px] text-white/40 leading-relaxed">Voltan had selamat operasi pek: 2.50V (cut-off) hingga 3.65V (penuh).</p>
+                </div>
+              </div>
+
+              <!-- Cell Balance & Delta V (Swiss) -->
+              <div class="swiss-card">
+                <div>
+                  <span class="swiss-eyebrow">03 / KESEIMBANGAN PEK</span>
+                  <span class="text-xs font-mono uppercase text-white/50 block">Sisihan Voltan (ΔV)</span>
+                  <span class="swiss-hero-number text-cyan-300" id="soh-delta-val">11<span class="text-lg font-normal text-white/50 ml-1">mV</span></span>
+                  <div class="inline-flex items-center gap-2 mb-3">
+                    <span class="swiss-badge text-emerald-400 border-emerald-500/30 bg-emerald-500/10">SEIMBANG</span>
+                    <span class="text-[10px] font-mono text-white/50">Had Safe ≤ 20 mV</span>
+                  </div>
+                  <div class="swiss-divider"></div>
+                  <div class="swiss-data-row">
+                    <span class="swiss-data-key">Min / Maks</span>
+                    <span class="swiss-data-val font-mono"><span id="soh-vmin-text" class="text-emerald-300">3.281</span> / <span id="soh-vmax-text" class="text-cyan-300">3.292 V</span></span>
+                  </div>
+                  <div class="swiss-data-row">
+                    <span class="swiss-data-key">Purata Voltan Sel</span>
+                    <span class="swiss-data-val font-mono" id="soh-vavg-text">3.287 V</span>
+                  </div>
+                  <div class="swiss-data-row">
+                    <span class="swiss-data-key">Penyejukan Pek</span>
+                    <span class="swiss-data-val text-emerald-400">Cecair Aktif (OK)</span>
+                  </div>
+                </div>
+                <div class="pt-2">
+                  <p class="text-[11px] text-white/40 leading-relaxed">BMS menjalankan perataan pasif masa-nyata merentas semua 8 modul pek.</p>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- TPMS 4-WHEEL PRESSURE & TEMPERATURE MONITOR + SMART CHARGING STRIP -->
+            <div class="grid grid-cols-2 gap-4 mt-3">
+              <!-- 1. TPMS Monitor -->
+              <div class="swiss-card" style="padding: 16px 20px !important;">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <span class="text-2xl">🛞</span>
+                    <div>
+                      <span class="swiss-eyebrow mb-0.5">ACO TECH CAN BUS</span>
+                      <h5 class="text-sm font-bold text-white tracking-tight">Tekanan &amp; Suhu 4 Tayar (TPMS)</h5>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-4 font-mono text-xs">
+                    <div class="bg-[#080d12] px-3 py-1.5 rounded-lg border border-white/5">
+                      <span class="text-[9px] text-white/40 block">DEPAN</span>
+                      <strong class="text-emerald-400">2.3 bar · 34°C</strong>
+                    </div>
+                    <div class="bg-[#080d12] px-3 py-1.5 rounded-lg border border-white/5">
+                      <span class="text-[9px] text-white/40 block">BELAKANG</span>
+                      <strong class="text-emerald-400">2.3 bar · 35°C</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2. Smart Charging Session & Cost Estimator -->
+              <div class="swiss-card" style="padding: 16px 20px !important;">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <span class="text-2xl">⚡</span>
+                    <div>
+                      <span class="swiss-eyebrow mb-0.5">ANGGARAN SESI</span>
+                      <h5 class="text-sm font-bold text-white tracking-tight">Pengecasan DC &amp; Kos</h5>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-4 font-mono text-xs">
+                    <div>
+                      <span class="text-[9px] text-white/40 block">DC 80%</span>
+                      <strong class="text-cyan-300 text-sm">~18 Minit</strong>
+                    </div>
+                    <div class="bg-[#080d12] px-3 py-1.5 rounded-lg border border-white/5">
+                      <span class="text-[9px] text-white/40 block">KOS KE 100%</span>
+                      <strong class="text-amber-300">~RM10.50</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Health Summary Strip -->
+            <div class="flex items-center justify-between swiss-card mt-3" style="padding: 12px 20px !important;">
+              <div class="flex items-center gap-2 text-white/70 text-xs">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Pek bateri Aegis LFP Geely dilindungi waranti integriti 8 Tahun / 160,000 km. Tiada sebarang sel rosak.</span>
+              </div>
+              <span class="text-emerald-400 font-mono text-xs font-bold">120/120 SEL AKTIF</span>
+            </div>
+          </div>
+
+          <!-- ================= TAB 3: 120-CELL DIAGNOSTIC MATRIX ================= -->
+          <div id="tab-content-cells" class="hidden flex-1 flex flex-col justify-between py-1">
+            <!-- Header Status & Filter -->
+            <div class="flex items-center justify-between swiss-card mb-3" style="padding: 12px 20px !important;">
+              <div class="flex items-center gap-4">
+                <span class="text-white font-bold flex items-center gap-2 text-sm">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Matriks Aegis 120 Sel (120s LFP)
+                </span>
+                <span class="text-white/40 font-mono text-xs">8 Modul &times; 15 Sel</span>
+              </div>
+              <div class="flex items-center gap-4 font-mono text-xs">
+                <span class="flex items-center gap-1.5 text-emerald-400">
+                  <span class="w-2 h-2 rounded-sm bg-emerald-500"></span> Sihat: <b id="matrix-count-healthy">120</b>
+                </span>
+                <span class="flex items-center gap-1.5 text-amber-400">
+                  <span class="w-2 h-2 rounded-sm bg-amber-500"></span> Sisih: <b id="matrix-count-warning">0</b>
+                </span>
+                <span class="flex items-center gap-1.5 text-rose-400">
+                  <span class="w-2 h-2 rounded-sm bg-rose-600"></span> Rosak: <b id="matrix-count-dead">0</b>
+                </span>
+              </div>
+            </div>
+
+            <!-- 120-CELL INTERACTIVE GRID -->
+            <div class="flex-1 overflow-hidden flex flex-col">
+              <div id="cells-grid-container" class="flex-1">
+                <!-- Dynamically populated 120 cell blocks by app.js -->
+              </div>
+            </div>
+            
+            <!-- Selected Cell Inspection Drawer -->
+            <div class="swiss-card mt-3" style="padding: 14px 20px !important;">
+              <div class="flex items-center justify-between text-xs font-mono">
+                <div class="flex items-center gap-6">
+                  <div>
+                    <span class="text-[9px] text-white/40 block uppercase">Sel Terpilih</span>
+                    <strong class="text-cyan-300 text-sm font-bold" id="cell-detail-id">Sel #1 (Modul 1)</strong>
+                  </div>
+                  <div>
+                    <span class="text-[9px] text-white/40 block uppercase">Voltan Semasa</span>
+                    <strong class="text-white text-sm font-bold" id="cell-detail-v">3.287 V</strong>
+                  </div>
+                  <div>
+                    <span class="text-[9px] text-white/40 block uppercase">Sisihan Purata</span>
+                    <strong class="text-emerald-400 text-sm font-bold" id="cell-detail-dev">0 mV</strong>
+                  </div>
+                </div>
+                <span class="swiss-badge text-emerald-400 border-emerald-500/30 bg-emerald-500/10 px-3 py-1" id="cell-detail-status">SIHAT &amp; AKTIF</span>
+              </div>
+            </div>
+          </div>
+
+
+
+        </div>
+
+        <!-- BOTTOM DOCK: QUICK WINDOW CONTROLS -->
+        <div class="mt-2 pt-2 border-t border-white/5 flex items-center justify-between z-10">
+          <div class="flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
+            <span>KAWALAN TINGKAP</span>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="window.controlWindow('crack')" class="py-1 px-3 rounded-lg bg-[#14202b] hover:bg-[#1b2c3c] text-xs font-bold text-white border border-white/10 transition-all">
+              Celah 5%
+            </button>
+            <button onclick="window.controlWindow('close')" class="py-1 px-3 rounded-lg bg-[#14202b] hover:bg-[#1b2c3c] text-xs font-bold text-emerald-400 border border-emerald-500/30 transition-all">
+              Tutup Rapat
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ==================== DRAGGABLE SPLIT-SCREEN DIVIDER ==================== -->
+      <div class="split-divider" id="split-divider" title="Tarik ke kanan untuk besarkan Media/Peta">
+        <div class="split-divider-line"></div>
+        <div class="split-divider-handle"><span>⋮</span></div>
+      </div>
+
+      <!-- ==================== RIGHT COLUMN: TELEMETRY & SMART CLIMATE ==================== -->
+      <div class="cockpit-telemetry flex flex-col gap-4 sm:gap-5 justify-between" id="cockpit-telemetry">
+
+        <!-- 1. BATTERY & POWER CLUSTER -->
+        <div class="cockpit-battery glass-panel rounded-3xl p-4 sm:p-5 flex flex-col justify-between">
+          
+          <div class="flex items-center justify-between pb-2.5 border-b border-white/5">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-400">Pek Bateri Voltan Tinggi</span>
+            <span class="text-xs font-mono text-white/60" id="pack-electrical">— V · — A</span>
+          </div>
+
+          <!-- BIG SoC & POWER -->
+          <div class="my-3 flex items-center justify-between">
+            <div>
+              <div class="flex items-baseline gap-2">
+                <span class="text-5xl font-extrabold font-mono text-white tracking-tight" id="soc-display">—</span>
+                <span class="text-2xl font-bold text-emerald-400">%</span>
+              </div>
+              <span class="text-xs font-medium text-white/60 block mt-0.5">Anggaran jarak: <b class="text-white" id="range-display">— km</b></span>
+            </div>
+
+            <div class="text-right">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-cyan-400 block" id="power-mode-label">Kuasa Semasa</span>
+              <div class="flex items-baseline justify-end gap-1.5 my-0.5">
+                <span class="text-3xl font-extrabold font-mono text-cyan-300" id="power-display">—</span>
+                <span class="text-base font-bold text-cyan-400">kW</span>
+              </div>
+              <span class="text-[10px] text-white/50 font-mono" id="speed-display">— km/j</span>
+            </div>
+          </div>
+
+          <!-- DUAL RIBBON -->
+          <div class="space-y-1">
+            <div class="h-2.5 w-full bg-[#080d11] rounded-full p-0.5 flex overflow-hidden border border-white/5">
+              <div class="w-1/2 flex justify-end">
+                <div id="ribbon-regen" class="bg-gradient-to-l from-emerald-500 to-teal-300 h-full rounded-l-full w-[0%]"></div>
+              </div>
+              <div class="w-1/2 flex justify-start">
+                <div id="ribbon-traction" class="bg-gradient-to-r from-cyan-500 to-blue-400 h-full rounded-r-full w-[0%] shadow-sm shadow-cyan-400/50"></div>
+              </div>
+            </div>
+            <div class="flex justify-between text-[9px] font-mono text-white/40">
+              <span>◀ REGEN</span>
+              <span>0 kW</span>
+              <span>TRAKSI ▶</span>
+            </div>
+          </div>
+
+          <!-- TRIP RESET -->
+          <div class="mt-2.5 pt-2 border-t border-white/5 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+              <span class="text-white/60">Trip:</span>
+              <b class="font-mono text-white text-sm" id="trip-readout">— km</b>
+            </div>
+            <button onclick="window.resetCustomTrip()" class="px-3 py-1 rounded-lg bg-[#14202b] hover:bg-[#1a2c3c] text-emerald-400 text-xs font-bold transition-all border border-emerald-500/20 active:scale-95">
+              Reset trip
+            </button>
+          </div>
+
+        </div>
+
+        <!-- 2. SMART CLIMATE (ADAPTIVE AIRCOND) -->
+        <div class="cockpit-climate glass-panel rounded-3xl p-4 sm:p-5 flex flex-col justify-start gap-2.5 sm:gap-3">
+          
+          <div class="flex items-center justify-between pb-2 border-b border-white/5">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-mono font-bold">A/C</span>
+              <h3 class="text-sm font-bold text-white tracking-tight">Smart Climate Control</h3>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="window.toggleClimatePower()" id="btn-climate-power" class="px-2.5 py-1 rounded-xl text-xs font-bold bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm" title="Hidupkan / Matikan A/C">
+                <span class="text-xs">⏻</span> <span id="climate-power-text">A/C ON</span>
+              </button>
+              <span id="climate-mode-pill" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
+                TIADA DATA HVAC
+              </span>
+            </div>
+          </div>
+
+          <!-- PROFILES -->
+          <div class="grid grid-cols-4 gap-2 my-0.5">
+            <button onclick="window.setSmartClimate('adaptive', true)" id="cm-adaptive" class="p-2 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-left transition-all">
+              <span class="text-xs block font-bold text-emerald-300">Adaptive</span>
+              <span class="text-[9px] text-white/50 block">Ikut cuaca</span>
+            </button>
+            <button onclick="window.setSmartClimate('quick_cool', true)" id="cm-quick_cool" class="p-2 rounded-2xl bg-[#0c141c] border border-white/10 hover:border-white/20 text-left transition-all">
+              <span class="text-xs block font-bold text-white">Quick Cool</span>
+              <span class="text-[9px] text-white/50 block">Sejuk pantas</span>
+            </button>
+            <button onclick="window.setSmartClimate('comfort', true)" id="cm-comfort" class="p-2 rounded-2xl bg-[#0c141c] border border-white/10 hover:border-white/20 text-left transition-all">
+              <span class="text-xs block font-bold text-white">Comfort</span>
+              <span class="text-[9px] text-white/50 block">Senyap 22°C</span>
+            </button>
+            <button onclick="window.setSmartClimate('off', false)" id="cm-off" class="p-2 rounded-2xl bg-[#0c141c] border border-white/10 hover:border-red-500/30 text-left transition-all">
+              <span class="text-xs block font-bold text-white/70">Manual</span>
+              <span class="text-[9px] text-white/50 block">Manual</span>
+            </button>
+          </div>
+
+          <!-- CONTROLS: SUHU ATAS, KIPAS BAWAH (FULL WIDTH, BUTTON BESAR SENANG TEKAN) -->
+          <div class="climate-controls-stack flex flex-col gap-2.5 pt-2 border-t border-white/5">
+            <!-- 1. SUHU KABIN (ATAS) -->
+            <div class="climate-temp-card bg-[#0b1218] px-4 py-2.5 rounded-2xl border border-white/5 flex items-center justify-between">
+              <div class="flex flex-col">
+                <span class="text-[11px] font-bold uppercase text-white/50 tracking-wider">Suhu Kabin</span>
+                <span class="text-[10px] font-mono text-emerald-400">Pemandu &amp; Kabin</span>
+              </div>
+              <div class="flex items-center gap-4 sm:gap-6">
+                <button onclick="window.adjustTemp(-0.5)" class="climate-temp-btn w-12 h-11 sm:w-14 sm:h-12 rounded-xl bg-[#14202b] hover:bg-[#1a2c3c] text-2xl font-black text-white border border-white/10 flex items-center justify-center active:scale-95 transition-all shadow-sm" aria-label="Turunkan suhu">−</button>
+                <div class="text-center min-w-[90px]">
+                  <span class="text-3xl font-black font-mono text-white" id="temp-val">—</span>
+                  <span class="text-base font-bold text-emerald-400 ml-0.5">°C</span>
+                </div>
+                <button onclick="window.adjustTemp(+0.5)" class="climate-temp-btn w-12 h-11 sm:w-14 sm:h-12 rounded-xl bg-[#14202b] hover:bg-[#1a2c3c] text-2xl font-black text-white border border-white/10 flex items-center justify-center active:scale-95 transition-all shadow-sm" aria-label="Naikkan suhu">+</button>
+              </div>
+            </div>
+
+            <!-- 2. KIPAS BLOWER (BAWAH) -->
+            <div class="climate-fan-card bg-[#0b1218] px-4 py-2.5 rounded-2xl border border-white/5 flex flex-col gap-2">
+              <div class="flex justify-between items-center">
+                <span class="text-[11px] font-bold uppercase text-white/50 tracking-wider">Kipas Blower</span>
+                <span class="text-xs font-mono font-bold text-white bg-white/5 px-2.5 py-0.5 rounded-lg border border-white/10" id="fan-val">— / 8</span>
+              </div>
+              <div class="grid grid-cols-8 gap-1.5 sm:gap-2">
+                <button onclick="window.setFanSpeed(1)" class="fan-dot h-10 rounded-xl bg-emerald-400 text-black font-extrabold text-sm active:scale-95 transition-all" data-f="1">1</button>
+                <button onclick="window.setFanSpeed(2)" class="fan-dot h-10 rounded-xl bg-emerald-400 text-black font-extrabold text-sm active:scale-95 transition-all" data-f="2">2</button>
+                <button onclick="window.setFanSpeed(3)" class="fan-dot h-10 rounded-xl bg-emerald-400 text-black font-extrabold text-sm active:scale-95 transition-all" data-f="3">3</button>
+                <button onclick="window.setFanSpeed(4)" class="fan-dot h-10 rounded-xl bg-[#14202b] text-white/50 font-extrabold text-sm border border-white/10 active:scale-95 transition-all" data-f="4">4</button>
+                <button onclick="window.setFanSpeed(5)" class="fan-dot h-10 rounded-xl bg-[#14202b] text-white/50 font-extrabold text-sm border border-white/10 active:scale-95 transition-all" data-f="5">5</button>
+                <button onclick="window.setFanSpeed(6)" class="fan-dot h-10 rounded-xl bg-[#14202b] text-white/50 font-extrabold text-sm border border-white/10 active:scale-95 transition-all" data-f="6">6</button>
+                <button onclick="window.setFanSpeed(7)" class="fan-dot h-10 rounded-xl bg-[#14202b] text-white/50 font-extrabold text-sm border border-white/10 active:scale-95 transition-all" data-f="7">7</button>
+                <button onclick="window.setFanSpeed(8)" class="fan-dot h-10 rounded-xl bg-[#14202b] text-white/50 font-extrabold text-sm border border-white/10 active:scale-95 transition-all" data-f="8">8</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
-  </header>
-  <section class="connection-panel" id="connection-panel" aria-label="Sambungan kereta">
-    <div class="connection-heading"><strong>Sambungan kereta</strong><span data-connection-state>MENYAMBUNG</span></div>
-    <p data-connection-message role="status" aria-live="polite">Memeriksa sambungan ke IHU…</p>
-    <form>
-      <label for="car-ip">IP kereta (kosong untuk ADB / carian automatik)
-        <input id="car-ip" name="car-ip" inputmode="decimal" autocomplete="off" placeholder="192.168.1.8" aria-describedby="car-ip-help">
-      </label>
-      <button type="submit" class="primary">Sambung</button>
-      <button type="button" class="secondary" data-detect>Cari kereta</button>
-    </form>
-    <p id="car-ip-help">Gateway mencuba alamat terakhir dan sambungan ADB. IP LAN memerlukan daemon yang boleh dicapai dari gateway.</p>
-  </section>
-  <main id="main"></main>
-  <footer>
-    <span><i class="connection-dot"></i> Telemetry & Energy Stream <span class="footer-note">· Proton e.MAS 5</span></span>
-    <span>Proton e.MAS 5 <b> / </b> ELECTRIC</span>
-  </footer>
-  <div id="usb-modal" class="modal-overlay" style="display:none;">
-    <div class="modal-card">
-      <div class="modal-header">
-        <span class="eyebrow">PEMACU USB · PEMILIH MUZIK AVAS</span>
-        <h2 id="usb-modal-title">Pilih Fail Audio dari USB</h2>
-        <button type="button" class="icon-button modal-close" aria-label="Tutup pemilih USB" onclick="closeUsbModal()">✕</button>
-      </div>
-      <div id="usb-file-list" class="usb-file-list">
-        <p class="usb-loading">Mengimbas pemacu USB untuk fail audio (.wav / .mp3)...</p>
-      </div>
-      <div class="dialog-actions">
-        <button type="button" class="secondary" onclick="refreshUsbAudioList()">🔄 Imbas Semula</button>
-        <button type="button" class="secondary" onclick="closeUsbModal()">Tutup</button>
-      </div>
-    </div>
+
   </div>
-</div>
-<div id="toast" role="status"></div>
-<dialog id="confirm">
-  <form method="dialog">
-    <span class="eyebrow">SYSTEM SHUTDOWN</span>
-    <h2>Power down EV high-voltage system?</h2>
-    <div class="dialog-actions">
-      <button value="cancel" class="secondary">Cancel</button>
-      <button value="confirm" class="primary">Power Down</button>
-    </div>
-  </form>
-</dialog>
 
+  <!-- TOAST -->
+  <div id="toast" class="fixed bottom-6 bg-[#0e1720] border border-emerald-500/40 text-emerald-300 px-5 py-2.5 rounded-2xl shadow-2xl text-xs font-bold opacity-0 pointer-events-none transition-all duration-300 z-50">
+    Pemberitahuan
+  </div>
 
-
-<script src="power-graph.js?v=9"></script>
-<script src="vehicle-client.js?v=3"></script>
-<script src="companion-client.js?v=1"></script>
-<script src="telemetry-model.js?v=1"></script>
-<script src="lock-sound.js?v=2"></script>
-<script src="megafon.js?v=1"></script>
-<script src="app.js?v=22"></script>
+  <script src="vehicle-client.js"></script>
+  <script src="app.js?v=32"></script>
 </body>
 </html>

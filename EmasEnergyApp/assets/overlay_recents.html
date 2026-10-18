@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Pengurus Tugasan & Aplikasi Terkini</title>
+  <style>
+    *, *:before, *:after { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: transparent !important;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", "Inter", Roboto, Arial, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Modal Backdrop */
+    .recents-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 24px 36px;
+      background: rgba(10, 14, 20, 0.90);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      transition: background 0.25s ease, opacity 0.2s ease;
+    }
+
+    /* ==========================================================================
+       SWISS THEMES (NIGHT & DAY)
+       ========================================================================== */
+    /* Obsidian Slate (Night OEM) */
+    body.theme-night .recents-overlay {
+      background: rgba(10, 14, 20, 0.90);
+    }
+    body.theme-night .swiss-bar {
+      background: rgba(18, 24, 34, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #F8FAFC;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+    }
+    body.theme-night .swiss-card {
+      background: #141B24;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #F1F5F9;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65);
+    }
+    body.theme-night .snapshot-container {
+      background: #0B0F15;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    body.theme-night .swiss-btn-close {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: #E2E8F0;
+    }
+    body.theme-night .swiss-btn-close:hover,
+    body.theme-night .swiss-btn-close:active {
+      background: rgba(239, 68, 68, 0.35);
+      border-color: #EF4444;
+      color: #FFFFFF;
+    }
+    body.theme-night .swiss-btn-action {
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: #F8FAFC;
+    }
+    body.theme-night .swiss-btn-action:active {
+      background: rgba(255, 255, 255, 0.16);
+    }
+    body.theme-night .swiss-badge {
+      background: rgba(255, 255, 255, 0.08);
+      color: #94A3B8;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    body.theme-night .meta-sub {
+      color: #94A3B8;
+    }
+
+    /* Pearl Grey (Day OEM) */
+    body.theme-day .recents-overlay {
+      background: rgba(235, 240, 245, 0.90);
+    }
+    body.theme-day .swiss-bar {
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      color: #0F172A;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    }
+    body.theme-day .swiss-card {
+      background: #FFFFFF;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      color: #0F172A;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.10);
+    }
+    body.theme-day .snapshot-container {
+      background: #E2E8F0;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+    body.theme-day .swiss-btn-close {
+      background: rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      color: #334155;
+    }
+    body.theme-day .swiss-btn-close:hover,
+    body.theme-day .swiss-btn-close:active {
+      background: rgba(239, 68, 68, 0.18);
+      border-color: #DC2626;
+      color: #DC2626;
+    }
+    body.theme-day .swiss-btn-action {
+      background: rgba(0, 0, 0, 0.04);
+      border: 1px solid rgba(0, 0, 0, 0.16);
+      color: #0F172A;
+    }
+    body.theme-day .swiss-btn-action:active {
+      background: rgba(0, 0, 0, 0.10);
+    }
+    body.theme-day .swiss-badge {
+      background: rgba(0, 0, 0, 0.06);
+      color: #475569;
+      border: 1px solid rgba(0, 0, 0, 0.10);
+    }
+    body.theme-day .meta-sub {
+      color: #64748B;
+    }
+
+    /* ==========================================================================
+       SWISS TOP BAR / SYSTEM STATUS
+       ========================================================================== */
+    .swiss-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-radius: 14px;
+      padding: 14px 24px;
+      width: 100%;
+      max-width: 1440px;
+      margin: 0 auto;
+      letter-spacing: -0.01em;
+    }
+
+    .bar-col-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .swiss-tag {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: #0EA5E9;
+      color: #FFFFFF;
+    }
+
+    .bar-headings {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .bar-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .bar-sub {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.65;
+      margin-top: 2px;
+    }
+
+    .bar-col-ram {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .ram-track {
+      width: 130px;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(125, 125, 125, 0.25);
+      overflow: hidden;
+    }
+
+    .ram-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: #0EA5E9;
+      width: 48%;
+      transition: width 0.35s ease;
+    }
+
+    .bar-col-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .swiss-btn-action {
+      padding: 10px 24px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+
+    .swiss-btn-close {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      font-size: 20px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+
+    /* ==========================================================================
+       SWISS CARDS DECK
+       ========================================================================== */
+    .deck-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 20px 0;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .deck-track {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      padding: 0 32px;
+      min-width: min-content;
+    }
+
+    /* Minimalist Swiss Card Frame */
+    .swiss-card {
+      width: 350px;
+      height: 430px;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 16px;
+      cursor: pointer;
+      position: relative;
+      touch-action: none;
+      transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s ease, box-shadow 0.2s ease;
+      will-change: transform, opacity;
+    }
+
+    .swiss-card:active {
+      transform: scale(0.985);
+    }
+
+    /* Card Header */
+    .card-meta-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .meta-text {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .meta-category {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      opacity: 0.65;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .meta-title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-kill-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border: 1.5px solid rgba(239, 68, 68, 0.4);
+      background: rgba(239, 68, 68, 0.12);
+      color: #EF4444;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+    }
+
+    .card-kill-btn:active {
+      background: #EF4444;
+      border-color: #EF4444;
+      color: #FFFFFF;
+      transform: scale(0.92);
+    }
+
+    /* Snapshot Window */
+    .snapshot-container {
+      width: 100%;
+      height: 270px;
+      border-radius: 10px;
+      margin: 12px 0 10px 0;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .snapshot-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.25s ease;
+      background: #111827;
+    }
+
+    .swiss-card:hover .snapshot-img {
+      transform: scale(1.02);
+    }
+
+    /* Minimal Live Indicator Badge */
+    .snapshot-badge {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      background: rgba(10, 14, 20, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      color: #FFFFFF;
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .badge-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #10B981;
+      display: inline-block;
+    }
+
+    /* Card Footer */
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      opacity: 0.65;
+    }
+
+    .action-hint {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Empty State */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      text-align: center;
+      color: inherit;
+      padding: 60px;
+      letter-spacing: 0.04em;
+    }
+
+    .empty-tag {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 6px;
+      background: rgba(125, 125, 125, 0.14);
+      border: 1px solid rgba(125, 125, 125, 0.2);
+    }
+
+    .empty-title {
+      font-size: 20px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .empty-sub {
+      font-size: 12px;
+      opacity: 0.6;
+      max-width: 360px;
+      line-height: 1.5;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Fly up dismiss animation */
+    .card-fly-up {
+      transform: translateY(-640px) scale(0.85) !important;
+      opacity: 0 !important;
+      transition: transform 0.28s cubic-bezier(0.1, 0.8, 0.2, 1), opacity 0.22s ease !important;
+    }
+  </style>
+</head>
+<body class="theme-night">
+  <div class="recents-overlay" id="overlay" onclick="onBackdropClick(event)">
+    <!-- SWISS TOP BAR -->
+    <div class="swiss-bar" onclick="event.stopPropagation()">
+      <div class="bar-col-left">
+        <div class="swiss-tag">SYS // 01</div>
+        <div class="bar-headings">
+          <div class="bar-title">APLIKASI BERJALAN</div>
+          <div class="bar-sub">LUNCUR KAD KE ATAS UNTUK TUTUP</div>
+        </div>
+      </div>
+
+      <div class="bar-col-ram">
+        <span id="ram-text">RAM: 2.8 GB BEBAS / 6.0 GB</span>
+        <div class="ram-track">
+          <div class="ram-fill" id="ram-bar"></div>
+        </div>
+        <span id="ram-pct" style="opacity: 0.75;">51%</span>
+      </div>
+
+      <div class="bar-col-right">
+        <button class="swiss-btn-action" onclick="sweepAllTasks()">TUTUP SEMUA</button>
+        <button class="swiss-btn-close" onclick="dismissRecents()">✕</button>
+      </div>
+    </div>
+
+    <!-- HORIZONTAL APPLICATION CARD DECK -->
+    <div class="deck-container" id="deck-container" onclick="onDeckContainerClick(event)">
+      <div class="deck-track" id="deck-track">
+        <!-- Rendered via JavaScript -->
+      </div>
+    </div>
+
+    <div style="height: 6px;"></div>
+  </div>
+
+  <script>
+    let activeTasks = [];
+
+    // App Visual Identity Registry with Realistic Screen Captures
+    const APP_REGISTRY = {
+      'org.smarttube.stable': {
+        name: 'SMARTTUBE',
+        category: 'MEDIA // VIDEO PLAYER',
+        snapshot: 'snapshots/org.smarttube.stable.jpg'
+      },
+      'com.netflix.mediaclient': {
+        name: 'NETFLIX',
+        category: 'ENTERTAINMENT // CINEMA',
+        snapshot: 'snapshots/com.netflix.mediaclient.jpg'
+      },
+      'com.spotify.music': {
+        name: 'SPOTIFY',
+        category: 'AUDIO // STREAMING',
+        snapshot: 'snapshots/com.spotify.music.jpg'
+      },
+      'com.malaysia.spotify': {
+        name: 'SPOTIFY',
+        category: 'AUDIO // STREAMING',
+        snapshot: 'snapshots/com.malaysia.spotify.jpg'
+      },
+      'com.neusoft.na.navigation': {
+        name: 'PETA & NAVIGASI',
+        category: 'NAVIGATION // GPS MAP',
+        snapshot: 'snapshots/com.neusoft.na.navigation.jpg'
+      },
+      'ecarx.settings': {
+        name: 'TETAPAN KENDERAAN',
+        category: 'PROTON // CAR SETTINGS',
+        snapshot: 'snapshots/ecarx.settings.jpg'
+      },
+      'ecarx.hvac.app': {
+        name: 'HAWA DINGIN (A/C)',
+        category: 'CABIN // CLIMATE CONTROL',
+        snapshot: 'snapshots/ecarx.hvac.app.jpg'
+      },
+      'com.noor.thenoorcar': {
+        name: 'NOORCAR EV',
+        category: 'TELEMETRY // BATTERY & COCKPIT',
+        snapshot: 'snapshots/com.noor.thenoorcar.jpg'
+      },
+      'com.vivaldi.browser.automotive': {
+        name: 'VIVALDI BROWSER',
+        category: 'NETWORK // WEB BROWSER',
+        snapshot: 'snapshots/com.vivaldi.browser.automotive.jpg'
+      },
+      'com.retroarch.aarch64': {
+        name: 'RETROARCH',
+        category: 'GAMING // RETRO EMULATOR',
+        snapshot: 'snapshots/default_app.jpg'
+      },
+      'com.explusalpha.GbaEmu': {
+        name: 'GBA.EMU',
+        category: 'GAMING // GAME BOY ADVANCE',
+        snapshot: 'snapshots/default_app.jpg'
+      },
+      'com.explusalpha.Snes9xPlus': {
+        name: 'SNES9X EX+',
+        category: 'GAMING // SUPER NINTENDO',
+        snapshot: 'snapshots/default_app.jpg'
+      },
+      'com.explusalpha.NesEmu': {
+        name: 'NES.EMU',
+        category: 'GAMING // FAMICOM / NES',
+        snapshot: 'snapshots/default_app.jpg'
+      },
+      'com.github.stenzek.duckstation': {
+        name: 'DUCKSTATION',
+        category: 'GAMING // PLAYSTATION 1',
+        snapshot: 'snapshots/default_app.jpg'
+      },
+      'com.malaysia.btphone': {
+        name: 'PANGGILAN TELEFON',
+        category: 'COMMUNICATION // BLUETOOTH PHONE',
+        snapshot: 'snapshots/default_app.jpg'
+      },
+      'com.molead.energy': {
+        name: 'TENAGA & BATERI',
+        category: 'TELEMETRY // ENERGY MONITOR',
+        snapshot: 'snapshots/default_app.jpg'
+      },
+      'com.malaysia.media': {
+        name: 'PEMAIN MEDIA',
+        category: 'AUDIO // MEDIA PLAYER',
+        snapshot: 'snapshots/default_app.jpg'
+      }
+    };
+
+    function setTheme(theme) {
+      if (theme === 'day') {
+        document.body.className = 'theme-day';
+      } else {
+        document.body.className = 'theme-night';
+      }
+    }
+
+    function onBackdropClick(e) {
+      if (e.target.id === 'overlay') {
+        dismissRecents();
+      }
+    }
+
+    function onDeckContainerClick(e) {
+      if (e.target.id === 'deck-container' || e.target.id === 'deck-track' || e.target.closest('.empty-state')) {
+        dismissRecents();
+      }
+    }
+
+    function dismissRecents() {
+      if (window.AndroidRecents && window.AndroidRecents.closeRecents) {
+        window.AndroidRecents.closeRecents();
+      }
+    }
+
+    function updateRamUi(ram) {
+      if (!ram) return;
+      const total = ram.total_mb ? (ram.total_mb / 1024).toFixed(1) : '6.0';
+      const free = ram.free_mb ? (ram.free_mb / 1024).toFixed(1) : '2.8';
+      const pct = ram.pct || 50;
+
+      document.getElementById('ram-text').innerText = `RAM: ${free} GB BEBAS / ${total} GB`;
+      document.getElementById('ram-bar').style.width = pct + '%';
+      document.getElementById('ram-pct').innerText = pct + '% DIGUNAKAN';
+    }
+
+    function renderTasks(tasks) {
+      const track = document.getElementById('deck-track');
+      track.innerHTML = '';
+
+      // Filter out internal system tasks, launcher, self, and deduplicate
+      const seenPackages = new Set();
+      activeTasks = (tasks || []).filter(t => {
+        if (!t.package) return false;
+        if (t.package === 'com.malaysia.launcher3' || t.package === 'com.noor.thenoorcar') return false;
+        const normKey = (t.package === 'com.malaysia.spotify' || t.package === 'com.spotify.music')
+          ? 'spotify' : t.package;
+        if (seenPackages.has(normKey)) return false;
+        seenPackages.add(normKey);
+        return true;
+      });
+
+      if (activeTasks.length === 0) {
+        track.innerHTML = `
+          <div class="empty-state" onclick="dismissRecents()">
+            <div class="empty-tag">MEMORI BERSIH</div>
+            <div class="empty-title">TIADA APLIKASI BERJALAN</div>
+            <div class="empty-sub">SEMUA PROSES TELAH DITAMATKAN. SENTUH MANA-MANA UNTUK KEMBALI.</div>
+          </div>
+        `;
+        return;
+      }
+
+      activeTasks.forEach((task, index) => {
+        const meta = APP_REGISTRY[task.package] || {
+          name: (task.package.split('.').pop() || 'APLIKASI').toUpperCase(),
+          category: 'APPLICATION // RUNNING',
+          snapshot: `snapshots/${task.package}.jpg`
+        };
+
+        const card = document.createElement('div');
+        card.className = 'swiss-card';
+        card.id = 'task-card-' + task.package.replace(/\./g, '_');
+        card.dataset.pkg = task.package;
+        card.dataset.act = task.activity || '';
+
+        card.innerHTML = `
+          <div class="card-meta-header">
+            <div class="meta-text">
+              <span class="meta-category">${meta.category}</span>
+              <span class="meta-title">${meta.name}</span>
+            </div>
+            <button class="card-kill-btn"
+                    onclick="killTask('${task.package}', event)"
+                    ontouchstart="event.stopPropagation()"
+                    ontouchend="event.stopPropagation(); killTask('${task.package}', event);"
+                    title="Tutup">✕</button>
+          </div>
+
+          <div class="snapshot-container">
+            <img class="snapshot-img"
+                 src="${meta.snapshot}"
+                 alt="${meta.name}"
+                 onerror="this.onerror=null; this.src='snapshots/default_app.jpg';" />
+            <div class="snapshot-badge">
+              <span class="badge-dot"></span>
+              <span>AKTIF</span>
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <span class="action-hint">↑ LUNCUR KE ATAS</span>
+            <span>SENTUH UNTUK BUKA</span>
+          </div>
+        `;
+
+        setupSwipePhysics(card, task);
+        track.appendChild(card);
+      });
+    }
+
+    function setupSwipePhysics(card, task) {
+      let startY = 0;
+      let startX = 0;
+      let currentY = 0;
+      let currentX = 0;
+      let startTime = 0;
+      let isDragging = false;
+
+      card.addEventListener('touchstart', (e) => {
+        if (e.target && e.target.closest && e.target.closest('.card-kill-btn')) {
+          return;
+        }
+        if (e.touches.length !== 1) return;
+        startY = e.touches[0].clientY;
+        startX = e.touches[0].clientX;
+        currentY = startY;
+        currentX = startX;
+        startTime = Date.now();
+        isDragging = false;
+        card.style.transition = 'none';
+      }, { passive: false });
+
+      card.addEventListener('touchmove', (e) => {
+        if (e.target && e.target.closest && e.target.closest('.card-kill-btn')) {
+          return;
+        }
+        if (e.touches.length !== 1) return;
+        currentY = e.touches[0].clientY;
+        currentX = e.touches[0].clientX;
+        const diffY = currentY - startY;
+        const diffX = currentX - startX;
+
+        // If swipe is moving upwards, lock vertical scroll
+        if (diffY < -6 && Math.abs(diffY) > Math.abs(diffX) * 0.5) {
+          try { e.preventDefault(); } catch (err) {}
+          isDragging = true;
+          const translateY = diffY;
+          const opacity = Math.max(0.15, 1 - Math.abs(diffY) / 260);
+          const scale = Math.max(0.85, 1 - Math.abs(diffY) / 600);
+
+          card.style.transform = `translateY(${translateY}px) scale(${scale})`;
+          card.style.opacity = opacity;
+        } else if (diffY > 0 && Math.abs(diffY) > Math.abs(diffX)) {
+          // Slight resistance when dragging down
+          card.style.transform = `translateY(${diffY * 0.2}px)`;
+        }
+      }, { passive: false });
+
+      const onEnd = (e) => {
+        if (e.target && e.target.closest && e.target.closest('.card-kill-btn')) {
+          return;
+        }
+        const diffY = currentY - startY;
+        const diffX = currentX - startX;
+        const elapsed = Math.max(Date.now() - startTime, 1);
+        const velocityY = diffY / elapsed; // px/ms
+
+        // Trigger kill if dragged up > 24px OR flicked upwards with speed (velocityY < -0.18)
+        const isUpwardSwipe = diffY < -24 || (diffY < -12 && velocityY < -0.18);
+
+        if (isUpwardSwipe) {
+          card.classList.add('card-fly-up');
+          killTask(task.package);
+        } else if (!isDragging && Math.abs(diffY) < 18 && Math.abs(diffX) < 18) {
+          // TAP TRIGGERED -> OPEN APP!
+          launchTask(task.package, task.activity);
+        } else {
+          // SNAP BACK
+          card.style.transition = 'transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s ease';
+          card.style.transform = 'translateY(0) scale(1)';
+          card.style.opacity = '1';
+        }
+      };
+
+      card.addEventListener('touchend', onEnd);
+      card.addEventListener('touchcancel', onEnd);
+    }
+
+    function killTask(pkg, event) {
+      if (event) {
+        event.stopPropagation();
+        if (event.cancelable) event.preventDefault();
+      }
+
+      // Trigger termination immediately in Android backend
+      if (window.AndroidRecents && window.AndroidRecents.killTask) {
+        window.AndroidRecents.killTask(pkg);
+      }
+
+      const card = document.getElementById('task-card-' + pkg.replace(/\./g, '_'));
+      if (card) {
+        card.classList.add('card-fly-up');
+        setTimeout(() => {
+          if (card.parentNode) card.parentNode.removeChild(card);
+          activeTasks = activeTasks.filter(t => t.package !== pkg);
+          if (activeTasks.length === 0) {
+            renderTasks([]);
+            setTimeout(() => {
+              dismissRecents();
+            }, 600);
+          }
+        }, 200);
+      }
+    }
+
+    function launchTask(pkg, act) {
+      if (window.AndroidRecents && window.AndroidRecents.openTask) {
+        window.AndroidRecents.openTask(pkg, act);
+      }
+    }
+
+    function sweepAllTasks() {
+      // Trigger termination immediately for all
+      if (window.AndroidRecents && window.AndroidRecents.clearAll) {
+        window.AndroidRecents.clearAll();
+      }
+
+      const cards = document.querySelectorAll('.swiss-card');
+      cards.forEach((card, idx) => {
+        setTimeout(() => {
+          card.classList.add('card-fly-up');
+        }, idx * 40);
+      });
+
+      setTimeout(() => {
+        renderTasks([]);
+        setTimeout(() => {
+          dismissRecents();
+        }, 500);
+      }, cards.length * 40 + 200);
+    }
+
+    // Called by FloatingDrawerService on open
+    window.onRecentsOpened = function() {
+      if (window.AndroidRecents && window.AndroidRecents.getTasks) {
+        window.AndroidRecents.getTasks();
+      }
+    };
+
+    // Callback when Java sends tasks JSON
+    window.onTasksLoaded = function(jsonStr) {
+      try {
+        const data = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr;
+        if (data && data.ram) {
+          updateRamUi(data.ram);
+        }
+        if (data && data.tasks) {
+          renderTasks(data.tasks);
+        }
+      } catch (e) {
+        console.error('Failed to parse tasks', e);
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      window.onRecentsOpened();
+    });
+  </script>
+</body>
+</html>

@@ -52,7 +52,7 @@ public class MainActivity extends Activity {
         1, 1, 0L, java.util.concurrent.TimeUnit.MILLISECONDS, new java.util.concurrent.ArrayBlockingQueue<Runnable>(4));
     private final com.noor.thenoorcar.VehicleHttpClient vehicleClient = new com.noor.thenoorcar.VehicleHttpClient();
     private volatile boolean energyReadErrorLogged = false;
-    private boolean legacyVehicleControlsBlocked() { return true; }
+    private boolean legacyVehicleControlsBlocked() { return false; }
 
     private final java.util.concurrent.atomic.AtomicBoolean lockSoundRequestPending =
             new java.util.concurrent.atomic.AtomicBoolean(false);
@@ -94,14 +94,15 @@ public class MainActivity extends Activity {
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setDatabaseEnabled(true);
-        settings.setAllowFileAccess(true);
-        settings.setAllowContentAccess(true);
-        settings.setAllowUniversalAccessFromFileURLs(true);
-        settings.setAllowFileAccessFromFileURLs(true);
+        settings.setAllowFileAccess(false);
+        settings.setAllowContentAccess(false);
+        settings.setAllowUniversalAccessFromFileURLs(false);
+        settings.setAllowFileAccessFromFileURLs(false);
         settings.setBlockNetworkLoads(false);
         settings.setLoadsImagesAutomatically(true);
         settings.setGeolocationEnabled(false);
         settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+        settings.setMediaPlaybackRequiresUserGesture(false);
         webView.clearCache(true);
 
         webView.setWebChromeClient(new WebChromeClient() {
@@ -118,7 +119,10 @@ public class MainActivity extends Activity {
 
         webView.setWebViewClient(new WebViewClient() {
             @Override public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                return url == null || !url.startsWith("file:///android_asset/");
+                if (url != null && !url.startsWith("file:///android_asset/")) {
+                    return true; // Block external navigation away from cockpit
+                }
+                return false;
             }
         });
         WebAppInterface webAppInterface = new WebAppInterface();
@@ -126,16 +130,18 @@ public class MainActivity extends Activity {
         webView.addJavascriptInterface(webAppInterface, "Android");
 
         webView.loadUrl("file:///android_asset/index.html");
+        startEnergyPolling();
 
-        // The reviewed JS transport owns polling; no parallel legacy polling loop.
-        stopFloatingBubbleService();
-    }
-
-
-    private void stopFloatingBubbleService() {
         try {
-            stopService(new Intent(this, FloatingBubbleService.class));
-        } catch (Throwable ignored) {}
+            Intent serviceIntent = new Intent(this, FloatingDrawerService.class);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent);
+            } else {
+                startService(serviceIntent);
+            }
+        } catch (Throwable t) {
+            Log.e(TAG, "Failed to start FloatingDrawerService", t);
+        }
     }
 
     @Override
@@ -148,12 +154,43 @@ public class MainActivity extends Activity {
     }
 
     @Override protected void onPause() {
-        if (webView != null) {
+        boolean inPip = false;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            try { inPip = isInPictureInPictureMode(); } catch (Throwable ignored) {}
+        }
+        if (webView != null && !inPip) {
             webView.evaluateJavascript("window.CompanionLifecycle && window.CompanionLifecycle.pause();", null);
             webView.onPause(); webView.pauseTimers();
         }
         releaseLockPreview();
         super.onPause();
+    }
+
+    @Override
+    protected void onUserLeaveHint() {
+        super.onUserLeaveHint();
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            if (getPackageManager().hasSystemFeature(android.content.pm.PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
+                try {
+                    android.app.PictureInPictureParams.Builder builder = new android.app.PictureInPictureParams.Builder();
+                    builder.setAspectRatio(new android.util.Rational(16, 9));
+                    enterPictureInPictureMode(builder.build());
+                } catch (Throwable ignored) {}
+            }
+        }
+    }
+
+    @Override
+    public void onPictureInPictureModeChanged(final boolean isInPictureInPictureMode, android.content.res.Configuration newConfig) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig);
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (webView != null) {
+                    webView.evaluateJavascript("if (window.onPipModeChanged) window.onPipModeChanged(" + isInPictureInPictureMode + ");", null);
+                }
+            }
+        });
     }
 
     @Override
@@ -371,15 +408,15 @@ public class MainActivity extends Activity {
                                 data.put("error", "AVAS_DAEMON_UNAVAILABLE");
                                 data.put("detail", avasErr.getMessage());
                             }
-                        } else if (path != null && (path.startsWith("/api/frunk") || path.startsWith("/api/trunk"))) {
+                        } else if (path != null && (path.startsWith("/api/frunk") || path.startsWith("/api/trunk") || path.startsWith("/api/climate"))) {
                             try {
                                 data = com.noor.thenoorcar.TelemetryHttpClient.request(method, path);
                                 code = 200;
-                            } catch (Exception bootErr) {
+                            } catch (Exception actErr) {
                                 code = 500;
                                 data.put("ok", false);
-                                data.put("error", "BOOT_CONTROL_FAILED");
-                                data.put("detail", bootErr.getMessage());
+                                data.put("error", "ACTUATOR_CONTROL_FAILED");
+                                data.put("detail", actErr.getMessage());
                             }
                         } else {
                             code = 405;
@@ -422,34 +459,8 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
-        public void playMegafonPreset(final String preset) {
-            if (preset == null || preset.isEmpty()) return;
-            new Thread(() -> {
-                try {
-                    URL u = new URL("http://127.0.0.1:8890/api/megafon/play?preset=" + java.net.URLEncoder.encode(preset, "UTF-8"));
-                    HttpURLConnection c = (HttpURLConnection) u.openConnection();
-                    c.setRequestMethod("GET");
-                    c.getResponseCode();
-                    c.disconnect();
-                } catch (Throwable t) {
-                    Log.e(TAG, "Error playing preset: " + t.getMessage());
-                }
-            }).start();
-        }
-
-        @JavascriptInterface
-        public void playDoa() {
-            new Thread(() -> {
-                try {
-                    URL u = new URL("http://127.0.0.1:8890/api/doa/play");
-                    HttpURLConnection c = (HttpURLConnection) u.openConnection();
-                    c.setRequestMethod("GET");
-                    c.getResponseCode();
-                    c.disconnect();
-                } catch (Throwable t) {
-                    Log.e(TAG, "Error playing doa: " + t.getMessage());
-                }
-            }).start();
+        public String getEnergyJson() {
+            return latestEnergyJson;
         }
 
 
@@ -621,122 +632,36 @@ public class MainActivity extends Activity {
         }
 
 
-        @JavascriptInterface
-        public void triggerRemoteAction(final String endpoint, final String payload) {
-            if (legacyVehicleControlsBlocked()) { Log.w(TAG, "Control unavailable in reviewed candidate"); return; }
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        URL url = new URL("http://127.0.0.1:8888" + endpoint);
-                        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                        conn.setRequestMethod("POST");
-                        conn.setDoOutput(true);
-                        conn.setRequestProperty("Content-Type", "application/json");
-                        OutputStream os = conn.getOutputStream();
-                        os.write(payload.getBytes("UTF-8"));
-                        os.flush();
-                        os.close();
-                        conn.getResponseCode();
-                    } catch (Throwable ignored) {}
-                }
-            }).start();
-        }
+
+
+
+
 
         @JavascriptInterface
-        public void setTargetTemperature(final float temp) {
-            if (legacyVehicleControlsBlocked()) { Log.w(TAG, "Control unavailable in reviewed candidate"); return; }
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        java.net.Socket sock = new java.net.Socket("127.0.0.1", 8888);
-                        sock.setSoTimeout(800);
-                        java.io.OutputStream os = sock.getOutputStream();
-                        os.write(("GET /api/hvac?temp=" + temp + " HTTP/1.1\r\nHost: 127.0.0.1:8888\r\nConnection: close\r\n\r\n").getBytes());
-                        os.flush();
-                        sock.close();
-                    } catch (Throwable ignored) {}
+        public String vehicleRequest(final String method, final String path, final String body) {
+            try {
+                if (path != null && path.startsWith("/api/window")) {
+                    if (!VehicleRequestPolicy.allowed(method, path, body != null ? body : "")) {
+                        return "{\"ok\":false,\"error\":\"FORBIDDEN\"}";
+                    }
+                    org.json.JSONObject wRes = com.noor.thenoorcar.WindowHttpClient.request(path);
+                    return wRes != null ? wRes.toString() : "{\"ok\":false}";
                 }
-            }).start();
-        }
-
-        @JavascriptInterface
-        public void setBlowerSpeed(final int speed) {
-            if (legacyVehicleControlsBlocked()) { Log.w(TAG, "Control unavailable in reviewed candidate"); return; }
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        java.net.Socket sock = new java.net.Socket("127.0.0.1", 8888);
-                        sock.setSoTimeout(800);
-                        java.io.OutputStream os = sock.getOutputStream();
-                        os.write(("GET /api/hvac?fan=" + speed + " HTTP/1.1\r\nHost: 127.0.0.1:8888\r\nConnection: close\r\n\r\n").getBytes());
-                        os.flush();
-                        sock.close();
-                    } catch (Throwable ignored) {}
+                VehicleHttpClient.Result res = vehicleClient.request(method, path, body != null ? body : "");
+                return res != null && res.body != null ? res.body : "{\"ok\":false}";
+            } catch (Throwable t) {
+                Log.w(TAG, "vehicleRequest error: " + path, t);
+                try {
+                    return new org.json.JSONObject().put("ok", false).put("error", t.getMessage() != null ? t.getMessage() : "ERROR").toString();
+                } catch (Exception e) {
+                    return "{\"ok\":false,\"error\":\"EXCEPTION\"}";
                 }
-            }).start();
+            }
         }
-
-        @JavascriptInterface
-        public void setClimatePower(final boolean on) {
-            if (legacyVehicleControlsBlocked()) { Log.w(TAG, "Control unavailable in reviewed candidate"); return; }
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        java.net.Socket sock = new java.net.Socket("127.0.0.1", 8888);
-                        sock.setSoTimeout(800);
-                        java.io.OutputStream os = sock.getOutputStream();
-                        os.write(("GET /api/hvac?power=" + (on ? "1" : "0") + " HTTP/1.1\r\nHost: 127.0.0.1:8888\r\nConnection: close\r\n\r\n").getBytes());
-                        os.flush();
-                        sock.close();
-                    } catch (Throwable ignored) {}
-                }
-            }).start();
-        }
-
-        @JavascriptInterface
-        public void setAirRecirculation(final int mode) {
-            if (legacyVehicleControlsBlocked()) { Log.w(TAG, "Control unavailable in reviewed candidate"); return; }
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        java.net.Socket sock = new java.net.Socket("127.0.0.1", 8888);
-                        sock.setSoTimeout(800);
-                        java.io.OutputStream os = sock.getOutputStream();
-                        os.write(("GET /api/hvac?recirc=" + mode + " HTTP/1.1\r\nHost: 127.0.0.1:8888\r\nConnection: close\r\n\r\n").getBytes());
-                        os.flush();
-                        sock.close();
-                    } catch (Throwable ignored) {}
-                }
-            }).start();
-        }
-
-        @JavascriptInterface
-        public void setAcCompressor(final boolean on) {
-            if (legacyVehicleControlsBlocked()) { Log.w(TAG, "Control unavailable in reviewed candidate"); return; }
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        java.net.Socket sock = new java.net.Socket("127.0.0.1", 8888);
-                        sock.setSoTimeout(800);
-                        java.io.OutputStream os = sock.getOutputStream();
-                        os.write(("GET /api/hvac?ac=" + (on ? "1" : "0") + " HTTP/1.1\r\nHost: 127.0.0.1:8888\r\nConnection: close\r\n\r\n").getBytes());
-                        os.flush();
-                        sock.close();
-                    } catch (Throwable ignored) {}
-                }
-            }).start();
-        }
-
 
         @JavascriptInterface
         public void launchApp(final String packageName) {
-            if (packageName == null) return;
+            if (packageName == null || !packageName.matches("^[a-zA-Z0-9._]+$")) return;
             handler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -753,7 +678,27 @@ public class MainActivity extends Activity {
             });
         }
 
-
+        @JavascriptInterface
+        public boolean enterPipMode() {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                if (getPackageManager().hasSystemFeature(android.content.pm.PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                android.app.PictureInPictureParams.Builder builder = new android.app.PictureInPictureParams.Builder();
+                                builder.setAspectRatio(new android.util.Rational(16, 9));
+                                enterPictureInPictureMode(builder.build());
+                            } catch (Throwable t) {
+                                Log.w(TAG, "enterPictureInPictureMode failed", t);
+                            }
+                        }
+                    });
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     @Override

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>e.MAS 5 Control Center — Desktop Modding Suite</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="swiss-container">
+        <!-- 1. HEADER (Strict Swiss Typographic Style) -->
+        <header class="swiss-header">
+            <div class="brand">
+                <span class="accent-title">e.MAS 5</span>
+                <span class="main-title">CONTROL CENTER</span>
+            </div>
+            <div class="sub-brand">
+                AUTOMOTIVE MODDING &amp; A-STORE SLOT OVERLAY SUITE
+            </div>
+            <div class="platform-badge">
+                IHU801P · ANDROID 10 · FLYME AUTO
+            </div>
+        </header>
+
+        <div class="divider"></div>
+
+        <!-- 2. CONNECTION BAR -->
+        <section class="conn-bar">
+            <div class="conn-status">
+                <div class="status-bulb" id="statusBulb"></div>
+                <div class="status-meta">
+                    <div class="status-title" id="connTitle">TERPUTUS / MENCARI KERETA...</div>
+                    <div class="status-sub" id="connSub">Menunggu sambungan Wi-Fi kereta...</div>
+                </div>
+            </div>
+
+            <div class="conn-controls">
+                <input type="text" id="inputCarIp" placeholder="192.168.1.18" value="192.168.1.18">
+                <button class="btn btn-primary" id="btnAutoScan">🔍 AUTO-SCAN WI-FI</button>
+                <button class="btn" id="btnManualConnect">SAMBUNG</button>
+            </div>
+        </section>
+
+        <!-- LIVE TASK PROGRESS BAR (Real-time Transfer/Install/Backup Status) -->
+        <section class="task-progress-section" id="taskProgressSection" style="display: none;">
+            <div class="progress-header">
+                <div class="progress-title-wrap">
+                    <span class="spinner" id="progressSpinner">⚡</span>
+                    <strong id="taskLabel">SEDANG MEMPROSES...</strong>
+                </div>
+                <div class="progress-pct" id="taskPct">0%</div>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="taskFill" style="width: 0%;"></div>
+            </div>
+            <div class="progress-detail" id="taskDetail">Menyediakan sambungan...</div>
+        </section>
+
+        <!-- BRAKE KEEP-ALIVE NOTICE -->
+        <div class="brake-tip-banner">
+            <span class="brake-icon">🦶🛑</span>
+            <div class="brake-tip-text">
+                <strong>PETUA KEKALKAN KUASA KENDERAAN:</strong> Semasa memindahkan fail besar, memasang APK atau membuat sandaran, 
+                <strong>duduk di kerusi pemandu &amp; pijak brek sekali-sekala</strong> supaya sistem komputer kereta (IHU) tidak masuk mod tidur (*sleep/timeout*).
+            </div>
+        </div>
+
+        <!-- 3. MAIN WORKSPACE (2 Columns) -->
+        <main class="workspace-grid">
+            <!-- COLUMN 1: SLOT MANAGER -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="section-num">01</div>
+                        <h2>PENGURUS SLOT APLIKASI</h2>
+                        <p class="section-desc">Pilih slot aplikasi A-Store atau Sistem untuk ditimpa dengan APK anda.</p>
+                    </div>
+                    <button class="btn btn-sm" id="btnRefreshSlots">🔄 IMBAS SEMULA</button>
+                </div>
+
+                <!-- Scanned Slots List -->
+                <div class="slots-container" id="slotsList">
+                    <div class="slot-empty-notice">Sambungkan ke kereta untuk melihat senarai slot aplikasi.</div>
+                </div>
+
+                <!-- Custom APK Injector Form -->
+                <div class="injector-box">
+                    <h3>PASANG APK SENDIRI KE SLOT TERPILIH</h3>
+                    
+                    <div class="file-dropzone" id="dropzone">
+                        <input type="file" id="fileApkInput" accept=".apk" style="display: none;">
+                        <div class="drop-text" id="dropText">Tarik &amp; Lepas fail .apk ke sini atau klik untuk pilih fail</div>
+                    </div>
+
+                    <div class="form-row">
+                        <label>Nama Aplikasi Baru:</label>
+                        <input type="text" id="inputCustomAppName" value="Spotify" placeholder="cth: Spotify, Waze">
+                    </div>
+
+                    <div class="form-row">
+                        <label>Slot Sasaran Ditimpa:</label>
+                        <select id="selectTargetSlot">
+                            <option value="">-- Pilih slot dari senarai di atas --</option>
+                        </select>
+                    </div>
+
+                    <button class="btn btn-primary btn-block" id="btnInstallCustom">🚀 TIMPA &amp; PASANG KE SLOT KERETA</button>
+                </div>
+            </div>
+
+            <!-- COLUMN 2: 1-CLICK MODS & UTILITIES (Scrollable) -->
+            <div class="card">
+                <div class="card-scrollable">
+                    <div class="card-header">
+                        <div>
+                            <div class="section-num">02</div>
+                            <h2>PAKEJ 1-KLIK &amp; UTILITI</h2>
+                            <p class="section-desc">Pakej modifikasi siap sedia, audio kenderaan &amp; kawalan servis.</p>
+                        </div>
+                    </div>
+
+                    <!-- 1-Click Apps -->
+                    <div class="preset-group">
+                        <div class="group-label">PAKEJ APLIKASI POPULAR (1-KLIK)</div>
+                        <button class="btn btn-action" id="btnSmartTube">
+                            <span class="icon">▶</span>
+                            <div class="btn-text">
+                                <strong>PASANG SMARTTUBE (TIKTOK)</strong>
+                                <small>YouTube tanpa iklan · Menimpa slot TikTok</small>
+                            </div>
+                        </button>
+
+                        <button class="btn btn-action" id="btnNetflix">
+                            <span class="icon">🎬</span>
+                            <div class="btn-text">
+                                <strong>PASANG NETFLIX (JOOX)</strong>
+                                <small>Strim filem HD · Menimpa slot JOOX Music</small>
+                            </div>
+                        </button>
+
+                        <button class="btn btn-action" id="btnSteering">
+                            <span class="icon">🎮</span>
+                            <div class="btn-text">
+                                <strong>MOD BUTANG STERENG (HOLD 5S)</strong>
+                                <small>Hold Volume Down 5s untuk sorok/munculkan app</small>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- Audio Customization (Lock Sound & AVAS) -->
+                    <div class="preset-group mt-16">
+                        <div class="group-label">PENGURUS AUDIO &amp; PEJALAN KAKI</div>
+                        
+                        <!-- Lock Sound -->
+                        <div class="sound-control-box">
+                            <div class="sound-control-header">
+                                <span>🔊 NADA KUNCI KENDERAAN (LOCK SOUND)</span>
+                                <span class="format-badge">48kHz · Stereo · 16-bit</span>
+                            </div>
+                            <div class="sound-row">
+                                <select id="selectLockSound">
+                                    <option value="original">★ Standard Kilang (Original Factory)</option>
+                                    <option value="mario">Super Mario Chime</option>
+                                    <option value="animewow">Anime Wow!</option>
+                                </select>
+                                <button class="btn btn-sm btn-primary" id="btnApplyLockSound">PASANG</button>
+                            </div>
+                            <!-- Upload custom audio for Lock Sound -->
+                            <div class="custom-audio-uploader">
+                                <input type="file" id="fileUploadLock" accept="audio/*,.mp3,.wav,.ogg,.m4a" style="display:none;">
+                                <button class="btn btn-sm btn-upload" id="btnBrowseLock">
+                                    📂 UPLOAD MP3/WAV NADA KUNCI (AUTO-CONVERT)
+                                </button>
+                                <span class="upload-filename" id="txtLockFile">Tiada fail dipilih</span>
+                            </div>
+                        </div>
+
+                        <!-- AVAS Sound -->
+                        <div class="sound-control-box">
+                            <div class="sound-control-header">
+                                <span>🚗 BUNYI AMARAN PEJALAN KAKI (AVAS)</span>
+                                <span class="format-badge">48kHz · Mono · 16-bit</span>
+                            </div>
+                            <div class="sound-row mb-4">
+                                <select id="selectAvasSlot">
+                                    <option value="1">Slot 1 (Galaxy Chord - Default)</option>
+                                    <option value="2">Slot 2 (Space Sound)</option>
+                                    <option value="3">Slot 3 (Pixel / Sport)</option>
+                                </select>
+                                <select id="selectAvasSound">
+                                    <option value="factory">★ Standard Kilang (Factory Audio)</option>
+                                    <option value="v8">Dodge V8 Engine Rumble</option>
+                                    <option value="mario">Mario Kart Speed Theme</option>
+                                    <option value="paddlepop">Paddle Pop Jingle</option>
+                                </select>
+                                <button class="btn btn-sm btn-primary" id="btnApplyAvasSound">TUKAR</button>
+                            </div>
+                            <!-- Upload custom audio for AVAS -->
+                            <div class="custom-audio-uploader">
+                                <input type="file" id="fileUploadAvas" accept="audio/*,.mp3,.wav,.ogg,.m4a" style="display:none;">
+                                <button class="btn btn-sm btn-upload" id="btnBrowseAvas">
+                                    📂 UPLOAD MP3/WAV AVAS (AUTO-CONVERT IKUT SLOT)
+                                </button>
+                                <span class="upload-filename" id="txtAvasFile">Tiada fail dipilih</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Factory Safety & Tools -->
+                    <div class="preset-group mt-16">
+                        <div class="group-label">KESELAMATAN &amp; SERVIS KILANG</div>
+                        
+                        <button class="btn btn-stealth" id="btnStealth">
+                            <span class="icon">🛡️</span>
+                            <div class="btn-text">
+                                <strong>KEMBALIKAN STANDARD KILANG (STEALTH MODE)</strong>
+                                <small>Nyah-pasang semua mount sebelum hantar servis di Proton SC</small>
+                            </div>
+                        </button>
+
+                        <!-- Detailed Full Backup Box -->
+                        <div class="backup-info-card">
+                            <div class="backup-info-header">
+                                <span class="icon">💾</span>
+                                <div>
+                                    <strong>SANDARAN SISTEM KECEMASAN (FAST UNBRICK RESCUE)</strong>
+                                    <div class="backup-specs">
+                                        Memori Diperlukan Laptop: <strong>~1.12 GB (1,116 MB)</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="backup-partitions-list">
+                                <div class="backup-part-item">
+                                    <span class="part-name">1. Kernel Boot (<code>boot_a.img</code>)</span>
+                                    <span class="part-size">32.0 MB</span>
+                                </div>
+                                <div class="backup-part-item">
+                                    <span class="part-name">2. Parameter ECARX (<code>ecarxpara.img</code>)</span>
+                                    <span class="part-size">1,024.0 MB (1.0 GB)</span>
+                                </div>
+                                <div class="backup-part-item">
+                                    <span class="part-name">3. Device Tree Blob (<code>dtbo_a.img</code>)</span>
+                                    <span class="part-size">8.0 MB</span>
+                                </div>
+                            </div>
+
+                            <!-- Peringatan Khas Full eMMC 30GB-45GB -->
+                            <div class="emmc-warning-box">
+                                <div class="emmc-warn-title">⚠️ PERHATIAN TENTANG FULL STORAGE BACKUP (30 GB - 45 GB):</div>
+                                <p class="emmc-warn-text">
+                                    Jika anda ingin klon keseluruhan storan kereta (<code>super.img</code> 14 GB + <code>userdata.img</code> 31 GB = <strong>~45 GB</strong>):<br>
+                                    • Anda <strong>WAJIB duduk di kerusi pemandu &amp; pijak pedal brek</strong> sekali-sekala sepanjang proses.<br>
+                                    • Jika ditinggalkan, sistem kereta akan masuk mod tidur (<em>sleep timeout</em>) &amp; Wi-Fi terputus di tengah jalan.<br>
+                                    • Sandaran <strong>1.12 GB di bawah</strong> adalah pilihan paling selamat &amp; pantas (1-2 minit) untuk pulihkan kereta jika <em>soft-brick</em> tanpa perlu tarik 45 GB.
+                                </p>
+                            </div>
+
+                            <p class="backup-note">
+                                * Lokasi simpanan: <code>Desktop/eMAS5_Full_Backup/</code>. Digunakan untuk pemulihan kecemasan jika sistem corrupt.
+                            </p>
+                            
+                            <!-- 2 PILIHAN SANDARAN: PANTAS (1.12 GB) ATAU KLON PENUH (45 GB) -->
+                            <div class="backup-buttons-wrap">
+                                <button class="btn btn-action btn-backup mt-8" id="btnBackupAll">
+                                    <span class="icon">⚡</span>
+                                    <div class="btn-text">
+                                        <strong>1. SANDARAN PANTAS KECEMASAN (1.12 GB)</strong>
+                                        <small>Paling disyorkan · Siap dalam 1-2 minit (boot_a, ecarxpara, dtbo)</small>
+                                    </div>
+                                </button>
+
+                                <button class="btn btn-action btn-emmc-dump mt-8" id="btnBackupEmmc">
+                                    <span class="icon">💾</span>
+                                    <div class="btn-text">
+                                        <strong>2. KLON PENUH STORAN eMMC (~45 GB)</strong>
+                                        <small>Wajib duduk dalam kereta &amp; pijak brek (super 14GB + userdata 31GB)</small>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="btn-row mt-8">
+                            <button class="btn" id="btnReboot">🔄 REBOOT IHU</button>
+                            <button class="btn" id="btnScreenshot">📸 SCREENSHOT</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 4. BOTTOM LOG CONSOLE -->
+        <footer class="console-card">
+            <div class="console-header">LOG SISTEM &amp; TERMINAL REAL-TIME</div>
+            <div class="console-body" id="consoleLogs"></div>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

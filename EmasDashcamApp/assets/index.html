@@ -1,0 +1,560 @@
+<!-- Saved copy for EmasDashcamApp mirroring original IHU layout -->
+<!DOCTYPE html>
+<html lang="ms" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Proton e.MAS 5 · Vision DVR & 360 AVM</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    @keyframes pulse-rec {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(0.9); }
+    }
+    .rec-dot { animation: pulse-rec 1.2s infinite ease-in-out; }
+    
+    @keyframes road-dash {
+      0% { stroke-dashoffset: 0; }
+      100% { stroke-dashoffset: -120; }
+    }
+    .road-lines { stroke-dasharray: 20 20; animation: road-dash 0.6s linear infinite; }
+
+    @keyframes orb-glow {
+      0%, 100% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.08); opacity: 1; filter: drop-shadow(0 0 10px #38bdf8); }
+    }
+    .voice-orb { animation: orb-glow 3s infinite ease-in-out; }
+
+    * { -webkit-tap-highlight-color: transparent; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(150, 150, 150, 0.3); border-radius: 999px; }
+  </style>
+</head>
+<body class="bg-[#dbe0e6] dark:bg-[#0c1017] text-slate-800 dark:text-slate-100 font-sans select-none antialiased min-h-screen flex flex-col justify-between overflow-hidden transition-colors duration-300">
+
+  <!-- TOP STATUS BAR (ORIGINAL IHU REPLICA) -->
+  <header class="h-14 px-6 flex items-center justify-between text-slate-600 dark:text-slate-300 border-b border-black/5 dark:border-white/5 bg-white/40 dark:bg-black/30 backdrop-blur-md z-30">
+    <div class="flex items-center gap-5">
+      <button class="w-8 h-8 rounded-full bg-slate-300/80 dark:bg-slate-700/80 flex items-center justify-center text-slate-700 dark:text-slate-200 shadow-sm" title="Profil Pemandu">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      </button>
+
+      <svg class="w-5 h-5 text-slate-700 dark:text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg>
+      <svg class="w-5 h-5 text-slate-700 dark:text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19l6-6-6-6v12l6-6-6-6"/></svg>
+
+      <div class="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-mono font-bold" title="USB OTG Rakaman Aktif">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7C5 4 4 5 4 7zm4 4h8m-8 4h5"/></svg>
+        <span>USB: 42.5/64GB</span>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md px-4 py-1.5 rounded-full border border-black/5 dark:border-white/10 shadow-sm cursor-pointer hover:scale-105 transition-transform" onclick="triggerVoiceAssistant()">
+      <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-cyan-400 to-blue-600 voice-orb flex items-center justify-center shadow-md">
+        <div class="w-2.5 h-2.5 rounded-full bg-white/90"></div>
+      </div>
+      <span class="text-xs md:text-sm font-medium text-slate-700 dark:text-slate-200">
+        Say <span class="font-bold text-cyan-600 dark:text-cyan-400">"Hi e.MAS"</span> to wake me up
+      </span>
+      <div class="flex items-center gap-1.5 ml-2 pl-3 border-l border-slate-300 dark:border-slate-700">
+        <span class="w-2 h-2 rounded-full bg-rose-500 rec-dot"></span>
+        <span id="top-rec-time" class="text-xs font-mono font-bold text-rose-500">REC 03:42</span>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <button onclick="toggleTheme()" class="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 transition-colors" title="Tukar Mod Siang/Malam">
+        <span id="theme-icon">🌙</span>
+      </button>
+
+      <button class="text-slate-700 dark:text-slate-200 hover:text-black dark:hover:text-white relative">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        <span class="w-2 h-2 rounded-full bg-cyan-500 absolute top-0 right-0"></span>
+      </button>
+
+      <div id="top-clock" class="text-base font-semibold font-mono text-slate-800 dark:text-white tracking-wide">
+        07:38
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE: OEM 360 AVM + DVR FEED -->
+  <main class="flex-1 relative p-3 md:p-4 flex gap-3 overflow-hidden">
+    
+    <!-- LEFT PANEL: 360° SURROUND BIRD-EYE VIEW -->
+    <div class="w-[42%] bg-slate-900 rounded-3xl border border-slate-800 relative flex flex-col items-center justify-between p-4 overflow-hidden shadow-xl">
+      <div class="w-full flex items-center justify-between z-10">
+        <div class="flex items-center gap-2">
+          <span class="px-2.5 py-1 rounded-lg bg-black/60 text-[11px] font-mono font-bold text-cyan-400 border border-cyan-500/30">
+            AVM 360° BIRD'S EYE
+          </span>
+          <span class="text-[10px] text-slate-400 font-mono">PARK DIST: 1.2M</span>
+        </div>
+        <div class="flex items-center gap-1 bg-black/60 p-1 rounded-xl border border-slate-700/60">
+          <button onclick="setAvmMode('2d')" id="btn-2d" class="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-cyan-500 text-slate-950">2D</button>
+          <button onclick="setAvmMode('3d')" id="btn-3d" class="px-2.5 py-0.5 rounded-lg text-xs font-bold text-slate-300 hover:text-white">3D</button>
+        </div>
+      </div>
+
+      <div class="relative w-full flex-1 flex items-center justify-center my-2">
+        <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 400">
+          <line x1="80" y1="40" x2="80" y2="360" stroke="#38bdf8" stroke-width="2" stroke-dasharray="6 6" opacity="0.6"/>
+          <line x1="320" y1="40" x2="320" y2="360" stroke="#38bdf8" stroke-width="2" stroke-dasharray="6 6" opacity="0.6"/>
+          <path d="M 120 60 Q 200 30 280 60" fill="none" stroke="#22c55e" stroke-width="3" opacity="0.8"/>
+          <path d="M 110 340 Q 200 370 290 340" fill="none" stroke="#eab308" stroke-width="3" opacity="0.8"/>
+          <polygon points="200,100 120,30 280,30" fill="#06b6d4" opacity="0.08"/>
+          <polygon points="200,300 120,370 280,370" fill="#06b6d4" opacity="0.08"/>
+        </svg>
+
+        <div class="relative w-36 h-64 bg-slate-950 rounded-[28px] border-2 border-emerald-400/80 shadow-2xl flex flex-col items-center justify-between p-3 overflow-hidden">
+          <div class="w-24 h-12 bg-slate-800 rounded-t-xl mt-3 border border-slate-700"></div>
+          <div class="w-20 h-16 bg-emerald-600/30 rounded-lg flex items-center justify-center">
+            <span class="text-[10px] font-black tracking-widest text-emerald-300">e.MAS 5</span>
+          </div>
+          <div class="w-24 h-8 bg-slate-800 rounded-b-xl mb-3 border border-slate-700"></div>
+          <span class="w-2 h-2 rounded-full bg-cyan-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-ping"></span>
+        </div>
+      </div>
+
+      <div class="w-full flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-800/80">
+        <span>SENSOR: DEPAN/BELAKANG OK</span>
+        <span class="text-cyan-400 font-bold">GEAR: D</span>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL: LIVE DRIVING DVR FEED -->
+    <div class="flex-1 bg-black rounded-3xl border border-slate-800 relative flex flex-col justify-between overflow-hidden shadow-2xl group">
+      
+      <div class="absolute top-4 left-4 z-20 flex items-center gap-1.5 bg-slate-950/80 backdrop-blur-md p-1.5 rounded-2xl border border-slate-800">
+        <button onclick="setCamera('front')" id="cam-front" class="cam-sel px-3 py-1 rounded-xl text-xs font-bold bg-cyan-500 text-slate-950 shadow-md">
+          Depan
+        </button>
+        <button onclick="setCamera('rear')" id="cam-rear" class="cam-sel px-3 py-1 rounded-xl text-xs font-bold text-slate-300 hover:text-white">
+          Belakang
+        </button>
+        <button onclick="setCamera('left')" id="cam-left" class="cam-sel px-3 py-1 rounded-xl text-xs font-bold text-slate-300 hover:text-white">
+          Kiri
+        </button>
+        <button onclick="setCamera('right')" id="cam-right" class="cam-sel px-3 py-1 rounded-xl text-xs font-bold text-slate-300 hover:text-white">
+          Kanan
+        </button>
+      </div>
+
+      <div class="absolute top-4 right-4 z-20 flex items-center gap-2">
+        <div class="flex items-center gap-1.5 bg-rose-950/80 border border-rose-500/50 px-2.5 py-1 rounded-xl">
+          <span class="w-2.5 h-2.5 rounded-full bg-rose-500 rec-dot"></span>
+          <span class="text-[11px] font-mono font-bold text-rose-300">REC</span>
+        </div>
+        <button onclick="toggleMic()" id="btn-mic" class="px-2.5 py-1 rounded-xl bg-black/60 border border-emerald-500/40 text-emerald-400 text-[11px] font-bold flex items-center gap-1">
+          🎙️ <span id="mic-text">MIC HIDUP</span>
+        </button>
+      </div>
+
+      <div id="live-canvas-wrap" class="w-full h-full relative flex items-center justify-center overflow-hidden">
+        <svg class="w-full h-full absolute inset-0 object-cover pointer-events-none" viewBox="0 0 960 540" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="skyN" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#030712" />
+              <stop offset="60%" stop-color="#0f172a" />
+              <stop offset="100%" stop-color="#1e293b" />
+            </linearGradient>
+            <linearGradient id="roadN" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#0a0f1d" />
+              <stop offset="100%" stop-color="#020617" />
+            </linearGradient>
+          </defs>
+          <rect width="960" height="280" fill="url(#skyN)" />
+          <polygon points="0,280 960,280 960,540 0,540" fill="url(#roadN)" />
+          <polygon points="430,280 435,280 200,540 140,540" fill="#1e293b" opacity="0.6" />
+          <polygon points="525,280 530,280 820,540 760,540" fill="#1e293b" opacity="0.6" />
+          <line x1="480" y1="280" x2="480" y2="540" stroke="#f59e0b" stroke-width="5" class="road-lines" />
+          <line x1="450" y1="280" x2="310" y2="540" stroke="#ffffff" stroke-width="3" stroke-opacity="0.4" class="road-lines" />
+          <line x1="510" y1="280" x2="650" y2="540" stroke="#ffffff" stroke-width="3" stroke-opacity="0.4" class="road-lines" />
+        </svg>
+
+        <div class="absolute right-4 bottom-14 z-20 flex flex-col gap-2">
+          <button onclick="lockEmergency()" class="w-12 h-12 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 flex items-center justify-center text-xl shadow-lg active:scale-95 transition-transform" title="Kunci Klip Kecemasan">
+            🔒
+          </button>
+          <button onclick="snapPhoto()" class="w-12 h-12 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-cyan-400 border border-cyan-500/40 flex items-center justify-center text-xl shadow-lg active:scale-95 transition-transform" title="Ambil Foto">
+            📸
+          </button>
+        </div>
+
+        <div class="absolute bottom-4 left-4 z-20 flex items-center gap-2 bg-black/70 backdrop-blur-md px-3 py-1 rounded-xl border border-slate-700">
+          <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+          <span id="cam-label" class="text-xs font-mono font-bold text-white">KAMERA DEPAN (WIDE 150°)</span>
+        </div>
+
+        <div class="absolute bottom-4 right-20 z-20 text-right pointer-events-none">
+          <div class="text-[10px] font-mono text-white/80">PROTON e.MAS 5 · DVR PRO</div>
+          <div id="stamp-dt" class="text-[9px] font-mono text-cyan-300">2026-09-26 01:40:15 · 68 KM/H</div>
+        </div>
+
+        <div id="toast-bar" class="absolute top-16 left-1/2 -translate-x-1/2 z-30 transition-all duration-300 transform -translate-y-4 opacity-0 pointer-events-none bg-amber-500 text-slate-950 font-black px-5 py-2 rounded-2xl shadow-2xl flex items-center gap-2 text-sm">
+          <span>🔒</span> <span id="toast-text">KLIP KECEMASAN DIKUNCI!</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- BOTTOM DOCK BAR (EXACT 1:1 REPLICA OF PROTON e.MAS 5 IHU DOCK) -->
+  <footer class="h-20 bg-white/95 dark:bg-[#121721]/95 backdrop-blur-lg border-t border-black/10 dark:border-white/10 px-6 flex items-center justify-between z-30 shadow-2xl">
+    
+    <div class="flex items-center gap-6 md:gap-8">
+      <button onclick="cycleCamView()" class="flex flex-col items-center justify-center text-cyan-600 dark:text-cyan-400 group transition-transform active:scale-95" title="Kamera 360°">
+        <div class="relative font-black text-xl tracking-tighter flex items-center justify-center w-9 h-9">
+          <span>360</span>
+          <svg class="absolute inset-0 w-full h-full -rotate-45" viewBox="0 0 36 36">
+            <path d="M 6 18 A 12 12 0 1 1 30 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            <polyline points="28,12 30,18 24,18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 mt-0.5"></span>
+      </button>
+
+      <button class="text-slate-700 dark:text-slate-300 hover:text-cyan-500 dark:hover:text-cyan-400 transition-colors" title="Navigasi">
+        <svg class="w-6 h-6 rotate-45" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+      </button>
+
+      <button class="text-slate-700 dark:text-slate-300 hover:text-cyan-500 dark:hover:text-cyan-400 transition-colors" title="Muzik & Media">
+        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+      </button>
+
+      <button class="text-slate-700 dark:text-slate-300 hover:text-cyan-500 dark:hover:text-cyan-400 transition-colors" title="Kelantangan Audio">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z"/></svg>
+      </button>
+    </div>
+
+    <div class="h-8 w-px bg-slate-300 dark:bg-slate-700/80 mx-2"></div>
+
+    <div class="flex items-center gap-6 md:gap-8">
+      <div class="flex items-center gap-2.5 text-slate-800 dark:text-slate-200">
+        <button onclick="adjFan(-1)" class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:hover:text-white font-bold text-lg active:scale-90">‹</button>
+        <div class="flex items-center gap-1.5 font-bold font-mono text-sm">
+          <svg class="w-5 h-5 text-cyan-600 dark:text-cyan-400 animate-spin" style="animation-duration: 4s;" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1010 10A10 10 0 0012 2zm1 14.93V17a1 1 0 01-2 0v-.07A6 6 0 017.07 13H7a1 1 0 010-2h.07A6 6 0 0111 7.07V7a1 1 0 012 0v.07A6 6 0 0116.93 11H17a1 1 0 010 2h-.07A6 6 0 0113 16.93z"/></svg>
+          <span id="dock-fan">2</span>
+        </div>
+        <button onclick="adjFan(1)" class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:hover:text-white font-bold text-lg active:scale-90">›</button>
+      </div>
+
+      <div class="flex items-center gap-2.5 text-slate-800 dark:text-slate-200">
+        <button onclick="adjTemp(-0.5)" class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:hover:text-white font-bold text-lg active:scale-90">‹</button>
+        <div class="flex items-center gap-1">
+          <span class="w-1 h-4 rounded-full bg-cyan-500"></span>
+          <span class="w-1 h-5 rounded-full bg-cyan-500"></span>
+          <span class="w-1 h-6 rounded-full bg-cyan-500"></span>
+          <span class="w-1 h-6 rounded-full bg-blue-500"></span>
+          <span class="w-1 h-5 rounded-full bg-purple-500"></span>
+          <span class="w-1 h-4 rounded-full bg-purple-400"></span>
+          <span id="dock-temp" class="ml-1 text-xs font-mono font-bold text-slate-700 dark:text-slate-300">22.0°</span>
+        </div>
+        <button onclick="adjTemp(0.5)" class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:hover:text-white font-bold text-lg active:scale-90">›</button>
+      </div>
+
+      <button class="text-slate-700 dark:text-slate-300 hover:text-cyan-500 transition-colors" title="Peredaran Angin">
+        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4a2 2 0 100-4 2 2 0 000 4zm1.5 6.5l2.5 5.5-2 1-2-4.5H9l-1 5-2-.5 1.5-7.5c.2-.9 1-1.5 1.9-1.5h3.6c.9 0 1.6.6 1.8 1.5l.2 1zM20 7h-4v2h4V7zm2 4h-6v2h6v-2z"/></svg>
+      </button>
+    </div>
+
+    <div class="h-8 w-px bg-slate-300 dark:bg-slate-700/80 mx-2"></div>
+
+    <div class="flex items-center gap-6 md:gap-8">
+      <!-- 1. GEAR ICON (SETTINGS) - AS MENTIONED BY USER -->
+      <button onclick="openSettingsDrawer()" id="dock-gear-btn" class="text-slate-700 dark:text-slate-300 hover:text-cyan-500 dark:hover:text-cyan-400 transition-transform active:scale-90" title="Tetapan Sistem & DVR">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      </button>
+
+      <!-- 2. APP DRAWER ICON (9 SQUARES / GRID) -->
+      <button onclick="openGalleryDrawer()" class="text-slate-700 dark:text-slate-300 hover:text-cyan-500 dark:hover:text-cyan-400 transition-transform active:scale-90" title="Galeri Klip DVR & Aplikasi">
+        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M4 4h4v4H4zm6 0h4v4h-4zm6 0h4v4h-4zM4 10h4v4H4zm6 0h4v4h-4zm6 0h4v4h-4zM4 16h4v4H4zm6 0h4v4h-4zm6 0h4v4h-4z"/></svg>
+      </button>
+
+      <!-- 3. HOME ICON -->
+      <button onclick="goHome()" class="text-slate-700 dark:text-slate-300 hover:text-cyan-500 dark:hover:text-cyan-400 transition-transform active:scale-90" title="Laman Utama">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      </button>
+    </div>
+  </footer>
+
+  <!-- SLIDE-OVER DRAWER: SETTINGS -->
+  <div id="drawer-settings" class="fixed inset-y-0 right-0 w-full max-w-md bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 flex flex-col justify-between">
+    <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-500 flex items-center justify-center text-xl font-bold">⚙️</div>
+        <div>
+          <h3 class="font-black text-lg text-slate-900 dark:text-white">Tetapan Kamera & DVR</h3>
+          <p class="text-xs text-slate-500">Proton e.MAS 5 (IHU801P MediaTek)</p>
+        </div>
+      </div>
+      <button onclick="closeSettingsDrawer()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center">✕</button>
+    </div>
+
+    <div class="p-6 space-y-4 overflow-y-auto flex-1 text-sm">
+      <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div>
+          <div class="font-bold text-slate-800 dark:text-slate-100">Panjang Klip Loop</div>
+          <div class="text-xs text-slate-500">Masa setiap segmen video rakaman</div>
+        </div>
+        <select class="bg-white dark:bg-slate-800 text-cyan-600 dark:text-cyan-400 font-bold text-xs px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 outline-none">
+          <option>1 Minit</option>
+          <option selected>3 Minit (Piawai)</option>
+          <option>5 Minit</option>
+        </select>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div>
+          <div class="font-bold text-slate-800 dark:text-slate-100">Resolusi Rakaman</div>
+          <div class="text-xs text-slate-500">Kualiti suapan H.264/MP4</div>
+        </div>
+        <select class="bg-white dark:bg-slate-800 text-cyan-600 dark:text-cyan-400 font-bold text-xs px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 outline-none">
+          <option selected>1080P Full HD (60fps)</option>
+          <option>720P HD (30fps)</option>
+        </select>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div>
+          <div class="font-bold text-slate-800 dark:text-slate-100">Sensitiviti G-Sensor</div>
+          <div class="text-xs text-slate-500">Auto-lock video jika ada hentakan</div>
+        </div>
+        <select class="bg-white dark:bg-slate-800 text-cyan-600 dark:text-cyan-400 font-bold text-xs px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 outline-none">
+          <option>Rendah</option>
+          <option selected>Sederhana</option>
+          <option>Tinggi</option>
+        </select>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div>
+          <div class="font-bold text-slate-800 dark:text-slate-100">Cop Air Kelajuan & Masa</div>
+          <div class="text-xs text-slate-500">Papar info pemanduan pada video</div>
+        </div>
+        <input type="checkbox" checked class="w-5 h-5 accent-cyan-500 rounded cursor-pointer">
+      </div>
+
+      <div class="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-500/30">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-cyan-700 dark:text-cyan-300">Storan USB OTG Terpilih</span>
+          <span class="text-xs font-mono font-bold text-cyan-600 dark:text-cyan-400">42.5 GB / 64 GB</span>
+        </div>
+        <div class="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden mb-3">
+          <div class="bg-cyan-500 h-full w-[66%]"></div>
+        </div>
+        <button onclick="formatUsbPrompt()" class="w-full py-2 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold text-xs transition-colors">
+          Format Kad Memori / USB
+        </button>
+      </div>
+    </div>
+
+    <div class="p-6 border-t border-slate-200 dark:border-slate-800">
+      <button onclick="closeSettingsDrawer()" class="w-full py-3 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-sm tracking-wider uppercase shadow-lg shadow-cyan-500/20">
+        SIMPAN & KEMBALI KE KAMERA
+      </button>
+    </div>
+  </div>
+
+  <!-- SLIDE-OVER DRAWER: GALLERY -->
+  <div id="drawer-gallery" class="fixed inset-y-0 right-0 w-full max-w-2xl bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 flex flex-col justify-between">
+    <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-500 flex items-center justify-center text-xl font-bold">🎬</div>
+        <div>
+          <h3 class="font-black text-lg text-slate-900 dark:text-white">Galeri Fail Rakaman DVR</h3>
+          <p class="text-xs text-slate-500">Folder: /storage/usbotg-otg1/DVR/</p>
+        </div>
+      </div>
+      <button onclick="closeGalleryDrawer()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center">✕</button>
+    </div>
+
+    <div class="px-6 py-3 bg-slate-50 dark:bg-slate-950/60 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2">
+      <button onclick="renderGallery('all')" id="tab-gal-all" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-cyan-500 text-slate-950">Semua (8)</button>
+      <button onclick="renderGallery('emergency')" id="tab-gal-emg" class="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800">🔒 Kecemasan (2)</button>
+      <button onclick="renderGallery('loop')" id="tab-gal-loop" class="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800">🔄 Loop (4)</button>
+      <button onclick="renderGallery('photo')" id="tab-gal-pic" class="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800">📸 Foto (2)</button>
+    </div>
+
+    <div id="gallery-container" class="p-6 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1"></div>
+
+    <div class="p-6 border-t border-slate-200 dark:border-slate-800 flex justify-end">
+      <button onclick="closeGalleryDrawer()" class="px-6 py-2.5 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-white font-bold text-xs">
+        TUTUP
+      </button>
+    </div>
+  </div>
+
+  <script>
+    let temp = 22.0;
+    let fan = 2;
+    let micActive = true;
+
+    function tick() {
+      const now = new Date();
+      const timeStr = now.toTimeString().split(' ')[0].slice(0, 5);
+      const fullSecs = now.toTimeString().split(' ')[0];
+      const dateStr = now.toISOString().split('T')[0];
+      document.getElementById('top-clock').innerText = timeStr;
+      document.getElementById('stamp-dt').innerText = `${dateStr} ${fullSecs} · 68 KM/H`;
+    }
+    setInterval(tick, 1000);
+    tick();
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const icon = document.getElementById('theme-icon');
+      if (html.getAttribute('data-theme') === 'light') {
+        html.setAttribute('data-theme', 'dark');
+        html.classList.add('dark');
+        icon.innerText = '☀️';
+      } else {
+        html.setAttribute('data-theme', 'light');
+        html.classList.remove('dark');
+        icon.innerText = '🌙';
+      }
+    }
+
+    function setCamera(c) {
+      document.querySelectorAll('.cam-sel').forEach(b => {
+        b.className = 'cam-sel px-3 py-1 rounded-xl text-xs font-bold text-slate-300 hover:text-white';
+      });
+      document.getElementById('cam-' + c).className = 'cam-sel px-3 py-1 rounded-xl text-xs font-bold bg-cyan-500 text-slate-950 shadow-md';
+      
+      const label = document.getElementById('cam-label');
+      if (c === 'front') label.innerText = 'KAMERA DEPAN (WIDE 150°)';
+      if (c === 'rear') label.innerText = 'KAMERA BELAKANG (UNDUR / REAR 135°)';
+      if (c === 'left') label.innerText = 'KAMERA SISI KIRI (SIDE MIRROR L)';
+      if (c === 'right') label.innerText = 'KAMERA SISI KANAN (SIDE MIRROR R)';
+    }
+
+    function setAvmMode(m) {
+      document.getElementById('btn-2d').className = m === '2d' 
+        ? 'px-2.5 py-0.5 rounded-lg text-xs font-bold bg-cyan-500 text-slate-950'
+        : 'px-2.5 py-0.5 rounded-lg text-xs font-bold text-slate-300 hover:text-white';
+      document.getElementById('btn-3d').className = m === '3d' 
+        ? 'px-2.5 py-0.5 rounded-lg text-xs font-bold bg-cyan-500 text-slate-950'
+        : 'px-2.5 py-0.5 rounded-lg text-xs font-bold text-slate-300 hover:text-white';
+    }
+
+    function cycleCamView() {
+      showToast('🔄 BIRD\'S EYE & 360 PANORAMA DIAKTIFKAN');
+    }
+
+    function adjFan(delta) {
+      fan = Math.max(1, Math.min(8, fan + delta));
+      document.getElementById('dock-fan').innerText = fan;
+      showToast(`𖣘 Kelajuan Kipas: Aras ${fan}`);
+    }
+
+    function adjTemp(delta) {
+      temp = Math.max(16.0, Math.min(30.0, temp + delta));
+      document.getElementById('dock-temp').innerText = temp.toFixed(1) + '°';
+      showToast(`❄️ Suhu Sasaran: ${temp.toFixed(1)}°C`);
+    }
+
+    function toggleMic() {
+      micActive = !micActive;
+      const t = document.getElementById('mic-text');
+      const b = document.getElementById('btn-mic');
+      if (micActive) {
+        t.innerText = 'MIC HIDUP';
+        b.className = 'px-2.5 py-1 rounded-xl bg-black/60 border border-emerald-500/40 text-emerald-400 text-[11px] font-bold flex items-center gap-1';
+        showToast('🎙️ Mikrofon Kabin Dihidupkan');
+      } else {
+        t.innerText = 'MIC BISU';
+        b.className = 'px-2.5 py-1 rounded-xl bg-black/60 border border-rose-500/40 text-rose-400 text-[11px] font-bold flex items-center gap-1';
+        showToast('🔇 Mikrofon Kabin Dibisukan');
+      }
+    }
+
+    function lockEmergency() {
+      showToast('🔒 KLIP KECEMASAN DIKUNCI! TIDAK AKAN DIPADAM');
+    }
+
+    function snapPhoto() {
+      showToast('📸 FOTO DISIMPAN KE USB (/DVR/Photo/)');
+    }
+
+    function triggerVoiceAssistant() {
+      showToast('🎙️ Pembantu Suara: "Hi e.MAS sedia membantu..."');
+    }
+
+    function goHome() {
+      showToast('🏠 Kembali ke Skrin Utama IHU');
+    }
+
+    function formatUsbPrompt() {
+      if (confirm('Amaran: Semua rakaman dalam USB akan dipadamkan. Teruskan?')) {
+        showToast('✅ USB Berjaya Difformat Bersih');
+      }
+    }
+
+    function showToast(msg) {
+      const b = document.getElementById('toast-bar');
+      document.getElementById('toast-text').innerText = msg;
+      b.className = 'absolute top-16 left-1/2 -translate-x-1/2 z-30 transition-all duration-300 transform translate-y-0 opacity-100 bg-amber-500 text-slate-950 font-black px-5 py-2 rounded-2xl shadow-2xl flex items-center gap-2 text-sm pointer-events-none';
+      clearTimeout(window.tId);
+      window.tId = setTimeout(() => {
+        b.className = 'absolute top-16 left-1/2 -translate-x-1/2 z-30 transition-all duration-300 transform -translate-y-4 opacity-0 pointer-events-none bg-amber-500 text-slate-950 font-black px-5 py-2 rounded-2xl shadow-2xl flex items-center gap-2 text-sm';
+      }, 2400);
+    }
+
+    function openSettingsDrawer() {
+      document.getElementById('drawer-settings').classList.remove('translate-x-full');
+    }
+    function closeSettingsDrawer() {
+      document.getElementById('drawer-settings').classList.add('translate-x-full');
+    }
+
+    function openGalleryDrawer() {
+      renderGallery('all');
+      document.getElementById('drawer-gallery').classList.remove('translate-x-full');
+    }
+    function closeGalleryDrawer() {
+      document.getElementById('drawer-gallery').classList.add('translate-x-full');
+    }
+
+    const mockClips = [
+      { id: 1, type: 'emergency', name: 'EMG_20260926_013512.mp4', time: '01:35 AM', dur: '03:00', size: '285 MB', locked: true },
+      { id: 2, type: 'emergency', name: 'EMG_20260925_221045.mp4', time: 'Semalam 10:10 PM', dur: '03:00', size: '280 MB', locked: true },
+      { id: 3, type: 'loop', name: 'REC_20260926_013000.mp4', time: '01:30 AM', dur: '03:00', size: '282 MB', locked: false },
+      { id: 4, type: 'loop', name: 'REC_20260926_012700.mp4', time: '01:27 AM', dur: '03:00', size: '281 MB', locked: false },
+      { id: 5, type: 'loop', name: 'REC_20260926_012400.mp4', time: '01:24 AM', dur: '03:00', size: '284 MB', locked: false },
+      { id: 6, type: 'loop', name: 'REC_20260926_012100.mp4', time: '01:21 AM', dur: '03:00', size: '282 MB', locked: false },
+      { id: 7, type: 'photo', name: 'IMG_20260926_013720.jpg', time: '01:37 AM', dur: 'FOTO', size: '2.4 MB', locked: false },
+      { id: 8, type: 'photo', name: 'IMG_20260925_194510.jpg', time: 'Semalam 07:45 PM', dur: 'FOTO', size: '2.6 MB', locked: false },
+    ];
+
+    function renderGallery(filter = 'all') {
+      const c = document.getElementById('gallery-container');
+      c.innerHTML = '';
+      const filtered = mockClips.filter(x => filter === 'all' || x.type === filter);
+      filtered.forEach(x => {
+        const item = document.createElement('div');
+        item.className = 'bg-slate-100 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 flex flex-col justify-between';
+        item.innerHTML = `
+          <div class="relative bg-slate-800 rounded-xl aspect-video flex items-center justify-center mb-2 overflow-hidden">
+            <span class="text-3xl">${x.type === 'photo' ? '🖼️' : '▶️'}</span>
+            <div class="absolute top-2 left-2">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${x.locked ? 'bg-amber-500 text-slate-950' : 'bg-cyan-500 text-slate-950'}">${x.locked ? '🔒 KECEMASAN' : (x.type === 'photo' ? '📸 FOTO' : '🔄 NORMAL')}</span>
+            </div>
+            <div class="absolute bottom-1 right-2 text-[10px] font-mono font-bold text-white bg-black/70 px-1.5 rounded">${x.dur}</div>
+          </div>
+          <div>
+            <div class="font-bold text-xs text-slate-800 dark:text-slate-100 truncate">${x.name}</div>
+            <div class="flex items-center justify-between text-[10px] text-slate-500 mt-1">
+              <span>${x.time}</span>
+              <span class="font-mono">${x.size}</span>
+            </div>
+          </div>
+          <div class="flex gap-2 mt-3 pt-2 border-t border-slate-200 dark:border-slate-800">
+            <button onclick="showToast('▶️ Memainkan fail: ${x.name}')" class="flex-1 py-1 rounded-lg bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 font-bold text-xs">Mainkan</button>
+            <button onclick="showToast('⬇️ Fail disalin ke telefon')" class="px-3 py-1 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs">Salin</button>
+          </div>
+        `;
+        c.appendChild(item);
+      });
+    }
+  </script>
+</body>
+</html>

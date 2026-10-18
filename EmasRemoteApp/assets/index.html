@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="ms">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7f6f3">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>e.MAS 5 Remote Pilot</title>
+  <link rel="stylesheet" href="./minimal.css?v=2.13">
+</head>
+<body>
+
+<main class="app-shell">
+  <!-- TOP BAR -->
+  <header class="app-header">
+    <div class="brand-block">
+      <span class="brand-badge">Proton e.MAS 5</span>
+      <h1 class="brand-title">Remote Pilot</h1>
+      <p class="brand-note">Bunyi pilihan. Kawalan di tangan.</p>
+    </div>
+    <div class="top-actions">
+      <button id="settingsToggle" class="btn-icon" aria-label="Tetapan" title="Tetapan Kunci Akses & Widget">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+          <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- LIVE CONNECTION & POWER STRIP -->
+  <div class="connection-strip">
+    <div class="conn-status">
+      <span class="conn-dot offline" id="connDot"></span>
+      <span class="conn-label" id="connLabel">Menyambung…</span>
+    </div>
+    <button id="btnMegaToggle" class="btn-mode-toggle" type="button">Megafon OFF</button>
+  </div>
+
+  <nav class="section-nav" aria-label="Bahagian remote">
+    <a href="#voice">Megafon</a><a href="#avas">AVAS</a><a href="#lock">Nada kunci</a><a href="#horn">Hon</a>
+  </nav>
+
+  <!-- Voice controls retain their existing recording handlers. -->
+  <section class="card-section card-voice" id="voice">
+    <div class="card-header">
+      <div class="card-title-group">
+        <span class="card-category">01 / Siaran suara</span>
+        <h2 class="card-title">Megafon</h2>
+      </div>
+      <span class="status-badge" id="micReadyBadge">Sedia</span>
+    </div>
+
+    <div class="mic-orb-container">
+      <button class="mic-orb-button" id="micBtn" type="button" aria-label="Tekan dan tahan untuk bersuara ke speaker kereta">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+          <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+        </svg>
+      </button>
+
+      <div class="mic-state-label">
+        <span class="mic-main-text" id="micStatusText">Tekan & Tahan</span>
+        <span class="mic-sub-text" id="micSubText">Lepaskan untuk siar ke speaker bumper depan</span>
+      </div>
+
+      <div class="mic-cancel-bar" id="micCancelBar" style="display:none;">
+        <button class="btn-cancel-rec" id="btnCancelRec" type="button">Batal Rakaman</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card-section card-avas" id="avas" aria-labelledby="avasTitle">
+    <div class="card-header">
+      <div class="card-title-group">
+        <span class="card-category">02 / Bunyi pejalan kaki</span>
+        <h2 class="card-title" id="avasTitle">AVAS pilihan anda</h2>
+      </div>
+      <button id="avasRefresh" class="btn-mode-toggle" type="button">Semak sambungan</button>
+    </div>
+    <p id="avasConnection" role="status">Memeriksa sambungan AVAS…</p>
+    <p id="avasCurrent" class="avas-help">Slot aktif IHU belum diterima.</p>
+    <div class="upload-drawer">
+      <label for="avasSlot" class="upload-drawer-title">Slot bunyi yang hendak ditukar</label>
+      <select id="avasSlot" class="input-text">
+        <option value="1">Slot 1 · Galactic Note</option>
+        <option value="2">Slot 2 · Space Walk</option>
+        <option value="3" selected>Slot 3 · Pixel Technology</option>
+      </select>
+      <label for="avasFile" class="upload-drawer-title">Pilih lagu atau audio</label>
+      <input id="avasFile" type="file" accept="audio/*,.mp3,.m4a,.aac,.ogg,.flac,.wav" class="avas-file">
+      <p class="avas-help">Pilih lagu dan ambil bahagian 13–15 saat. App sediakan WAV 48 kHz mono 16-bit.</p>
+      <details class="format-help"><summary>Format dan had fail</summary><p class="avas-help">MP3, M4A, WAV atau format yang disokong telefon. Fail asal sehingga 20 MiB / 10 minit. Hasil maksimum 15 saat.</p></details>
+      <div id="avasClip" hidden>
+        <p id="avasSourceInfo" class="avas-help"></p>
+        <div class="avas-clip-fields">
+          <label>Mula (saat)<input id="avasStart" type="number" min="0" step="0.1" value="0" class="input-text"></label>
+          <label>Panjang (saat)<input id="avasDuration" type="number" min="0.1" max="15" step="0.1" value="15" class="input-text"></label>
+        </div>
+        <button id="avasPrepare" type="button" class="btn-file-select">Sediakan WAV bahagian ini</button>
+      </div>
+      <audio id="avasPreview" controls preload="none" hidden aria-label="Dengar WAV pada telefon"></audio>
+      <p id="avasMessage" role="status" aria-live="polite">Pilih audio, dengar hasil WAV, kemudian muat naik.</p>
+      <button id="avasUpload" class="btn-submit-upload" type="button" disabled>1. Muat Naik WAV</button>
+      <button id="avasApply" class="btn-submit-upload" type="button" disabled>2. Gunakan pada IHU</button>
+      <button id="avasRestore" class="btn-file-select" type="button" disabled>Pulih Bunyi Asal Slot Ini</button>
+    </div>
+    <p id="avasJob" class="avas-help" role="status" aria-live="polite">Tiada pertukaran baharu.</p>
+  </section>
+
+  <!-- SECTION: NADA KUNCI KERETA (LOCK SOUND MANAGER) -->
+  <section class="card-section card-lock" id="lock">
+    <div class="card-header">
+      <div class="card-title-group">
+        <span class="card-category">03 / Ketika mengunci</span>
+        <h2 class="card-title">Nada kunci</h2>
+      </div>
+      <span class="status-badge" id="activeSoundBadge">Memuatkan…</span>
+    </div>
+
+    <!-- LOCK SOUNDS GRID -->
+    <details class="sound-library"><summary>Pilih daripada senarai nada</summary>
+    <div class="sounds-grid" id="lockGrid">
+      <!-- Injected via JS -->
+    </div>
+    </details>
+
+    <!-- Upload Custom Lock Sound -->
+    <div class="upload-drawer" style="margin-top:4px;">
+      <span class="upload-drawer-title">Tambah nada sendiri</span>
+      <div class="upload-input-group">
+        <input type="text" class="input-text" id="lockNameInput" placeholder="Nama nada (cth: Transformer)">
+        <input type="file" id="lockFileInput" accept="audio/*" style="display:none;" onchange="onLockFilePick(this)">
+        <label class="btn-file-select" for="lockFileInput" id="lockPickLabel">Pilih Fail</label>
+      </div>
+      <button class="btn-submit-upload" type="button" onclick="submitLockUpload()">Muat Naik & Set Nada Kunci</button>
+    </div>
+  </section>
+
+  <!-- SECTION: CUSTOM HORN (HOT BUTTONS) -->
+  <section class="card-section card-horn" id="horn">
+    <div class="card-header">
+      <div class="card-title-group">
+        <span class="card-category">04 / Bunyi ringkas</span>
+        <h2 class="card-title">Hon pilihan</h2>
+      </div>
+      <span class="status-badge" id="hornCountBadge">0 Hon</span>
+    </div>
+
+    <div class="horn-grid" id="hornGrid">
+      <!-- Injected via JS -->
+    </div>
+
+    <!-- Upload Custom Horn -->
+    <div class="upload-drawer">
+      <span class="upload-drawer-title">+ Tambah Hon Baru (MP3 / WAV)</span>
+      <div class="upload-input-group">
+        <input type="text" class="input-text" id="hornNameInput" placeholder="Nama hon (cth: Lori Air)">
+        <input type="file" id="hornFileInput" accept="audio/*" style="display:none;" onchange="onHornFilePick(this)">
+        <label class="btn-file-select" for="hornFileInput" id="hornPickLabel">Pilih Fail</label>
+      </div>
+      <button class="btn-submit-upload" type="button" onclick="submitHornUpload()">Muat Naik & Tambah Hot Button</button>
+    </div>
+  </section>
+
+  <!-- SECTION: SUARA PRESET PANTAS -->
+  <section class="card-section card-presets">
+    <div class="card-header">
+      <div class="card-title-group">
+        <span class="card-category">Ayat Pantas</span>
+        <h2 class="card-title">Suara Preset</h2>
+      </div>
+      <button class="btn-mode-toggle" type="button" onclick="openPresetSetup()">Setup</button>
+    </div>
+
+    <div class="presets-chip-grid" id="presetChipsGrid">
+      <!-- Injected via JS -->
+    </div>
+  </section>
+
+  <!-- OFFICIAL PROTON APP LINK -->
+  <div class="btn-proton-app" onclick="openProtonApp()">
+    <div class="proton-info">
+      <span class="proton-title">Buka Aplikasi Proton e.MAS</span>
+      <span class="proton-sub">Servis, pengecasan & fungsi rasmi Proton</span>
+    </div>
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+      <path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-7.85-1.42 1.42L16.86 11H5v2z"/>
+    </svg>
+  </div>
+
+  <!-- DEBUG / DIAGNOSTIK PANEL -->
+  <div class="debug-card" id="debugCard">
+    <div class="debug-header" onclick="toggleDebugLogs()">
+      <div class="debug-heading">
+        <span>Diagnostik mikrofon</span>
+        <span id="micBadgeDebug">MEMERIKSA</span>
+      </div>
+      <button type="button" class="btn-debug-toggle" id="btnToggleDebug">Buka +</button>
+    </div>
+    
+    <div id="debugBody" style="display:none;margin-top:12px;">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+        <button type="button" class="btn-debug-act" onclick="runDiagnostics()">Jalankan ujian</button>
+        <button type="button" class="btn-debug-act" onclick="reRequestMic()">Minta izin</button>
+        <button type="button" class="btn-debug-act" onclick="openPhoneSettings()">Tetapan</button>
+        <button type="button" class="btn-debug-act" onclick="copyDebugLog()">Salin log</button>
+        <button type="button" class="btn-debug-act" onclick="clearDebugLog()">Bersihkan</button>
+      </div>
+
+      <div id="debugLogBox" class="debug-terminal">Sedia. Tekan butang mikrofon atau 'Jalankan Ujian'.&#10;</div>
+    </div>
+  </div>
+
+  <p class="app-footer-note">
+    eMAS Remote 2.15 · Sync pilihan server
+  </p>
+</main>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsModal" style="display:none;">
+  <div class="modal-window">
+    <div class="modal-header">
+      <h3>Tetapan Akses Remote</h3>
+      <button class="btn-modal-close" type="button" onclick="$('settingsModal').style.display='none'">&times;</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <label style="font-size:12px;color:var(--text-sub);">Kunci Akses API (X-API-Key):</label>
+      <input type="password" class="input-text" id="apiKeyInput" value="azam7988">
+      <button class="btn-submit-upload" type="button" onclick="saveApiKey()">Simpan Kunci</button>
+      <hr style="border:0;border-top:1px solid var(--glass-border);margin:6px 0;">
+      <button class="btn-file-select" type="button" onclick="pinWidgetToHome()" style="padding:12px;">+ Tambah Widget ke Home Screen</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRESET SETUP MODAL -->
+<div class="modal-overlay" id="presetSetupModal" style="display:none;">
+  <div class="modal-window">
+    <div class="modal-header">
+      <h3>Tetapan Suara Preset</h3>
+      <button class="btn-modal-close" type="button" onclick="closePresetSetup()">&times;</button>
+    </div>
+    <div id="presetSlotsContainer" style="display:flex;flex-direction:column;gap:10px;">
+      <!-- Dynamic slot items -->
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button class="btn-file-select" type="button" onclick="addPresetSlot()" style="flex:1;">+ Tambah Slot</button>
+      <button class="btn-submit-upload" type="button" onclick="closePresetSetup()" style="flex:1;">Simpan & Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-bubble" id="toast"></div>
+
+<script src="./recorder.js?v=2.13"></script>
+<script src="./avas-audio.js?v=2.13"></script>
+<script src="./avas.js?v=2.13"></script>
+<script src="./app.js?v=2.13"></script>
+<script src="./minimal-ui.js?v=2.13"></script>
+</body>
+</html>

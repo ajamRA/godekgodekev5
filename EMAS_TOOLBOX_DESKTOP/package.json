@@ -1,0 +1,6 @@
+{
+  "name": "emas-control-center-portable",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "main": "server.js"
+}
