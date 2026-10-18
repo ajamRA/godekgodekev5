@@ -163,3 +163,9 @@ GBA_Saves_Backup_*/
 # Pakej toolbox: daemon preset mesti di-track (jar 52KB, hash disahkan)
 !EMAS_TOOLBOX_DESKTOP/presets/daemons/
 !EMAS_TOOLBOX_DESKTOP/presets/daemons/*
+
+# Desktop cache & temporary profiles
+EMAS_TOOLBOX_DESKTOP/cache_profile/
+EMAS_TOOLBOX_DESKTOP/webview_profile/
+EMAS_TOOLBOX_DESKTOP/.impeccable/
+

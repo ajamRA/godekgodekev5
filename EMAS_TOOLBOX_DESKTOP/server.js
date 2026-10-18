@@ -5,6 +5,7 @@ const os = require('os');
 const { exec, execFile } = require('child_process');
 const crypto = require('crypto');
 const { createAvasManager } = require('./avas-manager');
+const { streamBackup } = require('./backup-transfer');
 const net = require('net');
 
 const PORT = 5500;
@@ -16,7 +17,9 @@ let currentTask = {
     active: false,
     label: '',
     progress: 0,
-    detail: ''
+    detail: '',
+    status: null,
+    transfer: null
 };
 
 // P2 FIX: kunci single-flight sebenar. Dulu hanya state paparan (currentTask)
@@ -27,6 +30,8 @@ let busyLabel = null;
 function setProgress(progress, label = null, detail = null) {
     const p = Math.min(100, Math.max(0, Math.round(progress)));
     currentTask.progress = p;
+    currentTask.status = null;
+    currentTask.transfer = null;
     // P2 FIX: dulu currentTask.active tidak pernah dibersihkan, jadi bar boleh
     // tersangkut pada 100% + mesej lama. Sekarang 'active' dikira semula setiap kali.
     currentTask.active = p > 0 && p < 100;
@@ -40,6 +45,8 @@ function resetTask() {
     currentTask.progress = 0;
     currentTask.label = '';
     currentTask.detail = '';
+    currentTask.status = null;
+    currentTask.transfer = null;
 }
 
 function log(msg) {
@@ -68,8 +75,8 @@ function getFfmpegPath() {
 
 const ADB = getAdbPath();
 const FFMPEG = getFfmpegPath();
-log(`ADB binary sedia ada di: ${ADB}`);
-log(`FFmpeg binary sedia ada di: ${FFMPEG}`);
+log(`ADB binary available at: ${ADB}`);
+log(`FFmpeg binary available at: ${FFMPEG}`);
 
 function runAdb(args, timeoutMs = 25000) {
     return new Promise((resolve) => {
@@ -86,6 +93,97 @@ function runAdb(args, timeoutMs = 25000) {
 
 function runShell(ip, cmd, timeoutMs = 25000) {
     return runAdb(`-s ${ip}:5555 shell "${cmd.replace(/"/g, '\\"')}"`, timeoutMs);
+}
+
+async function partitionSize(ip, name) {
+    const size = await runShell(ip, `blockdev --getsize64 /dev/block/by-name/${name}`);
+    const bytes = Number(size.stdout);
+    if (size.success && /^\d+$/.test(size.stdout) && Number.isSafeInteger(bytes) && bytes > 0) return bytes;
+
+    const resolved = await runShell(ip, `readlink -f /dev/block/by-name/${name}`);
+    const device = path.posix.basename(resolved.stdout);
+    if (!resolved.success || !/^[a-zA-Z0-9_-]+$/.test(device)) {
+        throw new Error(`Cannot resolve the ${name} block device to determine its size.`);
+    }
+    const sizeInSectors = await runShell(ip, `cat /sys/class/block/${device}/size`);
+    const fallbackBytes = Number(sizeInSectors.stdout) * 512;
+    if (!sizeInSectors.success || !/^\d+$/.test(sizeInSectors.stdout) || !Number.isSafeInteger(fallbackBytes) || fallbackBytes <= 0) {
+        throw new Error(`Cannot verify the size of partition ${name}; no image transfer was started.`);
+    }
+    return fallbackBytes;
+}
+
+async function backupPartitions(ip, directory, names, label, detail) {
+    currentTask = {
+        active: true, label, progress: null, detail, status: 'running',
+        transfer: {
+            bytesTransferred: 0, totalBytes: null, bytesPerSecond: null,
+            etaSeconds: null, currentFile: null, fileIndex: 0, fileCount: names.length
+        }
+    };
+    log(`${label}: ${detail} Destination: ${directory}`);
+    try {
+        if (!ip) throw new Error('Car is not connected.');
+        await fs.promises.mkdir(directory, { recursive: true });
+        const sizes = [];
+        for (const name of names) sizes.push(await partitionSize(ip, name));
+        const totalBytes = sizes.reduce((sum, size) => sum + size, 0);
+        if (!Number.isSafeInteger(totalBytes)) throw new Error('Combined partition size exceeds the supported byte count.');
+        currentTask.transfer.totalBytes = totalBytes;
+        currentTask.progress = 0;
+        let completedBytes = 0;
+        for (let index = 0; index < names.length; index++) {
+            const name = names[index];
+            const currentFile = `${name}.img`;
+            currentTask.transfer.currentFile = currentFile;
+            currentTask.transfer.fileIndex = index + 1;
+            currentTask.transfer.bytesPerSecond = null;
+            currentTask.transfer.etaSeconds = null;
+            currentTask.detail = `[${index + 1}/${names.length}] Streaming ${currentFile} directly to this PC. ${detail}`;
+            log(`[${index + 1}/${names.length}] Streaming ${currentFile} (${sizes[index]} bytes), without staging an image on the IHU.`);
+            // Suppress dd diagnostics on the binary channel, then append its actual
+            // exit status. The transfer helper strips and verifies this trailer.
+            const remote = `dd if=/dev/block/by-name/${name} bs=4M 2>/dev/null; result=$?; printf "\\nEMAS_BACKUP_EXIT:%s\\n" "$result"`;
+            await streamBackup({
+                command: ADB,
+                args: ['-s', `${ip}:5555`, 'exec-out', 'sh', '-c', remote],
+                destination: path.join(directory, currentFile),
+                expectedBytes: sizes[index],
+                onProgress: sample => {
+                    const bytesTransferred = completedBytes + sample.bytesTransferred;
+                    const bytesPerSecond = sample.bytesPerSecond;
+                    Object.assign(currentTask.transfer, {
+                        bytesTransferred, bytesPerSecond,
+                        etaSeconds: bytesPerSecond > 0 ? (totalBytes - bytesTransferred) / bytesPerSecond : null
+                    });
+                    // Full byte receipt is not success until exit status and disk
+                    // verification pass. Show an indeterminate verification phase.
+                    currentTask.progress = bytesTransferred < totalBytes ? bytesTransferred * 100 / totalBytes : null;
+                    if (bytesTransferred === totalBytes) {
+                        currentTask.detail = `[${index + 1}/${names.length}] Verifying ${currentFile}: all bytes received. ${detail}`;
+                    }
+                }
+            });
+            completedBytes += sizes[index];
+            log(`Verified ${currentFile}: ${sizes[index]} bytes saved.`);
+        }
+        currentTask.active = false;
+        currentTask.status = 'completed';
+        currentTask.progress = 100;
+        currentTask.transfer.bytesPerSecond = 0;
+        currentTask.transfer.etaSeconds = 0;
+        currentTask.detail = `Verified images saved in ${directory}. ${detail}`;
+        log(`${label} completed. ${currentTask.detail}`);
+        return { success: true, message: currentTask.detail };
+    } catch (error) {
+        currentTask.active = false;
+        currentTask.status = 'failed';
+        currentTask.transfer.bytesPerSecond = 0;
+        currentTask.transfer.etaSeconds = null;
+        currentTask.detail = `Backup failed: ${error.message} Any incomplete .partial image is retained; remaining partitions were not started.`;
+        log(currentTask.detail);
+        return { success: false, message: currentTask.detail };
+    }
 }
 
 // ============================================================================
@@ -142,7 +240,7 @@ async function resolveSlotTarget(ip, sys) {
     if (!target) {
         return {
             targetPath: null, apkPath: null, bindTarget: null,
-            isOverwritten: false, overwrittenBy: 'Tiada', missing: true
+            isOverwritten: false, overwrittenBy: 'None', missing: true
         };
     }
 
@@ -163,7 +261,7 @@ async function resolveSlotTarget(ip, sys) {
     const hit = mounts.find((m) => (apkPath && m.target === apkPath) || m.target === target);
 
     let isOverwritten = !!hit;
-    let overwrittenBy = 'Tiada';
+    let overwrittenBy = 'None';
 
     if (hit) {
         const mo = hit.source.match(/\/custom_apps\/([^/\s]+)/);
@@ -198,7 +296,7 @@ async function writeBootPersistence(ip) {
     const custom = mounts.filter((m) => m.source.startsWith('/data/local/custom_apps/'));
 
     if (custom.length === 0) {
-        return { ok: false, message: 'tiada bind mount custom_apps aktif untuk direkod.' };
+        return { ok: false, message: 'No active custom_apps bind mounts to record.' };
     }
 
     const body = [
@@ -220,7 +318,7 @@ async function writeBootPersistence(ip) {
     try { fs.unlinkSync(tmpLocal); } catch (e) { /* abaikan */ }
 
     if (pushRes.exitCode !== 0) {
-        return { ok: false, message: 'gagal menghantar fail .rc ke kereta.' };
+        return { ok: false, message: 'Failed to send the .rc file to the car.' };
     }
 
     // /system bukan mount point berasingan pada IHU ini â€” ia atas '/'.
@@ -237,16 +335,16 @@ async function writeBootPersistence(ip) {
     const expected = custom.map((m) => `mount none ${m.source} ${m.target} bind rec`);
     const missing = expected.filter((e) => !(backRes.stdout || '').includes(e));
     if (missing.length > 0) {
-        return { ok: false, message: `fail .rc tidak lengkap (${missing.length} baris hilang) â€” mount akan hilang selepas reboot.` };
+        return { ok: false, message: `Incomplete .rc file (${missing.length} lines missing); mounts will be lost after reboot.` };
     }
 
     // Beritahu kalau ada .rc lama yang turut memasang mount (boleh bertindih).
     const legacy = await runShell(ip, `[ -f "${LEGACY_RC}" ] && echo ADA`);
     const legacyNote = (legacy.stdout || '').includes('ADA')
-        ? ' Nota: zzz_custom_apps.rc lama masih ada dan turut memasang mount â€” mount bertindih tidak merosakkan, tetapi beritahu saya kalau mahu ia dibersihkan.'
+        ? ' Note: the legacy zzz_custom_apps.rc still exists and also installs mounts. Duplicate mounts are not harmful, but you can request cleanup.'
         : '';
 
-    return { ok: true, message: `${expected.length} mount direkod dalam ${RC_PATH}.${legacyNote}` };
+    return { ok: true, message: `${expected.length} mounts recorded in ${RC_PATH}.${legacyNote}` };
 }
 
 // Subnet Scanning on port 5555
@@ -271,7 +369,7 @@ async function scanSubnets() {
         ipsToScan.add(`192.168.43.${i}`);
     }
 
-    log(`Memulakan imbasan port 5555 ke atas ${ipsToScan.size} alamat IP...`);
+    log(`Scanning port 5555 across ${ipsToScan.size} IP addresses...`);
     const foundIps = [];
 
     const probeIp = (ip) => {
@@ -309,7 +407,7 @@ async function scanSubnets() {
         }
     }
 
-    log(`Port 5555 terbuka dikesan pada: ${foundIps.join(', ') || 'tiada'}. Mengesahkan model IHU...`);
+    log(`Port 5555 is open at: ${foundIps.join(', ') || 'none'}. Verifying the IHU model...`);
 
     // Sahkan IHU801P DAN pastikan peranti authorize. Port 5555 terbuka bukan
     // bermakna ia kereta — boleh jadi telefon/tablet yang belum authorize.
@@ -322,20 +420,20 @@ async function scanSubnets() {
 
         if (/unauthorized/i.test(out) || /unauthorized/i.test(errtxt)) {
             unauthorized.push(candIp);
-            log(`SKIP ${candIp}: peranti tidak authorize (perlu terima prompt ADB pada peranti itu).`);
+            log(`SKIP ${candIp}: unauthorized device (accept the ADB authorization prompt on that device).`);
             continue;
         }
 
         if (out && /IHU|801|Geely/i.test(out)) {
-            log(`Kereta Proton e.MAS 5 disahkan pada: ${candIp} (${out})`);
+            log(`Proton e.MAS 5 verified at: ${candIp} (${out})`);
             return [candIp];
         }
 
-        log(`SKIP ${candIp}: model "${out || 'tiada respons'}" bukan IHU801P.`);
+        log(`SKIP ${candIp}: model "${out || 'no response'}" is not IHU801P.`);
     }
 
     if (unauthorized.length > 0) {
-        log(`Port 5555 terbuka pada ${unauthorized.join(', ')} tetapi tidak authorize. Kereta TIDAK dijumpai.`);
+        log(`Port 5555 is open at ${unauthorized.join(', ')} but ADB is unauthorized. No car was found.`);
     }
     // Jangan pulangkan peranti yang belum sah — pemanggil akan tersilap sambung.
     return [];
@@ -377,7 +475,7 @@ function checkSlotPolicy(slot) {
         return {
             allowed: true,
             severity: 'warn',
-            reason: 'Aplikasi pihak ketiga (A-Store). Boleh ditimpa, tetapi aplikasi ini akan hilang dari senarai.'
+            reason: 'Third-party app (A-Store). An APK slot overlay is allowed, but the original app will disappear from the list.'
         };
     }
 
@@ -389,7 +487,7 @@ function checkSlotPolicy(slot) {
         return {
             allowed: true,
             severity: 'ok',
-            reason: `Slot ${dirBase} dibenarkan (media/pihak ketiga).`
+            reason: `Slot ${dirBase} allows an APK overlay (media/third-party app).`
         };
     }
 
@@ -398,7 +496,7 @@ function checkSlotPolicy(slot) {
         return {
             allowed: true,
             severity: 'warn',
-            reason: `Slot ${dirBase} ialah in-place replace (APK ditulis ganti). Boleh ditimpa, tetapi APK asal tidak boleh dipulihkan tanpa sandaran/OTA.`
+            reason: `Slot ${dirBase} uses in-place replacement (the APK is overwritten). Replacement is allowed, but restoring the original APK requires a backup or OTA.`
         };
     }
 
@@ -407,7 +505,7 @@ function checkSlotPolicy(slot) {
             return {
                 allowed: false,
                 severity: 'block',
-                reason: `DILINDUNGI: ${p} ialah komponen sistem teras. Menimpanya boleh merosakkan IHU atau menghilangkan fungsi penting.`
+                reason: `PROTECTED: ${p} is a core system component. Overwriting it could damage the IHU or disable essential functions.`
             };
         }
     }
@@ -416,13 +514,13 @@ function checkSlotPolicy(slot) {
     return {
         allowed: false,
         severity: 'block',
-        reason: `TIDAK DIKENALI: ${p} bukan dalam senarai putih slot. Ditolak untuk keselamatan.`
+        reason: `UNKNOWN: ${p} is not on the slot allowlist. Blocked for safety.`
     };
 }
 
 // Robust Slot Scanner
 async function scanCarSlots(ip) {
-    log(`Mengimbas slot aplikasi pada kereta (${ip})...`);
+    log(`Scanning app slots on the car (${ip})...`);
 
     // P1 FIX: baca terus /proc/mounts â€” jangan bergantung pada `mount | grep` yang
     // ada pipe + petikan dalaman (pecah kat cmd.exe Windows).
@@ -502,7 +600,7 @@ async function scanCarSlots(ip) {
                 // Mount sebenar: target = laluan slot, source = fail custom_apps.
                 const hitMount = mountLines.find((l) => l.target === apkPath);
                 const isOverwritten = !!hitMount;
-                let overwrittenBy = 'Tiada';
+                let overwrittenBy = 'None';
                 if (hitMount) {
                     const matchOver = hitMount.source.match(/\/custom_apps\/([^/\s]+)/);
                     if (matchOver) overwrittenBy = matchOver[1];
@@ -565,6 +663,14 @@ const server = http.createServer(async (req, res) => {
     req.on('aborted', () => { if (ownsLock && !executionStarted) { busyLabel = null; ownsLock = false; } });
 
     const sendJson = (data, code = 200) => {
+        if (ownsLock && ['/api/install-preset', '/api/install-slot', '/api/upload-convert-audio'].includes(pathname)
+            && typeof data.success === 'boolean' && !currentTask.transfer) {
+            currentTask.active = false;
+            currentTask.status = data.success ? 'completed' : 'failed';
+            currentTask.progress = data.success ? 100 : null;
+            currentTask.label = data.success ? (currentTask.label || 'Operation complete') : 'Operation failed';
+            currentTask.detail = data.message || '';
+        }
         if (ownsLock) { busyLabel = null; ownsLock = false; }
         res.writeHead(code, {
             'Content-Type': 'application/json',
@@ -591,7 +697,7 @@ const server = http.createServer(async (req, res) => {
         if (busyLabel) {
             sendJson({
                 success: false,
-                message: `Satu operasi lain masih berjalan (${busyLabel}). Tunggu ia selesai dahulu.`
+                message: `Another operation is still running (${busyLabel}). Wait for it to finish.`
             }, 409);
             return;
         }
@@ -611,34 +717,18 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    if (pathname === '/api/window/close' && req.method === 'POST') {
-        sendJson({ success: true });
-        setTimeout(() => {
-            log('Menutup aplikasi atas arahan pengguna...');
-            process.exit(0);
-        }, 100);
-        return;
-    }
-
-    if (pathname === '/api/window/minimize' && req.method === 'POST') {
-        // Pada Windows, minimize active window via powershell command senyap
-        exec('powershell -command "(New-Object -ComObject Shell.Application).MinimizeAll()"', { windowsHide: true });
-        sendJson({ success: true });
-        return;
-    }
-
     if (pathname === '/api/scan') {
-        log('Memulakan imbasan subnet untuk mencari IHU Proton e.MAS 5...');
+        log('Scanning subnets for the Proton e.MAS 5 IHU...');
         const found = await scanSubnets();
         if (found.length > 0) {
             connectedIp = found[0];
-            log(`Kereta dikesan di: ${connectedIp}!`);
+            log(`Car detected at: ${connectedIp}!`);
             await runAdb(`connect ${connectedIp}:5555`);
             const modelRes = await runShell(connectedIp, 'getprop ro.product.model');
             carModel = modelRes.stdout || 'IHU801P';
             sendJson({ success: true, ip: connectedIp, model: carModel });
         } else {
-            sendJson({ success: false, message: 'Tiada kereta dikesan dalam subnet semasa.' });
+            sendJson({ success: false, message: 'No car detected on the current subnet.' });
         }
         return;
     }
@@ -649,7 +739,7 @@ const server = http.createServer(async (req, res) => {
         req.on('end', async () => {
             try {
                 const { ip } = JSON.parse(body);
-                log(`Menyambung manual ke ${ip}:5555...`);
+                log(`Connecting manually to ${ip}:5555...`);
                 const connRes = await runAdb(`connect ${ip}:5555`);
                 if (connRes.stdout.includes('connected')) {
                     const modelRes = await runShell(ip, 'getprop ro.product.model', 3000);
@@ -657,19 +747,19 @@ const server = http.createServer(async (req, res) => {
                     const errtxt = (modelRes.stderr || '').trim();
 
                     if (/unauthorized/i.test(out) || /unauthorized/i.test(errtxt)) {
-                        const msg = `${ip} tidak authorize. Terima prompt "Allow USB debugging" pada peranti itu, atau IP salah.`;
+                        const msg = `${ip} is unauthorized. Accept the "Allow USB debugging" prompt on that device, or check the IP address.`;
                         log(msg);
                         return sendJson({ success: false, message: msg });
                     }
                     if (!/IHU|801|Geely/i.test(out)) {
-                        const msg = `${ip} bukan IHU801P (model: "${out || 'tiada respons'}"). Sambungan ditolak.`;
+                        const msg = `${ip} is not IHU801P (model: "${out || 'no response'}"). Connection rejected.`;
                         log(msg);
                         return sendJson({ success: false, message: msg });
                     }
 
                     connectedIp = ip;
                     carModel = out;
-                    log(`Berjaya disambungkan ke ${carModel} (${connectedIp})!`);
+                    log(`Connected to ${carModel} (${connectedIp})!`);
                     sendJson({ success: true, ip: connectedIp, model: carModel });
                 } else {
                     sendJson({ success: false, message: connRes.stderr || connRes.stdout });
@@ -683,7 +773,7 @@ const server = http.createServer(async (req, res) => {
 
     if (pathname === '/api/slots') {
         if (!connectedIp) {
-            sendJson({ success: false, message: 'Kereta belum disambungkan.' }, 400);
+            sendJson({ success: false, message: 'Car is not connected.' }, 400);
             return;
         }
         const slots = await scanCarSlots(connectedIp);
@@ -697,51 +787,51 @@ const server = http.createServer(async (req, res) => {
         req.on('end', async () => {
             try {
                 const { targetSlot, localApkPath, customAppName } = JSON.parse(body);
-                if (!connectedIp) return sendJson({ success: false, message: 'Kereta belum bersambung.' });
-                if (!fs.existsSync(localApkPath)) return sendJson({ success: false, message: 'Fail APK tempatan tidak dijumpai.' });
+                if (!connectedIp) return sendJson({ success: false, message: 'Car is not connected.' });
+                if (!fs.existsSync(localApkPath)) return sendJson({ success: false, message: 'Local APK file not found.' });
 
                 // Kuatkuasa senarai putih slot. Tolak jika dilindungi.
                 const pol = targetSlot.policy || checkSlotPolicy(targetSlot);
                 if (!pol.allowed) {
-                    const msg = `DITOLAK: ${pol.reason}`;
+                    const msg = `REJECTED: ${pol.reason}`;
                     log(msg);
-                    setProgress(100, 'Ditolak', pol.reason);
+                    setProgress(100, 'Rejected', pol.reason);
                     return sendJson({ success: false, message: msg, policy: pol }, 403);
                 }
                 if (pol.severity === 'warn') {
-                    log(`AMARAN: ${pol.reason}`);
+                    log(`WARNING: ${pol.reason}`);
                 }
 
                 const safeName = (customAppName || 'CustomApp').replace(/[^a-zA-Z0-9_]/g, '');
                 const remoteDir = `/data/local/custom_apps/${safeName}`;
                 const remoteApk = `${remoteDir}/${safeName}.apk`;
 
-                setProgress(10, `Memasang ${customAppName}`, 'Membina folder di storan kereta...');
-                log(`[1/6] Membina folder: ${remoteDir}...`);
+                setProgress(10, `Installing overlay: ${customAppName}`, 'Creating a folder on the car...');
+                log(`[1/6] Creating folder: ${remoteDir}...`);
                 await runShell(connectedIp, `mkdir -p ${remoteDir}`);
 
-                setProgress(30, `Memindahkan ${customAppName}`, `Menghantar ${path.basename(localApkPath)} via Wi-Fi ADB...`);
-                log(`[2/6] Memindahkan APK ke kereta (${path.basename(localApkPath)})...`);
+                setProgress(30, `Transferring ${customAppName}`, `Sending ${path.basename(localApkPath)} over Wi-Fi ADB...`);
+                log(`[2/6] Transferring APK to the car (${path.basename(localApkPath)})...`);
                 const pushRes = await runAdb(`-s ${connectedIp}:5555 push "${localApkPath}" "${remoteApk}"`, 300000);
 
                 // P0 FIX: sahkan APK benar-benar sampai dan saiznya padan fail tempatan.
                 const localApkSize = fs.statSync(localApkPath).size;
                 const remoteApkSize = await remoteFileSize(connectedIp, remoteApk);
                 if (pushRes.exitCode !== 0 || remoteApkSize !== localApkSize) {
-                    const msg = `BATAL: APK tidak sampai sepenuhnya (tempatan=${localApkSize} bait, kereta=${remoteApkSize} bait). Slot TIDAK disentuh.`;
+                    const msg = `ABORTED: APK transfer is incomplete (local=${localApkSize} bytes, car=${remoteApkSize} bytes). The slot was NOT touched.`;
                     log(msg);
-                    setProgress(100, 'Ralat', msg);
+                    setProgress(100, 'Error', msg);
                     return sendJson({ success: false, message: msg }, 500);
                 }
 
-                setProgress(60, `Mengkonfigurasi ${customAppName}`, 'Menetapkan kebenaran & SELinux context...');
-                log('[3/6] Mengkonfigurasi kebenaran fail & konteks SELinux...');
+                setProgress(60, `Configuring ${customAppName}`, 'Setting permissions and SELinux context...');
+                log('[3/6] Configuring file permissions and SELinux context...');
                 const selinuxContext = targetSlot.type === 'SYSTEM' ? 'u:object_r:system_file:s0' : 'u:object_r:apk_data_file:s0';
                 await runShell(connectedIp, `chmod 755 ${remoteDir} && chmod 644 ${remoteApk}`);
                 await runShell(connectedIp, `chcon -R ${selinuxContext} ${remoteDir}`);
 
-                setProgress(75, `Mengikat Slot ${targetSlot.name}`, 'Melaksanakan Virtual Bind-Mount...');
-                log('[4/6] Melaksanakan Virtual Bind-Mount...');
+                setProgress(75, `Overlaying slot: ${targetSlot.name}`, 'Applying the APK bind mount...');
+                log('[4/6] Applying the APK slot overlay with a bind mount...');
 
                 // P1 FIX: mount pada TARGET SEBENAR yang dilaporkan scanner
                 // (fail APK dalam slot), bukan pada folder slot.
@@ -752,21 +842,21 @@ const server = http.createServer(async (req, res) => {
                 await runShell(connectedIp, `restorecon -F "${bindTarget}" 2>/dev/null || true`);
 
                 if (!(await isBindMounted(connectedIp, bindTarget))) {
-                    const msg = `GAGAL: bind mount ke ${bindTarget} tidak disahkan. Slot ${targetSlot.name} TIDAK ditimpa.`;
+                    const msg = `FAILED: bind mount at ${bindTarget} could not be verified. Slot ${targetSlot.name} was NOT overlaid.`;
                     log(msg);
-                    setProgress(100, 'Ralat', msg);
+                    setProgress(100, 'Error', msg);
                     return sendJson({ success: false, message: msg }, 500);
                 }
 
-                setProgress(88, `Mendaftarkan ${customAppName}`, 'Mendaftar dengan Package Manager...');
-                log('[5/6] Mendaftarkan dengan Package Manager...');
+                setProgress(88, `Registering ${customAppName}`, 'Registering with Package Manager...');
+                log('[5/6] Registering with Package Manager...');
                 const pmRes = await runShell(connectedIp, `pm install -r -d -g "${remoteApk}"`, 120000);
                 if (pmRes.exitCode !== 0) {
-                    log(`Amaran pm install: ${pmRes.stderr || pmRes.stdout} (mount masih aktif, ikon mungkin perlu reboot)`);
+                    log(`pm install warning: ${pmRes.stderr || pmRes.stdout} (mount is still active; the icon may need a reboot)`);
                 }
 
-                setProgress(95, 'Ketahanan Boot', 'Menulis init .rc supaya mount kekal selepas reboot...');
-                log('[6/6] Menulis ketahanan boot (init .rc, bukan run_binds.sh)...');
+                setProgress(95, 'Boot persistence', 'Writing init .rc so mounts survive a reboot...');
+                log('[6/6] Writing boot persistence (init .rc, not run_binds.sh)...');
 
                 // P1 FIX: run_binds.sh lama TIDAK dipanggil oleh sesiapa â€” reboot hilang
                 // semua mount. Sekarang jana .rc init dari mount SEBENAR yang aktif.
@@ -775,15 +865,15 @@ const server = http.createServer(async (req, res) => {
                 // Refresh launcher
                 await runShell(connectedIp, 'pkill -f ecarx.launcher || am force-stop ecarx.launcher 2>/dev/null || true');
 
-                const warn = persist.ok ? '' : ` AMARAN KETAHANAN BOOT: ${persist.message}`;
-                setProgress(100, 'Selesai', `Berjaya memasang ${customAppName}!${warn}`);
-                log(`Pemasangan selesai! ${customAppName} aktif di atas slot ${targetSlot.name} (mount disahkan).${warn}`);
+                const warn = persist.ok ? '' : ` BOOT PERSISTENCE WARNING: ${persist.message}`;
+                setProgress(100, 'Complete', `Installed ${customAppName}!${warn}`);
+                log(`Installation complete! ${customAppName} is active over slot ${targetSlot.name} (mount verified).${warn}`);
                 sendJson({
                     success: true,
-                    message: `Berjaya memasang ${customAppName} di atas slot ${targetSlot.name} (mount disahkan).${warn}`
+                    message: `Installed ${customAppName} as an APK overlay over slot ${targetSlot.name} (mount verified).${warn}`
                 });
             } catch (e) {
-                setProgress(100, 'Ralat', e.message);
+                setProgress(100, 'Error', e.message);
                 sendJson({ success: false, message: e.message }, 500);
             }
         });
@@ -798,7 +888,7 @@ const server = http.createServer(async (req, res) => {
             audioBytes += chunk.length;
             if (audioBytes > 32 * 1024 * 1024) {
                 oversized = true; chunks.length = 0;
-                sendJson({ success: false, message: 'Fail audio melebihi had 32 MB.' }, 413);
+                sendJson({ success: false, message: 'APK upload exceeds the 32 MB limit.' }, 413);
             } else chunks.push(chunk);
         });
         req.on('end', async () => {
@@ -806,10 +896,10 @@ const server = http.createServer(async (req, res) => {
                 const buf = Buffer.concat(chunks);
                 const originalName = path.basename(req.headers['x-file-name'] || 'uploaded.apk');
                 if (!/\.(apk|apks|xapk)$/i.test(originalName)) {
-                    return sendJson({ success: false, message: 'Hanya fail .apk / .apks / .xapk diterima.' }, 400);
+                    return sendJson({ success: false, message: 'Only .apk / .apks / .xapk files are accepted.' }, 400);
                 }
                 if (buf.length === 0) {
-                    return sendJson({ success: false, message: 'Fail kosong diterima.' }, 400);
+                    return sendJson({ success: false, message: 'An empty file was received.' }, 400);
                 }
 
                 const dir = path.join(__dirname, 'temp_uploaded_apk');
@@ -821,13 +911,13 @@ const server = http.createServer(async (req, res) => {
                 const written = fs.statSync(dest).size;
                 if (written !== buf.length) {
                     try { fs.unlinkSync(dest); } catch (e) { /* abaikan */ }
-                    return sendJson({ success: false, message: `Muat naik tidak lengkap (${written}/${buf.length} bait).` }, 500);
+                    return sendJson({ success: false, message: `Incomplete upload (${written}/${buf.length} bytes).` }, 500);
                 }
 
-                log(`APK dimuat naik: ${originalName} (${(written / 1024 / 1024).toFixed(1)} MB).`);
+                log(`APK uploaded: ${originalName} (${(written / 1024 / 1024).toFixed(1)} MB).`);
                 sendJson({ success: true, path: dest, name: originalName, size: written });
             } catch (e) {
-                log(`Ralat muat naik APK: ${e.message}`);
+                log(`APK upload error: ${e.message}`);
                 sendJson({ success: false, message: e.message }, 500);
             }
         });
@@ -842,7 +932,7 @@ const server = http.createServer(async (req, res) => {
             audioBytes += chunk.length;
             if (audioBytes > 32 * 1024 * 1024) {
                 oversized = true; chunks.length = 0;
-                sendJson({ success: false, message: 'Fail audio melebihi had 32 MB.' }, 413);
+                sendJson({ success: false, message: 'Audio file exceeds the 32 MB limit.' }, 413);
             } else chunks.push(chunk);
         });
         req.on('end', async () => {
@@ -850,11 +940,11 @@ const server = http.createServer(async (req, res) => {
                 if (oversized) return;
                 const totalBuf = Buffer.concat(chunks);
                 const targetType = req.headers['x-audio-type'] || 'lock'; // 'lock' (48k stereo) or 'avas' (48k mono)
-                if (!['lock', 'avas'].includes(targetType)) return sendJson({ success: false, message: 'Jenis audio tidak sah.' }, 400);
+                if (!['lock', 'avas'].includes(targetType)) return sendJson({ success: false, message: 'Invalid audio type.' }, 400);
                 const originalName = path.basename(req.headers['x-file-name'] || 'uploaded_sound.mp3');
                 const slotNum = req.headers['x-slot-num'] || '1';
 
-                log(`Menerima fail audio: ${originalName} (${(totalBuf.length / 1024).toFixed(1)} KB) untuk mod: ${targetType.toUpperCase()}...`);
+                log(`Receiving audio: ${originalName} (${(totalBuf.length / 1024).toFixed(1)} KB) for mode: ${targetType.toUpperCase()}...`);
 
                 const tempDir = path.join(__dirname, 'temp_audio');
                 if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
@@ -869,13 +959,13 @@ const server = http.createServer(async (req, res) => {
                 // Lock sound: 48000Hz, stereo (2 channels), 16-bit PCM
                 // AVAS sound: 48000Hz, mono (1 channel), 16-bit PCM
                 const channels = targetType === 'avas' ? 1 : 2;
-                log(`Menukar format audio kepada WAV 48,000Hz 16-bit PCM (${channels === 1 ? 'MONO' : 'STEREO'})...`);
+                log(`Converting to WAV 48,000 Hz 16-bit PCM (${channels === 1 ? 'MONO' : 'STEREO'})...`);
 
                 await new Promise((resolve, reject) => {
                     execFile(FFMPEG, ['-i', inputTemp, '-y', '-ar', '48000', '-ac', String(channels), '-c:a', 'pcm_s16le', outputWav], { timeout: 120000, windowsHide: true }, (err, stdout, stderr) => {
                         if (err) {
-                            log(`Ralat FFmpeg: ${stderr || err.message}`);
-                            return reject(new Error('Gagal menukar format audio menggunakan FFmpeg.'));
+                            log(`FFmpeg error: ${stderr || err.message}`);
+                            return reject(new Error('Failed to convert audio with FFmpeg.'));
                         }
                         resolve();
                     });
@@ -884,15 +974,15 @@ const server = http.createServer(async (req, res) => {
                 fs.unlinkSync(inputTemp); // remove temp input
 
                 if (!fs.existsSync(outputWav)) {
-                    return sendJson({ success: false, message: 'Fail WAV hasil konversi tidak terhasil.' }, 500);
+                    return sendJson({ success: false, message: 'The converted WAV file was not created.' }, 500);
                 }
 
-                log(`Audio berjaya ditukar! Saiz fail: ${(fs.statSync(outputWav).size / 1024).toFixed(1)} KB.`);
+                log(`Audio converted! File size: ${(fs.statSync(outputWav).size / 1024).toFixed(1)} KB.`);
 
                 // Direct deploy to car if connected
                 if (connectedIp) {
                     if (targetType === 'lock') {
-                        log('Memindahkan audio baru ke Nada Kunci Kenderaan...');
+                        log('Transferring the new vehicle lock chime...');
                         await runShell(connectedIp, 'mkdir -p /data/local/window/locksounds /data/local/tmp');
                         await runAdb(`-s ${connectedIp}:5555 push "${outputWav}" /data/local/tmp/new_lock.wav`);
                         await runShell(connectedIp, 'chmod 666 /sdcard/V3_Vehicle_Locked_Single.wav /data/media/0/V3_Vehicle_Locked_Single.wav 2>/dev/null || true');
@@ -901,8 +991,8 @@ const server = http.createServer(async (req, res) => {
                         await runShell(connectedIp, 'chmod 444 /sdcard/V3_Vehicle_Locked_Single.wav /data/media/0/V3_Vehicle_Locked_Single.wav 2>/dev/null || true');
                         await runShell(connectedIp, 'rm -f /data/local/tmp/new_lock.wav');
                         await runShell(connectedIp, 'killall -HUP ecarx_reverse_radar 2>/dev/null || pkill -f ecarx_reverse_radar 2>/dev/null || true');
-                        log('Nada Kunci tersuai berjaya dipasang dan aktif serta-merta di kereta!');
-                        return sendJson({ success: true, message: `Nada Kunci tersuai berjaya ditukar & diaktifkan ke kereta (${originalName})!` });
+                        log('Custom lock chime installed and active immediately on the car!');
+                        return sendJson({ success: true, message: `Custom lock chime updated and activated on the car (${originalName})!` });
                     } else if (targetType === 'avas') {
                         const reply = await avasManager.apply(connectedIp, slotNum, outputWav, path.basename(originalName));
                         log(reply.message);
@@ -911,9 +1001,9 @@ const server = http.createServer(async (req, res) => {
                     }
                 }
 
-                sendJson({ success: true, message: 'Audio berjaya ditukar tetapi kereta belum bersambung.' });
+                sendJson({ success: true, message: 'Audio converted, but the car is not connected.' });
             } catch (err) {
-                log(`Ralat pemprosesan audio: ${err.message}`);
+                log(`Audio processing error: ${err.message}`);
                 sendJson({ success: false, message: err.message }, 500);
             }
         });
@@ -927,7 +1017,7 @@ const server = http.createServer(async (req, res) => {
             bodyBytes += chunk.length;
             if (bodyBytes > 65536) {
                 oversized = true; body = '';
-                sendJson({ success: false, message: 'Permintaan melebihi had 64 KB.' }, 413);
+                sendJson({ success: false, message: 'Request exceeds the 64 KB limit.' }, 413);
             } else body += chunk;
         });
         req.on('end', async () => {
@@ -935,12 +1025,14 @@ const server = http.createServer(async (req, res) => {
             try {
             const extra = JSON.parse(body);
             const { preset, soundChoice } = extra;
-            if (!connectedIp) return sendJson({ success: false, message: 'Kereta belum bersambung.' });
+            if (!connectedIp && !['backup_identity', 'backup_all', 'backup_emmc'].includes(preset)) {
+                return sendJson({ success: false, message: 'Car is not connected.' });
+            }
 
             if (preset === 'smarttube') {
-                log('Memasang SmartTube (slot TikTok)...');
+                log('Installing SmartTube APK overlay (TikTok slot)...');
                 const apk = getPresetPath('apps/SmartTube.apk');
-                if (!apk) return sendJson({ success: false, message: 'SmartTube.apk tidak dijumpai.' });
+                if (!apk) return sendJson({ success: false, message: 'SmartTube.apk not found.' });
 
                 const remoteDir = '/data/local/custom_apps/SmartTube';
                 const remoteApk = `${remoteDir}/SmartTube.apk`;
@@ -951,7 +1043,7 @@ const server = http.createServer(async (req, res) => {
                 const localSize = fs.statSync(apk).size;
                 const remoteSize = await remoteFileSize(connectedIp, remoteApk);
                 if (pushRes.exitCode !== 0 || remoteSize !== localSize) {
-                    const msg = `BATAL: SmartTube.apk tidak sampai sepenuhnya (tempatan=${localSize}, kereta=${remoteSize}). Slot TikTok TIDAK disentuh.`;
+                    const msg = `ABORTED: SmartTube.apk transfer is incomplete (local=${localSize}, car=${remoteSize}). The TikTok slot was NOT touched.`;
                     log(msg);
                     return sendJson({ success: false, message: msg }, 500);
                 }
@@ -967,7 +1059,7 @@ const server = http.createServer(async (req, res) => {
                 });
                 const bindTarget = slot.bindTarget || slot.targetPath;
                 if (!slot.apkPath && !slot.targetPath) {
-                    return sendJson({ success: false, message: 'Slot TikTok tidak dijumpai pada kereta.' }, 404);
+                    return sendJson({ success: false, message: 'TikTok slot not found on the car.' }, 404);
                 }
 
                 await runShell(connectedIp, `umount -l "${bindTarget}" 2>/dev/null || true`);
@@ -975,25 +1067,25 @@ const server = http.createServer(async (req, res) => {
                 await runShell(connectedIp, `restorecon -F "${bindTarget}" 2>/dev/null || true`);
 
                 if (!(await isBindMounted(connectedIp, bindTarget))) {
-                    const msg = `GAGAL: mount SmartTube ke ${bindTarget} tidak disahkan.`;
+                    const msg = `FAILED: SmartTube mount at ${bindTarget} could not be verified.`;
                     log(msg);
                     return sendJson({ success: false, message: msg }, 500);
                 }
 
                 const persist = await writeBootPersistence(connectedIp);
                 await runShell(connectedIp, 'pkill -f ecarx.launcher || am force-stop ecarx.launcher 2>/dev/null || true');
-                log(`SmartTube dipasang & disahkan pada ${bindTarget}.`);
+                log(`SmartTube installed and verified at ${bindTarget}.`);
                 return sendJson({
                     success: true,
-                    message: `SmartTube berjaya dipasang di atas slot TikTok (mount disahkan).` +
-                             (persist.ok ? '' : ` AMARAN BOOT: ${persist.message}`)
+                    message: `SmartTube installed as an APK overlay over the TikTok slot (mount verified).` +
+                             (persist.ok ? '' : ` BOOT WARNING: ${persist.message}`)
                 });
             }
 
             if (preset === 'netflix') {
-                log('Memasang Netflix (slot JOOX)...');
+                log('Installing Netflix APK overlay (JOOX slot)...');
                 const apk = getPresetPath('apps/Netflix.apk');
-                if (!apk) return sendJson({ success: false, message: 'Netflix.apk tidak dijumpai.' });
+                if (!apk) return sendJson({ success: false, message: 'Netflix.apk not found.' });
 
                 const remoteDir = '/data/local/custom_apps/Netflix';
                 const remoteApk = `${remoteDir}/Netflix.apk`;
@@ -1003,7 +1095,7 @@ const server = http.createServer(async (req, res) => {
                 const localSize = fs.statSync(apk).size;
                 const remoteSize = await remoteFileSize(connectedIp, remoteApk);
                 if (pushRes.exitCode !== 0 || remoteSize !== localSize) {
-                    const msg = `BATAL: Netflix.apk tidak sampai sepenuhnya (tempatan=${localSize}, kereta=${remoteSize}). Slot JOOX TIDAK disentuh.`;
+                    const msg = `ABORTED: Netflix.apk transfer is incomplete (local=${localSize}, car=${remoteSize}). The JOOX slot was NOT touched.`;
                     log(msg);
                     return sendJson({ success: false, message: msg }, 500);
                 }
@@ -1023,48 +1115,48 @@ const server = http.createServer(async (req, res) => {
                 await runShell(connectedIp, `restorecon -F "${bindTarget}" 2>/dev/null || true`);
 
                 if (!(await isBindMounted(connectedIp, bindTarget))) {
-                    const msg = `GAGAL: mount Netflix ke ${bindTarget} tidak disahkan.`;
+                    const msg = `FAILED: Netflix mount at ${bindTarget} could not be verified.`;
                     log(msg);
                     return sendJson({ success: false, message: msg }, 500);
                 }
 
                 const persist = await writeBootPersistence(connectedIp);
                 await runShell(connectedIp, 'pkill -f ecarx.launcher || am force-stop ecarx.launcher 2>/dev/null || true');
-                log(`Netflix dipasang & disahkan pada ${bindTarget}.`);
+                log(`Netflix installed and verified at ${bindTarget}.`);
                 return sendJson({
                     success: true,
-                    message: `Netflix berjaya dipasang di atas slot JOOX Music (mount disahkan).` +
-                             (persist.ok ? '' : ` AMARAN BOOT: ${persist.message}`)
+                    message: `Netflix installed as an APK overlay over the JOOX Music slot (mount verified).` +
+                             (persist.ok ? '' : ` BOOT WARNING: ${persist.message}`)
                 });
             }
 
             if (preset === 'energy_app') {
-                log('Memasang EmasEnergy App Bateri (slot TheNoor)...');
+                log('Installing EmasEnergy battery app (TheNoor slot)...');
 
                 // P2 FIX: script ini tidak pernah wujud di kereta (hanya di laptop),
                 // jadi dulu ia lapor "berjaya" walaupun tiada apa berlaku.
                 const scriptSize = await remoteFileSize(connectedIp, '/data/local/custom_apps/deploy_energy_app.sh');
                 if (scriptSize <= 0) {
-                    const msg = 'BATAL: /data/local/custom_apps/deploy_energy_app.sh tidak wujud di kereta. ' +
-                                'Pasang skrip itu dahulu (ia tiada dalam bundle toolbox).';
+                    const msg = 'ABORTED: /data/local/custom_apps/deploy_energy_app.sh is missing on the car. ' +
+                                'Install that script first (it is not included in the toolbox bundle).';
                     log(msg);
                     return sendJson({ success: false, message: msg }, 409);
                 }
 
                 const runRes = await runShell(connectedIp, 'sh /data/local/custom_apps/deploy_energy_app.sh', 300000);
                 if (runRes.exitCode !== 0) {
-                    const msg = `GAGAL: deploy_energy_app.sh keluar dengan kod ${runRes.exitCode}: ${runRes.stderr || runRes.stdout}`;
+                    const msg = `FAILED: deploy_energy_app.sh exited with code ${runRes.exitCode}: ${runRes.stderr || runRes.stdout}`;
                     log(msg);
                     return sendJson({ success: false, message: msg }, 500);
                 }
 
                 await runShell(connectedIp, 'pkill -f ecarx.launcher || am force-stop ecarx.launcher 2>/dev/null || true');
-                log('EmasEnergy App siap dipasang (disahkan).');
-                return sendJson({ success: true, message: 'EmasEnergy Battery Monitor berjaya dipasang pada slot TheNoor (disahkan).' });
+                log('EmasEnergy app installed (verified).');
+                return sendJson({ success: true, message: 'EmasEnergy Battery Monitor installed in the TheNoor slot (verified).' });
             }
 
             if (preset === 'steering') {
-                log('Memasang Pengawal Butang Stereng (Drive Mode + Regen + Stealth)...');
+                log('Installing the steering-button daemon (Drive Mode + Regen + Stealth toggle)...');
                 const jar = getPresetPath('daemons/steering_mode_controller.jar');
                 const sh1 = getPresetPath('daemons/service_mode.sh');
                 const sh2 = getPresetPath('daemons/start_steering_daemon.sh');
@@ -1075,11 +1167,11 @@ const server = http.createServer(async (req, res) => {
                 if (jar) {
                     const h = crypto.createHash('sha256').update(fs.readFileSync(jar)).digest('hex');
                     if (h !== EXPECTED_SHA) {
-                        const msg = `BATAL: jar tempatan tidak padan (${h.slice(0, 12)}...). Dijangka ${EXPECTED_SHA.slice(0, 12)}...`;
+                        const msg = `ABORTED: local JAR hash mismatch (${h.slice(0, 12)}...). Expected ${EXPECTED_SHA.slice(0, 12)}...`;
                         log(msg);
                         return sendJson({ success: false, message: msg }, 500);
                     }
-                    log('JAR disahkan (hash padan dengan versi yang diuji pada kereta).');
+                    log('JAR verified (hash matches the version tested on the car).');
                 }
 
                 await runShell(connectedIp, 'mkdir -p /data/local/window');
@@ -1098,9 +1190,9 @@ const server = http.createServer(async (req, res) => {
                 if ((parseInt(hasHook.stdout.trim()) || 0) === 0) {
                     await runShell(connectedIp,
                         `printf '\\n# Steering daemon (Drive Mode + Regen + Stealth toggle)\\nif [ -f /data/local/window/start_steering_daemon.sh ]; then\\n    sh /data/local/window/start_steering_daemon.sh >> \\$LOG 2>&1\\nfi\\n' >> ${AVAS_BOOT}`);
-                    log('Auto-start didaftarkan dalam avas_boot.sh.');
+                    log('Auto-start registered in avas_boot.sh.');
                 } else {
-                    log('Auto-start sudah ada dalam avas_boot.sh.');
+                    log('Auto-start already exists in avas_boot.sh.');
                 }
 
                 await runShell(connectedIp, 'sh /data/local/window/start_steering_daemon.sh', 60000);
@@ -1108,18 +1200,18 @@ const server = http.createServer(async (req, res) => {
                 const check = await runShell(connectedIp, 'pgrep -f SteeringModeDaemon');
                 const ok = check.stdout.trim().length > 0;
 
-                log(ok ? 'Mod butang stereng aktif dan berjalan.' : 'AMARAN: daemon tidak dikesan selepas dimulakan.');
+                log(ok ? 'Steering-button daemon is active and running.' : 'WARNING: daemon was not detected after startup.');
                 return sendJson({
                     success: ok,
                     message: ok
-                        ? 'Kawalan stereng siap. Kanan 800ms = Drive Mode, Kiri 800ms = Regen, Bawah 5s = Stealth.'
-                        : 'Fail dipasang tetapi daemon tidak bermula. Semak steering.log pada kereta.'
+                        ? 'Steering-button daemon installed and running on the IHU. Hold Right 800 ms = Drive Mode, Left 800 ms = Regen, Down 5 s = Stealth toggle; no PC required after installation.'
+                        : 'Files installed, but the daemon did not start. Check steering.log on the car.'
                 });
             }
 
             if (preset === 'locksound') {
                 const choice = soundChoice || 'mario';
-                log(`Memasang Nada Kunci Kenderaan (${choice})...`);
+                log(`Installing the vehicle lock chime (${choice})...`);
 
                 let localWav = null;
                 if (choice === 'factory' || choice === 'original') {
@@ -1127,8 +1219,8 @@ const server = http.createServer(async (req, res) => {
                     // jangan tulis apa-apa (dulu tetap lapor "berjaya").
                     const backupSize = await remoteFileSize(connectedIp, '/data/local/window/locksounds/lock_original.wav');
                     if (backupSize <= 0) {
-                        const msg = `BATAL: /data/local/window/locksounds/lock_original.wav TIADA atau KOSONG (saiz=${backupSize}). ` +
-                                    `Nada kunci TIDAK ditukar supaya tidak jadi senyap.`;
+                        const msg = `ABORTED: /data/local/window/locksounds/lock_original.wav is MISSING or EMPTY (size=${backupSize}). ` +
+                                    `The lock chime was NOT changed, to avoid losing sound.`;
                         log(msg);
                         return sendJson({ success: false, message: msg }, 409);
                     }
@@ -1140,14 +1232,14 @@ const server = http.createServer(async (req, res) => {
                     // Sahkan tulisan benar-benar berlaku (saiz fail aktif == saiz sandaran).
                     const activeSize = await remoteFileSize(connectedIp, '/data/media/0/V3_Vehicle_Locked_Single.wav');
                     if (cpRes.exitCode !== 0 || activeSize !== backupSize) {
-                        const msg = `GAGAL: pulih nada kunci tidak disahkan (sandaran=${backupSize} bait, aktif=${activeSize} bait). Semak manual.`;
+                        const msg = `FAILED: lock chime restore could not be verified (backup=${backupSize} bytes, active=${activeSize} bytes). Check manually.`;
                         log(msg);
                         return sendJson({ success: false, message: msg }, 500);
                     }
 
                     await runShell(connectedIp, 'killall -HUP ecarx_reverse_radar 2>/dev/null || pkill -f ecarx_reverse_radar 2>/dev/null || true');
-                    log(`Nada kunci asal kilang dipulihkan & disahkan (${activeSize} bait).`);
-                    return sendJson({ success: true, message: `Nada kunci kenderaan berjaya dipulihkan kepada Original Factory (disahkan).` });
+                    log(`Factory lock chime restored and verified (${activeSize} bytes).`);
+                    return sendJson({ success: true, message: `Vehicle lock chime restored to factory original (verified).` });
                 }
 
                 if (choice === 'custom' && extra.customAudioPath) {
@@ -1165,7 +1257,7 @@ const server = http.createServer(async (req, res) => {
                     const pushedSize = await remoteFileSize(connectedIp, '/data/local/tmp/new_lock.wav');
                     const localSize = fs.statSync(localWav).size;
                     if (pushedSize <= 0 || pushedSize !== localSize) {
-                        const msg = `BATAL: fail nada kunci tidak sampai sepenuhnya (tempatan=${localSize}, kereta=${pushedSize}). Nada kunci TIDAK ditukar.`;
+                        const msg = `ABORTED: lock chime transfer is incomplete (local=${localSize}, car=${pushedSize}). The lock chime was NOT changed.`;
                         log(msg);
                         await runShell(connectedIp, 'rm -f /data/local/tmp/new_lock.wav');
                         return sendJson({ success: false, message: msg }, 500);
@@ -1179,16 +1271,16 @@ const server = http.createServer(async (req, res) => {
 
                     const activeSize = await remoteFileSize(connectedIp, '/data/media/0/V3_Vehicle_Locked_Single.wav');
                     if (cpRes.exitCode !== 0 || activeSize !== localSize) {
-                        const msg = `GAGAL: nada kunci baru tidak disahkan (sepatutnya=${localSize}, aktif=${activeSize}). Semak manual.`;
+                        const msg = `FAILED: new lock chime could not be verified (expected=${localSize}, active=${activeSize}). Check manually.`;
                         log(msg);
                         return sendJson({ success: false, message: msg }, 500);
                     }
 
                     await runShell(connectedIp, 'killall -HUP ecarx_reverse_radar 2>/dev/null || pkill -f ecarx_reverse_radar 2>/dev/null || true');
-                    log(`Nada kunci (${choice}) diaktifkan & disahkan (${activeSize} bait).`);
-                    return sendJson({ success: true, message: `Nada kunci kenderaan berjaya ditukar kepada mod: ${choice.toUpperCase()} (disahkan)!` });
+                    log(`Lock chime (${choice}) activated and verified (${activeSize} bytes).`);
+                    return sendJson({ success: true, message: `Vehicle lock chime changed to: ${choice.toUpperCase()} (verified)!` });
                 } else {
-                    return sendJson({ success: false, message: 'Fail nada kunci tidak ditemui.' }, 404);
+                    return sendJson({ success: false, message: 'Lock chime file not found.' }, 404);
                 }
             }
 
@@ -1202,20 +1294,20 @@ const server = http.createServer(async (req, res) => {
                 // Guna service_mode.sh yang dipasang oleh PAKEJ_STEALTH_EMAS5.
                 // Ini versi yang lebih lengkap: lumpuhkan apps, AVAS kilang,
                 // hentikan daemon, dan BERTAHAN selepas reboot.
-                log('Menyemak skrip Mod Servis pada kereta...');
+                log('Checking the on-car service-mode script for the PC-triggered Stealth action...');
                 const hasScript = (await runShell(connectedIp, 'ls /data/local/window/service_mode.sh 2>/dev/null')).stdout.trim();
                 if (!hasScript) {
-                    const msg = 'service_mode.sh tidak dijumpai. Pasang PAKEJ_STEALTH_EMAS5 dahulu, atau kereta ini belum ada Mod Servis.';
+                    const msg = 'service_mode.sh not found. Install PAKEJ_STEALTH_EMAS5 first; service mode is not available on this car yet.';
                     log(msg);
                     return sendJson({ success: false, message: msg }, 400);
                 }
 
-                log('Mengaktifkan Mod Servis (Stealth): lumpuhkan apps, AVAS kilang, hentikan daemon...');
-                setProgress(20, 'Mengaktifkan Stealth', 'Menjalankan service_mode.sh on...');
+                log('Enabling Stealth Mode from this PC: hiding apps, restoring factory AVAS, stopping custom daemons...');
+                setProgress(20, 'Enabling Stealth from PC', 'Running service_mode.sh on...');
                 const on = await runShell(connectedIp, 'sh /data/local/window/service_mode.sh on', 120000);
                 for (const line of on.stdout.split('\n').filter(Boolean)) log('  ' + line);
 
-                setProgress(70, 'Mengesahkan', 'Menyemak keadaan akhir...');
+                setProgress(70, 'Verifying', 'Checking the final state...');
                 const st = await runShell(connectedIp, 'sh /data/local/window/service_mode.sh status');
                 const disabled = await runShell(connectedIp, 'pm list packages -d | wc -l');
                 const mounts = await runShell(connectedIp, 'mount | grep -cE "ttincar|JOOX"');
@@ -1224,55 +1316,55 @@ const server = http.createServer(async (req, res) => {
                 const nDisabled = parseInt(disabled.stdout.trim()) || 0;
                 const nMounts = parseInt(mounts.stdout.trim()) || 0;
 
-                setProgress(100, 'Selesai', 'Mod Servis aktif.');
-                log(`Stealth ${isStealth ? 'AKTIF' : 'GAGAL'}: ${nDisabled} pakej dilumpuhkan, ${nMounts} mount slot tinggal.`);
+                setProgress(100, 'Complete', 'Service mode enabled.');
+                log(`Stealth ${isStealth ? 'ACTIVE' : 'FAILED'}: ${nDisabled} packages disabled, ${nMounts} slot mounts remaining.`);
 
                 return sendJson({
                     success: isStealth && nMounts === 0,
                     message: isStealth
-                        ? `Mod Servis AKTIF. ${nDisabled} aplikasi tersembunyi, AVAS kilang, daemon kustom dihentikan. Bertahan selepas reboot.`
-                        : `GAGAL: status masih ${st.stdout.trim()}. Semak log.`,
+                        ? `Stealth Mode ACTIVE (triggered from this PC). ${nDisabled} apps hidden, factory AVAS restored, custom daemons stopped. Survives reboot.`
+                        : `FAILED: status is still ${st.stdout.trim()}. Check the log.`,
                     detail: { stealth: isStealth, disabledPackages: nDisabled, remainingMounts: nMounts }
                 });
             }
 
             if (preset === 'stealth_off') {
-                log('Menyahaktifkan Mod Servis — memulihkan semua ciri kustom...');
-                setProgress(20, 'Memulihkan', 'Menjalankan service_mode.sh off...');
+                log('Disabling Stealth Mode from this PC and restoring custom features...');
+                setProgress(20, 'Restoring', 'Running service_mode.sh off...');
                 const off = await runShell(connectedIp, 'sh /data/local/window/service_mode.sh off', 120000);
                 for (const line of off.stdout.split('\n').filter(Boolean)) log('  ' + line);
 
-                setProgress(70, 'Mengesahkan', 'Menyemak keadaan akhir...');
+                setProgress(70, 'Verifying', 'Checking the final state...');
                 const st2 = await runShell(connectedIp, 'sh /data/local/window/service_mode.sh status');
                 const disabled2 = await runShell(connectedIp, 'pm list packages -d | wc -l');
 
                 const isNormal = st2.stdout.includes('NORMAL_MODE_ACTIVE');
                 const nDis2 = parseInt(disabled2.stdout.trim()) || 0;
 
-                setProgress(100, 'Selesai', 'Mod normal dipulihkan.');
-                log(`Stealth DIMATIKAN: status ${st2.stdout.trim()}, ${nDis2} pakej masih dilumpuhkan.`);
+                setProgress(100, 'Complete', 'Normal mode restored.');
+                log(`Stealth OFF: status ${st2.stdout.trim()}, ${nDis2} packages still disabled.`);
 
                 return sendJson({
                     success: isNormal,
                     message: isNormal
-                        ? `Mod normal dipulihkan. Semua aplikasi kustom kembali kelihatan, AVAS custom dipulihkan.`
-                        : `GAGAL: status masih ${st2.stdout.trim()}.`,
+                        ? `Normal mode restored. Custom apps are visible again and custom AVAS is restored.`
+                        : `FAILED: status is still ${st2.stdout.trim()}.`,
                     detail: { stealth: !isNormal, disabledPackages: nDis2 }
                 });
             }
 
             if (preset === 'drivemode_install') {
-                log('Memasang kawalan stereng (Drive Mode + Regen + Stealth toggle)...');
+                log('Starting the installed steering-button daemon (Drive Mode + Regen + Stealth toggle)...');
                 const hasJar = (await runShell(connectedIp, 'ls /data/local/window/steering_mode_controller.jar 2>/dev/null')).stdout.trim();
                 const hasLauncher = (await runShell(connectedIp, 'ls /data/local/window/start_steering_daemon.sh 2>/dev/null')).stdout.trim();
 
                 if (!hasJar || !hasLauncher) {
-                    const msg = 'Fail kawalan stereng tiada. Pasang melalui PAKEJ_DRIVEMODE_EMAS5/pasang_drivemode.ps1 dahulu.';
+                    const msg = 'Steering-control files are missing. Install them using PAKEJ_DRIVEMODE_EMAS5/pasang_drivemode.ps1 first.';
                     log(msg);
                     return sendJson({ success: false, message: msg }, 400);
                 }
 
-                setProgress(50, 'Memulakan daemon', 'Menjalankan start_steering_daemon.sh...');
+                setProgress(50, 'Starting daemon', 'Running start_steering_daemon.sh...');
                 const r = await runShell(connectedIp, 'sh /data/local/window/start_steering_daemon.sh', 60000);
                 for (const line of r.stdout.split('\n').filter(Boolean)) log('  ' + line);
 
@@ -1280,34 +1372,34 @@ const server = http.createServer(async (req, res) => {
                 const ps = await runShell(connectedIp, 'pgrep -f SteeringModeDaemon');
                 const running = ps.stdout.trim().length > 0;
 
-                setProgress(100, 'Selesai', running ? 'Daemon stereng berjalan.' : 'Daemon tidak bermula.');
+                setProgress(100, 'Complete', running ? 'Steering-button daemon is running.' : 'Daemon did not start.');
                 return sendJson({
                     success: running,
                     message: running
-                        ? 'Kawalan stereng aktif. Kanan 800ms = Drive Mode, Kiri 800ms = Regen, Bawah 5s = Stealth.'
-                        : 'Daemon stereng tidak bermula. Semak steering.log pada kereta.'
+                        ? 'On-car steering-button daemon is active. Hold Right 800 ms = Drive Mode, Left 800 ms = Regen, Down 5 s = Stealth toggle; it runs without this PC.'
+                        : 'Steering-button daemon did not start. Check steering.log on the car.'
                 });
             }
 
             if (preset === 'drivemode_remove') {
-                log('Menghentikan daemon stereng...');
-                setProgress(50, 'Menghentikan', 'pkill SteeringModeDaemon...');
+                log('Stopping the steering-button daemon...');
+                setProgress(50, 'Stopping', 'pkill SteeringModeDaemon...');
                 await runShell(connectedIp, 'pkill -f SteeringModeDaemon 2>/dev/null || true');
                 await new Promise(res => setTimeout(res, 1000));
                 const ps2 = await runShell(connectedIp, 'pgrep -f SteeringModeDaemon');
                 const stillRunning = ps2.stdout.trim().length > 0;
 
-                setProgress(100, 'Selesai', stillRunning ? 'Masih berjalan.' : 'Dihentikan.');
+                setProgress(100, 'Complete', stillRunning ? 'Still running.' : 'Stopped.');
                 return sendJson({
                     success: !stillRunning,
                     message: stillRunning
-                        ? 'Daemon masih berjalan — cuba reboot.'
-                        : 'Daemon stereng dihentikan. Butang kembali fungsi volume biasa.'
+                        ? 'Daemon is still running; try a reboot.'
+                        : 'Steering-button daemon stopped. Buttons return to normal volume control.'
                 });
             }
 
             if (preset === 'stealth_status') {
-                setProgress(30, 'Menyemak', 'Membaca keadaan Mod Servis...');
+                setProgress(30, 'Checking', 'Reading service-mode status...');
                 const st3 = await runShell(connectedIp, 'sh /data/local/window/service_mode.sh status');
                 const dis3 = await runShell(connectedIp, 'pm list packages -d | wc -l');
                 const mnt3 = await runShell(connectedIp, 'mount | grep -cE "ttincar|JOOX"');
@@ -1320,128 +1412,61 @@ const server = http.createServer(async (req, res) => {
                 const s3 = steer3.stdout.trim().length > 0;
                 const a3 = parseInt(avas3.stdout.trim()) || 0;
 
-                setProgress(100, 'Selesai', 'Status dibaca.');
-                log(`Status: ${state}, ${n3} pakej disable, ${m3} mount, stereng ${s3 ? 'RUNNING' : 'STOPPED'}, ${a3} fail AVAS kilang.`);
+                setProgress(100, 'Complete', 'Status read.');
+                log(`Status: ${state}, ${n3} disabled packages, ${m3} mounts, steering daemon ${s3 ? 'RUNNING' : 'STOPPED'}, ${a3} factory AVAS files.`);
 
                 return sendJson({
                     success: true,
-                    message: `Status: ${state.replace('_', ' ')} | ${n3} aplikasi tersembunyi | ${m3} mount slot | stereng ${s3 ? 'aktif' : 'mati'} | ${a3} fail AVAS kilang`,
+                    message: `Status: ${state.replace('_', ' ')} | ${n3} hidden apps | ${m3} slot mounts | steering daemon ${s3 ? 'active' : 'stopped'} | ${a3} factory AVAS files`,
                     detail: { state, disabledPackages: n3, remainingMounts: m3, steering: s3, avasFactoryFiles: a3 }
                 });
             }
 
             if (preset === 'reboot') {
-                log('Menghantar arahan reboot ke skrin IHU kereta...');
+                log('Sending the reboot command to the car IHU...');
                 await runShell(connectedIp, 'reboot');
                 connectedIp = null;
-                return sendJson({ success: true, message: 'IHU sedang dimulakan semula (rebooting)...' });
+                return sendJson({ success: true, message: 'IHU is rebooting...' });
             }
 
             if (preset === 'screenshot') {
                 const filename = `IHU_Screenshot_${Date.now()}.png`;
                 const dest = path.join(os.homedir(), 'Desktop', filename);
-                log(`Mengambil screenshot skrin IHU ke: ${dest}...`);
+                log(`Capturing the IHU screenshot to: ${dest}...`);
                 await runShell(connectedIp, 'screencap -p /data/local/tmp/screen.png');
                 await runAdb(`-s ${connectedIp}:5555 pull /data/local/tmp/screen.png "${dest}"`);
                 await runShell(connectedIp, 'rm -f /data/local/tmp/screen.png');
-                return sendJson({ success: true, message: `Screenshot disimpan di Desktop: ${filename}` });
+                return sendJson({ success: true, message: `Screenshot saved on the Desktop: ${filename}` });
             }
 
             if (preset === 'backup_identity') {
-                const bDir = path.join(os.homedir(), 'Desktop', 'eMAS5_Identity_Backup');
-                if (!fs.existsSync(bDir)) fs.mkdirSync(bDir, { recursive: true });
-                log(`Memulakan BACKUP IDENTITI & KALIBRASI UNIK ke: ${bDir}...`);
-
-                const identParts = [
-                    { name: 'proinfo', desc: 'Hardware Serial & Device ID' },
-                    { name: 'nvcfg', desc: 'Modem Radio Config' },
-                    { name: 'nvdata', desc: 'Modem Calibration & IMEI' },
-                    { name: 'nvram', desc: 'Wi-Fi & Bluetooth MAC' },
-                    { name: 'protect1', desc: 'Radio Protection 1' },
-                    { name: 'protect2', desc: 'Radio Protection 2' },
-                    { name: 'seccfg', desc: 'Security Configuration' },
-                    { name: 'sec1', desc: 'Security Block 1' },
-                    { name: 'pki', desc: 'Vehicle PKI & Security Certificates' }
-                ];
-
-                for (let i = 0; i < identParts.length; i++) {
-                    const p = identParts[i];
-                    const pct = Math.round(((i + 1) / identParts.length) * 90);
-                    setProgress(pct, `Menyalin ${p.name}`, `Membaca ${p.desc}...`);
-                    log(`[${i + 1}/${identParts.length}] Menyalin ${p.name}.img (${p.desc})...`);
-                    await runShell(connectedIp, `dd if=/dev/block/by-name/${p.name} of=/data/local/tmp/${p.name}.img bs=1M`);
-                    await runAdb(`-s ${connectedIp}:5555 pull /data/local/tmp/${p.name}.img "${path.join(bDir, p.name + '.img')}"`);
-                    await runShell(connectedIp, `rm -f /data/local/tmp/${p.name}.img`);
-                }
-
-                setProgress(100, 'Backup Selesai', 'Semua fail disimpan di Desktop/eMAS5_Identity_Backup.');
-                log(`Backup Identiti selesai! Fail disimpan di Desktop/eMAS5_Identity_Backup.`);
-                return sendJson({ success: true, message: `Sandaran Identiti Unik (~60 MB) Berjaya Disimpan di Folder Desktop/eMAS5_Identity_Backup!` });
+                const directory = path.join(os.homedir(), 'Desktop', 'eMAS5_Identity_Backup');
+                const reply = await backupPartitions(connectedIp, directory,
+                    ['proinfo', 'nvcfg', 'nvdata', 'nvram', 'protect1', 'protect2', 'seccfg', 'sec1', 'pki'],
+                    'Identity and calibration backup',
+                    'Read-only partition images containing device identity and calibration data.');
+                return sendJson(reply, reply.success ? 200 : 500);
             }
 
             if (preset === 'backup_all') {
-                const bDir = path.join(os.homedir(), 'Desktop', 'eMAS5_Full_Backup');
-                if (!fs.existsSync(bDir)) fs.mkdirSync(bDir, { recursive: true });
-                log(`Memulakan BACKUP PENUH sistem kenderaan ke: ${bDir}...`);
-
-                // 1. Boot Partition
-                setProgress(5, 'Menyalin Kernel Boot', 'Membaca partition boot_a (32MB)...');
-                log('[1/3] Mengambil salinan boot_a.img...');
-                await runShell(connectedIp, 'dd if=/dev/block/by-name/boot_a of=/data/local/tmp/boot_a.img bs=4M');
-                setProgress(15, 'Memuat Turun Boot', 'Memuat turun boot_a.img ke Laptop...');
-                await runAdb(`-s ${connectedIp}:5555 pull /data/local/tmp/boot_a.img "${path.join(bDir, 'boot_a.img')}"`);
-                await runShell(connectedIp, 'rm -f /data/local/tmp/boot_a.img');
-
-                // 2. ECARX Parameter
-                setProgress(25, 'Membaca ECARX Parameter', 'Menyalin ecarxpara.img (1,024MB)... Pijak brek sekali-sekala supaya IHU kekal aktif.');
-                log('[2/3] Mengambil salinan ecarxpara.img...');
-                await runShell(connectedIp, 'dd if=/dev/block/by-name/ecarxpara of=/data/local/tmp/ecarxpara.img bs=4M');
-                setProgress(55, 'Memuat Turun ECARX Parameter', 'Memuat turun 1.0 GB ke Laptop via Wi-Fi ADB...');
-                await runAdb(`-s ${connectedIp}:5555 pull /data/local/tmp/ecarxpara.img "${path.join(bDir, 'ecarxpara.img')}"`);
-                await runShell(connectedIp, 'rm -f /data/local/tmp/ecarxpara.img');
-
-                // 3. Device Tree DTBO
-                setProgress(90, 'Menyalin DTBO', 'Membaca partition dtbo_a (8MB)...');
-                log('[3/3] Mengambil salinan dtbo_a.img...');
-                await runShell(connectedIp, 'dd if=/dev/block/by-name/dtbo_a of=/data/local/tmp/dtbo_a.img bs=4M');
-                setProgress(96, 'Memuat Turun DTBO', 'Memuat turun dtbo_a.img...');
-                await runAdb(`-s ${connectedIp}:5555 pull /data/local/tmp/dtbo_a.img "${path.join(bDir, 'dtbo_a.img')}"`);
-                await runShell(connectedIp, 'rm -f /data/local/tmp/dtbo_a.img');
-
-                setProgress(100, 'Backup Selesai', 'Semua fail disimpan di Desktop/eMAS5_Full_Backup.');
-                log(`Backup pantas selesai! Semua fail disimpan di Desktop/eMAS5_Full_Backup.`);
-                return sendJson({ success: true, message: `Sandaran Pantas (1.12 GB) Berjaya Disimpan di Folder Desktop/eMAS5_Full_Backup!` });
+                const directory = path.join(os.homedir(), 'Desktop', 'eMAS5_Full_Backup');
+                const reply = await backupPartitions(connectedIp, directory,
+                    ['boot_a', 'ecarxpara', 'dtbo_a'], 'Quick partition backup',
+                    'Boot, ECARX parameters and DTBO images only; not a full storage clone.');
+                return sendJson(reply, reply.success ? 200 : 500);
             }
 
             if (preset === 'backup_emmc') {
-                const bDir = path.join(os.homedir(), 'Desktop', 'eMAS5_Full_eMMC_Dump');
-                if (!fs.existsSync(bDir)) fs.mkdirSync(bDir, { recursive: true });
-                log(`Memulakan KLON PENUH STORAN eMMC (~45 GB) ke: ${bDir}...`);
-
-                // 1. Super partition (14GB)
-                setProgress(5, 'Menyalin Super ROM (~14 GB)', 'Membaca partition super (system, vendor, product)... Sila pijak pedal brek.');
-                log('[1/2] Menyalin super.img (~14 GB)...');
-                await runShell(connectedIp, 'dd if=/dev/block/by-name/super of=/data/local/tmp/super.img bs=4M');
-                setProgress(30, 'Memuat Turun Super ROM', 'Memindahkan super.img ke Laptop via Wi-Fi ADB... Sila pijak pedal brek sekali-sekala.');
-                await runAdb(`-s ${connectedIp}:5555 pull /data/local/tmp/super.img "${path.join(bDir, 'super.img')}"`, 1800000); // 30 min timeout
-                await runShell(connectedIp, 'rm -f /data/local/tmp/super.img');
-
-                // 2. Userdata partition (31GB)
-                setProgress(55, 'Menyalin Userdata (~31 GB)', 'Membaca partition userdata (data pengguna, apps, cache)... Sila pijak pedal brek.');
-                log('[2/2] Menyalin userdata.img (~31 GB)...');
-                await runShell(connectedIp, 'dd if=/dev/block/by-name/userdata of=/data/local/tmp/userdata.img bs=4M');
-                setProgress(80, 'Memuat Turun Userdata', 'Memindahkan userdata.img ke Laptop... Pastikan skrin IHU tidak tidur.');
-                await runAdb(`-s ${connectedIp}:5555 pull /data/local/tmp/userdata.img "${path.join(bDir, 'userdata.img')}"`, 3600000); // 60 min timeout
-                await runShell(connectedIp, 'rm -f /data/local/tmp/userdata.img');
-
-                setProgress(100, 'Klon Penuh Selesai', 'Seluruh storan kereta (~45 GB) selamat disalin ke Desktop/eMAS5_Full_eMMC_Dump.');
-                log(`Klon eMMC (~45 GB) selesai sepenuhnya!`);
-                return sendJson({ success: true, message: `Klon Penuh eMMC (~45 GB) Berjaya Disimpan di Folder Desktop/eMAS5_Full_eMMC_Dump!` });
+                const directory = path.join(os.homedir(), 'Desktop', 'eMAS5_Full_eMMC_Dump');
+                const reply = await backupPartitions(connectedIp, directory,
+                    ['super', 'userdata'], 'Large partition dump (eMMC)',
+                    'WARNING: approximately 45 GB of PC storage required (actual sizes queried before transfer). Super + userdata images only, NOT the entire raw eMMC. Live userdata is not a snapshot-consistent backup. Failed transfers retain .partial files; no resume.');
+                return sendJson(reply, reply.success ? 200 : 500);
             }
 
-            sendJson({ success: false, message: 'Preset tidak sah.' }, 400);
+            sendJson({ success: false, message: 'Invalid preset.' }, 400);
             } catch (error) {
-                log(`Ralat transaksi: ${error.message}`);
+                log(`Transaction error: ${error.message}`);
                 sendJson({ success: false, message: error.message }, 500);
             }
         });
@@ -1469,7 +1494,7 @@ const server = http.createServer(async (req, res) => {
 
 if (require.main === module) {
     server.listen(PORT, '127.0.0.1', () => {
-        log(`e.MAS 5 Desktop Control Center Engine berjalan di: http://127.0.0.1:${PORT}`);
+        log(`e.MAS 5 Desktop Control Center Engine running at: http://127.0.0.1:${PORT}`);
     });
 }
 module.exports = { server };

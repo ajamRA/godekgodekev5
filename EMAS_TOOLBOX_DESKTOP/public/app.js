@@ -65,6 +65,9 @@ const taskLabel = document.getElementById('taskLabel');
 const taskPct = document.getElementById('taskPct');
 const taskFill = document.getElementById('taskFill');
 const taskDetail = document.getElementById('taskDetail');
+let transferRunning = false;
+let backupRequestPending = false;
+let closingConfirmed = false;
 
 function logToUi(msg) {
     const time = new Date().toLocaleTimeString();
@@ -77,52 +80,52 @@ function logToUi(msg) {
 
 function setConnected(ip, model = 'IHU801P') {
     statusBulb.classList.add('connected');
-    connTitle.textContent = `Bersambung ke e.MAS 5 · ${ip}:5555`;
+    connTitle.textContent = `Connected to e.MAS 5 · ${ip}:5555`;
     connTitle.style.color = 'var(--status-green)';
-    connSub.textContent = `Model: ${model} · Port ADB 5555 Aktif · Akses Root Disahkan`;
+    connSub.textContent = `Model: ${model} · Wi-Fi ADB port 5555 · Root access verified`;
     inputCarIp.value = ip;
-    document.getElementById('connectionChip').textContent = 'Kereta bersambung';
+    document.getElementById('connectionChip').textContent = 'Connected';
 }
 
 function setDisconnected() {
     statusBulb.classList.remove('connected');
-    connTitle.textContent = 'Kereta belum dijumpai';
+    connTitle.textContent = 'Car not found';
     connTitle.style.color = 'var(--ink)';
-    connSub.textContent = 'Semak laptop dan kereta menggunakan Wi-Fi yang sama, kemudian cuba cari semula atau masukkan IP secara manual.';
-    document.getElementById('connectionChip').textContent = 'Belum bersambung';
+    connSub.textContent = 'Check that your PC and IHU share the same Wi-Fi network. Scan again or connect using the IHU IP address.';
+    document.getElementById('connectionChip').textContent = 'Disconnected';
 }
 
 // Auto-Scan Wi-Fi
 async function autoScan() {
-    logToUi('🔍 Memulakan imbasan automatik Wi-Fi untuk mencari kereta...');
+    logToUi('Scanning the local Wi-Fi network for your IHU…');
     btnAutoScan.disabled = true;
-    btnAutoScan.textContent = 'Sedang mencari kereta…';
+    btnAutoScan.textContent = 'Scanning for car…';
 
     try {
         const res = await fetch('/api/scan');
         const data = await res.json();
         if (data.success) {
-            logToUi(`[+] Kereta Proton e.MAS 5 dikesan di alamat IP: ${data.ip}!`);
+            logToUi(`Proton e.MAS 5 found at ${data.ip}.`);
             setConnected(data.ip, data.model);
             await refreshSlots();
         } else {
-            logToUi(data.message || 'Tiada kereta dikesan.');
+            logToUi(data.message || 'No car found.');
             setDisconnected();
         }
     } catch (e) {
-        logToUi(`Ralat imbasan: ${e.message}`);
+        logToUi(`Scan failed: ${e.message}`);
     } finally {
         btnAutoScan.disabled = false;
-        btnAutoScan.textContent = 'Cari kereta di Wi-Fi';
+        btnAutoScan.textContent = 'Scan for car';
     }
 }
 
 // Manual Connect
 async function manualConnect() {
     const ip = inputCarIp.value.trim();
-    if (!ip) return alert('Sila masukkan alamat IP kereta.');
+    if (!ip) return alert('Enter the IHU IP address first.');
 
-    logToUi(`Menyambung manual ke ${ip}:5555...`);
+    logToUi(`Connecting to ${ip}:5555 over Wi-Fi ADB…`);
     btnManualConnect.disabled = true;
 
     try {
@@ -133,15 +136,15 @@ async function manualConnect() {
         });
         const data = await res.json();
         if (data.success) {
-            logToUi(`Berjaya disambungkan ke ${ip}!`);
+            logToUi(`Connected to ${ip}.`);
             setConnected(data.ip, data.model);
             await refreshSlots();
         } else {
-            alert(`Gagal menyambung: ${data.message}`);
-            logToUi(`Gagal menyambung: ${data.message}`);
+            alert(`Connection failed: ${data.message}`);
+            logToUi(`Connection failed: ${data.message}`);
         }
     } catch (e) {
-        logToUi(`Ralat sambungan: ${e.message}`);
+        logToUi(`ADB connection error: ${e.message}`);
     } finally {
         btnManualConnect.disabled = false;
     }
@@ -150,7 +153,7 @@ async function manualConnect() {
 // Refresh Scanned Slots
 async function refreshSlots() {
     btnRefreshSlots.disabled = true;
-    logToUi('Mengimbas senarai aplikasi terpasang pada kereta (A-Store & Sistem)...');
+    logToUi('Scanning installed app slots on the IHU (A-Store & system)…');
 
     try {
         const res = await fetch('/api/slots');
@@ -158,12 +161,12 @@ async function refreshSlots() {
         if (data.success) {
             currentSlots = data.slots;
             renderSlots(currentSlots);
-            logToUi(`Imbasan selesai: ${currentSlots.length} slot aplikasi ditemui.`);
+            logToUi(`Scan complete: ${currentSlots.length} app slots found.`);
         } else {
-            logToUi(`Ralat slot: ${data.message}`);
+            logToUi(`Slot scan failed: ${data.message}`);
         }
     } catch (e) {
-        logToUi(`Ralat mengimbas slot: ${e.message}`);
+        logToUi(`Slot scan error: ${e.message}`);
     } finally {
         btnRefreshSlots.disabled = false;
     }
@@ -172,15 +175,15 @@ async function refreshSlots() {
 function renderSlots(slots) {
     slotsList.innerHTML = '';
     selectedSlot = null;
-    selectTargetSlot.innerHTML = '<option value="">-- Pilih slot sasaran dari senarai --</option>';
+    selectTargetSlot.innerHTML = '<option value="">Select a target slot from the list</option>';
 
     if (!slots || slots.length === 0) {
-        slotsList.innerHTML = '<div class="slot-empty-notice">Tiada slot aplikasi ditemui.</div>';
+        slotsList.innerHTML = '<div class="slot-empty-notice">No app slots found. Check the ADB connection and refresh slots.</div>';
         return;
     }
 
     slots.forEach((slot, index) => {
-        const statusText = slot.isOverwritten ? `Diganti: ${slot.overwrittenBy}` : 'Aplikasi asal';
+        const statusText = slot.isOverwritten ? `Overlaid: ${slot.overwrittenBy}` : 'Original app';
         const isOccupied = slot.isOverwritten;
 
         // Create Slot Item in ListBox
@@ -197,7 +200,7 @@ function renderSlots(slots) {
             </div>
             <div>
                 <span class="slot-badge-status ${isOccupied ? '' : 'empty'}">
-                    ${isOccupied ? statusText : 'Aplikasi asal'}
+                    ${isOccupied ? statusText : 'Original app'}
                 </span>
             </div>
         `;
@@ -208,7 +211,7 @@ function renderSlots(slots) {
             selectedSlot = slot;
             selectTargetSlot.value = index;
             inputCustomAppName.value = slot.name + ' Mod';
-            logToUi(`Slot dipilih: ${slot.name} (${slot.packageName}) · Status: ${statusText}`);
+            logToUi(`Selected slot: ${slot.name} (${slot.packageName}) · ${statusText}`);
         });
 
         slotsList.appendChild(item);
@@ -218,7 +221,7 @@ function renderSlots(slots) {
         opt.value = index;
         const allowed = !slot.policy || slot.policy.allowed;
         const iconPrefix = !allowed ? '[L]' : (isOccupied ? '[!]' : '[+]');
-        const polTag = !allowed ? ' — DILINDUNGI' : '';
+        const polTag = !allowed ? ' — PROTECTED' : '';
         opt.textContent = `${iconPrefix} [${slot.type}] ${slot.name} — ${statusText}${polTag}`;
         if (!allowed) opt.style.color = '#c9a227';
         selectTargetSlot.appendChild(opt);
@@ -245,16 +248,16 @@ let chosenApkFile = null;
 let uploadedApk = { name: null, path: null, size: 0 };
 
 async function uploadApkToServer(file) {
-    logToUi(`Memuat naik ${file.name} (${(file.size / 1024 / 1024).toFixed(1)} MB) ke enjin tempatan...`);
+    logToUi(`Uploading ${file.name} (${(file.size / 1024 / 1024).toFixed(1)} MB) to the local toolbox server…`);
     const res = await fetch('/api/upload-apk', {
         method: 'POST',
         headers: { 'Content-Type': 'application/octet-stream', 'X-File-Name': file.name },
         body: file
     });
     const data = await res.json();
-    if (!data.success) throw new Error(data.message || 'Muat naik gagal.');
+    if (!data.success) throw new Error(data.message || 'APK upload failed.');
     uploadedApk = { name: file.name, path: data.path, size: file.size };
-    logToUi(`Muat naik selesai: ${file.name}`);
+    logToUi(`APK upload complete: ${file.name}`);
     return data;
 }
 
@@ -262,19 +265,19 @@ async function handleApkPicked(file) {
     if (!file) return;
     const okApk = /\.apk$/i.test(file.name) || file.name.endsWith('.apks') || file.name.endsWith('.xapk');
     if (!okApk) {
-        alert('Sila pilih fail .apk sahaja.');
+        alert('Choose an APK file.');
         return;
     }
     chosenApkFile = file;
-    dropText.textContent = `Fail dipilih: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)} MB) — memuat naik...`;
+    dropText.textContent = `Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)} MB) — uploading…`;
     try {
         await uploadApkToServer(file);
-        dropText.textContent = `Fail sedia: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)} MB)`;
+        dropText.textContent = `Ready: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)} MB)`;
         const baseName = file.name.replace(/\.(apk|apks|xapk)$/i, '');
         inputCustomAppName.value = baseName;
     } catch (e) {
-        dropText.textContent = `Gagal memuat naik: ${e.message}`;
-        logToUi(`Ralat muat naik APK: ${e.message}`);
+        dropText.textContent = `Upload failed: ${e.message}`;
+        logToUi(`APK upload error: ${e.message}`);
         chosenApkFile = null;
         uploadedApk = { name: null, path: null, size: 0 };
     }
@@ -302,16 +305,16 @@ dropzone.addEventListener('drop', (e) => {
 // Install Custom APK to Slot
 btnInstallCustom.addEventListener('click', async () => {
     if (!selectedSlot) {
-        return alert('Sila pilih satu slot dari senarai di atas terlebih dahulu!');
+        return alert('Select the app slot you want to replace first.');
     }
     if (!uploadedApk.path) {
-        return alert('Sila pilih/tarik fail .apk terlebih dahulu (tunggu sehingga "Fail sedia").');
+        return alert('Choose an APK and wait until the file shows “Ready”.');
     }
 
     const customName = inputCustomAppName.value.trim() || 'CustomApp';
-    logToUi(`Memulakan pemasangan ${customName} ke slot ${selectedSlot.name}...`);
+    logToUi(`Installing ${customName} over the ${selectedSlot.name} slot…`);
     btnInstallCustom.disabled = true;
-    btnInstallCustom.textContent = '⏳ SEDANG MEMASANG...';
+    btnInstallCustom.textContent = 'Installing slot overlay…';
 
     try {
         const res = await fetch('/api/install-slot', {
@@ -329,22 +332,28 @@ btnInstallCustom.addEventListener('click', async () => {
             logToUi(data.message);
             await refreshSlots();
         } else {
-            alert(`Ralat: ${data.message}`);
-            logToUi(`Ralat: ${data.message}`);
+            alert(`Install failed: ${data.message}`);
+            logToUi(`Install failed: ${data.message}`);
         }
     } catch (e) {
-        logToUi(`Ralat pemasangan: ${e.message}`);
+        logToUi(`APK installation error: ${e.message}`);
     } finally {
         btnInstallCustom.disabled = false;
-        btnInstallCustom.textContent = 'Gantikan slot & pasang APK';
+        btnInstallCustom.textContent = 'Replace slot & install APK';
     }
 });
 
 // 1-Click Presets
 async function triggerPreset(preset, label, extra = {}) {
-    if (!confirm(`Adakah anda ingin menjalankan: ${label}?`)) return;
+    if (!confirm(`Run on the connected IHU: ${label}?`)) return;
+    const backup = preset.startsWith('backup_');
+    if (backup) {
+        backupRequestPending = true;
+        updateProgressUi({ active: true, status: 'running', progress: null, label: 'Preparing backup', detail: label, transfer: { bytesTransferred: 0, totalBytes: null, bytesPerSecond: null, etaSeconds: null } });
+        taskProgressSection.scrollIntoView({ behavior: 'instant', block: 'start' });
+    }
 
-    logToUi(`Menjalankan: ${label}...`);
+    logToUi(`Running: ${label}…`);
     try {
         const res = await fetch('/api/install-preset', {
             method: 'POST',
@@ -354,35 +363,39 @@ async function triggerPreset(preset, label, extra = {}) {
         const data = await res.json();
         alert(data.message);
         logToUi(data.message);
+        if (backup) await checkTaskStatus();
         await refreshSlots();
     } catch (e) {
-        logToUi(`Ralat: ${e.message}`);
+        logToUi(`Operation failed: ${e.message}`);
+        if (backup) taskDetail.textContent = 'The backup request could not be confirmed. Keep the IHU awake while Toolbox checks its status.';
+    } finally {
+        if (backup) backupRequestPending = false;
     }
 }
 
-document.getElementById('btnSmartTube').addEventListener('click', () => triggerPreset('smarttube', 'Pasang SmartTube atas slot TikTok'));
-document.getElementById('btnNetflix').addEventListener('click', () => triggerPreset('netflix', 'Pasang Netflix atas slot JOOX Music'));
-document.getElementById('btnSteering').addEventListener('click', () => triggerPreset('steering', 'Pasang Mod Butang Stereng (Hold 5s)'));
-document.getElementById('btnStealth').addEventListener('click', () => triggerPreset('restore_stock', 'Aktifkan Stealth Mode'));
-document.getElementById('btnStealthOff').addEventListener('click', () => triggerPreset('stealth_off', 'Matikan Stealth — Pulih Mod Normal'));
-document.getElementById('btnStealthStatus').addEventListener('click', () => triggerPreset('stealth_status', 'Semak Status Sistem'));
-document.getElementById('btnDriveInstall').addEventListener('click', () => triggerPreset('drivemode_install', 'Mulakan Kawalan Stereng'));
-document.getElementById('btnDriveRemove').addEventListener('click', () => triggerPreset('drivemode_remove', 'Hentikan Kawalan Stereng'));
-document.getElementById('btnReboot').addEventListener('click', () => triggerPreset('reboot', 'Reboot Skrin IHU'));
-document.getElementById('btnScreenshot').addEventListener('click', () => triggerPreset('screenshot', 'Ambil Screenshot IHU'));
+document.getElementById('btnSmartTube').addEventListener('click', () => triggerPreset('smarttube', 'Install SmartTube over the TikTok slot'));
+document.getElementById('btnNetflix').addEventListener('click', () => triggerPreset('netflix', 'Install Netflix over the JOOX Music slot'));
+document.getElementById('btnSteering').addEventListener('click', () => triggerPreset('steering', 'Install and start the steering controller on the IHU (Drive Mode, regen & Stealth shortcut)'));
+document.getElementById('btnStealth').addEventListener('click', () => triggerPreset('restore_stock', 'Enable Stealth using the service-mode script already installed on the IHU'));
+document.getElementById('btnStealthOff').addEventListener('click', () => triggerPreset('stealth_off', 'Disable Stealth and restore normal mod operation on the IHU'));
+document.getElementById('btnStealthStatus').addEventListener('click', () => triggerPreset('stealth_status', 'Check installed mod status on the IHU'));
+document.getElementById('btnDriveInstall').addEventListener('click', () => triggerPreset('drivemode_install', 'Start the steering controller already installed on the IHU'));
+document.getElementById('btnDriveRemove').addEventListener('click', () => triggerPreset('drivemode_remove', 'Stop the running steering controller (files and auto-start remain installed)'));
+document.getElementById('btnReboot').addEventListener('click', () => triggerPreset('reboot', 'Reboot the IHU'));
+document.getElementById('btnScreenshot').addEventListener('click', () => triggerPreset('screenshot', 'Save an IHU screenshot to your PC'));
 
 // Audio & Backup Controls
 btnApplyLockSound.addEventListener('click', () => {
     const choice = selectLockSound.value;
-    const label = choice === 'original' ? 'Standard Kilang (Factory)' : choice.toUpperCase();
-    triggerPreset('locksound', `Tukar Nada Kunci kepada ${label}`, { soundChoice: choice });
+    const label = choice === 'original' ? 'Factory original' : choice.toUpperCase();
+    triggerPreset('locksound', `Apply lock chime: ${label}`, { soundChoice: choice });
 });
 
 btnApplyAvasSound.addEventListener('click', () => {
     const choice = selectAvasSound.value;
     const slot = selectAvasSlot.value;
-    const label = choice === 'factory' ? 'Standard Kilang' : choice.toUpperCase();
-    triggerPreset('avas', `Tukar Bunyi AVAS (Slot ${slot}) kepada ${label}`, { soundChoice: choice, slotNum: parseInt(slot, 10) });
+    const label = choice === 'factory' ? 'Factory original' : choice.toUpperCase();
+    triggerPreset('avas', `Apply AVAS sound to slot ${slot}: ${label}`, { soundChoice: choice, slotNum: parseInt(slot, 10) });
 });
 
 // Custom Audio Upload Handlers
@@ -392,13 +405,13 @@ fileUploadLock.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         txtLockFile.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
         
-        if (!confirm(`Tukar Nada Kunci kereta menggunakan fail audio: ${file.name}?\nSistem akan auto-convert fail ini ke WAV 48kHz Stereo 16-bit PCM.`)) {
+        if (!confirm(`Apply ${file.name} as the IHU lock chime?\nThe file will be converted to WAV 48 kHz stereo 16-bit PCM and installed on the car.`)) {
             return;
         }
 
-        logToUi(`Memuat naik dan menukar audio Nada Kunci: ${file.name}...`);
+        logToUi(`Uploading and converting lock chime: ${file.name}…`);
         btnBrowseLock.disabled = true;
-        btnBrowseLock.textContent = '⏳ SEDANG CONVERT & PASANG...';
+        btnBrowseLock.textContent = 'Converting & applying…';
 
         try {
             const res = await fetch('/api/upload-convert-audio', {
@@ -414,11 +427,11 @@ fileUploadLock.addEventListener('change', async (e) => {
             alert(data.message);
             logToUi(data.message);
         } catch (err) {
-            alert(`Ralat: ${err.message}`);
-            logToUi(`Ralat: ${err.message}`);
+            alert(`Audio operation failed: ${err.message}`);
+            logToUi(`Audio operation failed: ${err.message}`);
         } finally {
             btnBrowseLock.disabled = false;
-            btnBrowseLock.textContent = 'Pilih & pasang audio sendiri';
+            btnBrowseLock.textContent = 'Upload & apply custom audio';
             fileUploadLock.value = '';
         }
     }
@@ -431,13 +444,13 @@ fileUploadAvas.addEventListener('change', async (e) => {
         const slot = selectAvasSlot.value;
         txtAvasFile.textContent = `[Slot ${slot}] ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
         
-        if (!confirm(`Tukar Bunyi AVAS Pejalan Kaki (Slot ${slot}) menggunakan: ${file.name}?\nSistem akan auto-convert fail ini ke WAV 48kHz Mono 16-bit PCM.`)) {
+        if (!confirm(`Apply ${file.name} to AVAS slot ${slot} on the IHU?\nThe file will be converted to WAV 48 kHz mono 16-bit PCM and installed on the car.`)) {
             return;
         }
 
-        logToUi(`Memuat naik dan menukar audio AVAS Slot ${slot}: ${file.name}...`);
+        logToUi(`Uploading and converting AVAS audio for slot ${slot}: ${file.name}…`);
         btnBrowseAvas.disabled = true;
-        btnBrowseAvas.textContent = '⏳ SEDANG CONVERT & PASANG...';
+        btnBrowseAvas.textContent = 'Converting & applying…';
 
         try {
             const res = await fetch('/api/upload-convert-audio', {
@@ -454,11 +467,11 @@ fileUploadAvas.addEventListener('change', async (e) => {
             alert(data.message);
             logToUi(data.message);
         } catch (err) {
-            alert(`Ralat: ${err.message}`);
-            logToUi(`Ralat: ${err.message}`);
+            alert(`AVAS operation failed: ${err.message}`);
+            logToUi(`AVAS operation failed: ${err.message}`);
         } finally {
             btnBrowseAvas.disabled = false;
-            btnBrowseAvas.textContent = 'Pilih & pasang audio sendiri';
+            btnBrowseAvas.textContent = 'Upload & apply custom audio';
             fileUploadAvas.value = '';
         }
     }
@@ -466,24 +479,45 @@ fileUploadAvas.addEventListener('change', async (e) => {
 
 if (btnBackupIdentity) {
     btnBackupIdentity.addEventListener('click', () => {
-        triggerPreset('backup_identity', 'Sandaran Identiti & Kalibrasi Unik (~60 MB: proinfo, nvcfg, nvram, pki)');
+        triggerPreset('backup_identity', 'Create identity & calibration backup (~60 MB) on your PC');
     });
 }
 
 btnBackupAll.addEventListener('click', () => {
-    triggerPreset('backup_all', 'Sandaran Pantas Sistem Kenderaan (~1.12 GB: boot_a, ecarxpara, dtbo)');
+    triggerPreset('backup_all', 'Create recovery backup (~1.12 GB: boot_a, ecarxpara, dtbo_a) on your PC');
 });
 
-btnBackupEmmc.addEventListener('click', () => {
-    const confirmed = confirm(
-        "⚠️ AMARAN KLON PENUH eMMC (~45 GB):\n\n" +
-        "1. Proses ini akan menyalin super.img (14 GB) dan userdata.img (31 GB).\n" +
-        "2. Mengambil masa lebih kurang 30 hingga 60 minit melalui Wi-Fi.\n" +
-        "3. Anda WAJIB duduk di kerusi pemandu & PIJAK PEDAL BREK sekali-sekala agar IHU tidak 'sleep'!\n\n" +
-        "Adakah anda bersedia dan ingin memulakan sekarang?"
-    );
-    if (confirmed) {
-        triggerPreset('backup_emmc', 'Klon Penuh Storan eMMC (~45 GB: super & userdata)');
+btnBackupEmmc.addEventListener('click', async () => {
+    if (!confirm(
+        'LARGE PARTITION DUMP — ABOUT 45 GB\n\n' +
+        'This reads super and userdata, not the entire raw eMMC. Actual sizes depend on the IHU.\n' +
+        'Keep enough free disk space on your PC. Stay in the driver’s seat while safely parked and press the brake periodically to prevent IHU sleep.\n' +
+        'Do not close this app, let the PC sleep, disconnect Wi-Fi ADB or reboot the IHU until the dump finishes.\n' +
+        'Live userdata is not an offline snapshot. An interrupted transfer leaves a .partial image; there is no automatic resume.\n\n' +
+        'Start the partition dump now?'
+    )) return;
+    backupRequestPending = true;
+    updateProgressUi({ active: true, status: 'running', progress: null, label: 'Preparing partition dump', detail: 'Reading partition sizes from the IHU. Keep ADB connected.', transfer: { bytesTransferred: 0, totalBytes: null, bytesPerSecond: null, etaSeconds: null } });
+    taskProgressSection.scrollIntoView({ behavior: 'instant', block: 'start' });
+    try {
+        const res = await fetch('/api/install-preset', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ preset: 'backup_emmc' })
+        });
+        const data = await res.json();
+        logToUi(data.message);
+        if (!res.ok || !data.success) {
+            updateProgressUi({ active: false, status: 'failed', progress: null, label: 'Partition dump failed', detail: data.message });
+        } else {
+            await checkTaskStatus();
+        }
+    } catch (e) {
+        taskLabel.textContent = 'Backup status unknown';
+        taskDetail.textContent = `Could not confirm the dump result: ${e.message}. Keep the IHU awake while Toolbox checks its status.`;
+        logToUi(`Partition dump request failed: ${e.message}`);
+    } finally {
+        backupRequestPending = false;
     }
 });
 
@@ -492,40 +526,68 @@ btnAutoScan.addEventListener('click', autoScan);
 btnManualConnect.addEventListener('click', manualConnect);
 btnRefreshSlots.addEventListener('click', refreshSlots);
 
-// === LIVE TASK PROGRESS POLLING (Real-time %) ===
-let progressPollInterval = null;
+// Progress is measured only where the backend supplies byte counters.
+function formatBytes(bytes) {
+    if (!Number.isFinite(bytes) || bytes < 0) return '—';
+    if (bytes >= 1e9) return `${(bytes / 1e9).toFixed(2)} GB`;
+    if (bytes >= 1e6) return `${(bytes / 1e6).toFixed(1)} MB`;
+    if (bytes >= 1e3) return `${(bytes / 1e3).toFixed(1)} KB`;
+    return `${Math.round(bytes)} B`;
+}
+
+function formatEta(seconds) {
+    if (!Number.isFinite(seconds) || seconds < 0) return 'Calculating…';
+    if (seconds === 0) return 'Finishing…';
+    const minutes = Math.ceil(seconds / 60);
+    return minutes >= 60 ? `~${Math.floor(minutes / 60)}h ${minutes % 60}m` : `~${minutes} min`;
+}
 
 function updateProgressUi(task) {
     if (!task) return;
-    if (task.active || (task.progress > 0 && task.progress < 100)) {
-        taskProgressSection.style.display = 'block';
-        taskLabel.textContent = (task.label || 'SEDANG MEMPROSES...').toUpperCase();
-        taskPct.textContent = `${task.progress}%`;
-        taskFill.style.width = `${task.progress}%`;
-        taskDetail.textContent = task.detail || '';
-    } else if (task.progress >= 100) {
-        taskPct.textContent = '100%';
-        taskFill.style.width = '100%';
-        taskDetail.textContent = task.detail || 'Selesai!';
-        setTimeout(() => {
-            taskProgressSection.style.display = 'none';
-        }, 3000);
-    } else {
-        taskProgressSection.style.display = 'none';
+    if (backupRequestPending && !task.active) return;
+    const failed = task.status === 'failed';
+    const completed = task.status === 'completed';
+    const visible = task.active || failed || completed || (Number.isFinite(task.progress) && task.progress > 0);
+    taskProgressSection.style.display = visible ? 'block' : 'none';
+    taskProgressSection.classList.toggle('task-failed', failed);
+    taskProgressSection.classList.toggle('task-completed', completed);
+    taskProgressSection.setAttribute('aria-busy', String(!!task.active));
+    transferRunning = !!task.active && !!task.transfer;
+    btnBackupEmmc.disabled = !!task.active;
+    if (!visible) return;
+    const determinate = Number.isFinite(task.progress);
+    const pct = determinate ? Math.min(100, Math.max(0, task.progress)) : null;
+    const bar = document.getElementById('taskProgressBar');
+    taskLabel.textContent = task.label || 'Processing…';
+    taskDetail.textContent = task.detail || '';
+    const verifying = task.transfer?.totalBytes > 0 && task.transfer.bytesTransferred >= task.transfer.totalBytes;
+    taskPct.textContent = failed ? 'Failed' : completed ? 'Complete' : determinate ? `${Math.floor(pct * 10) / 10}%` : verifying ? 'Verifying…' : 'Preparing…';
+    bar.classList.toggle('indeterminate', !determinate && !!task.active);
+    if (determinate) bar.setAttribute('aria-valuenow', String(pct));
+    else bar.removeAttribute('aria-valuenow');
+    taskFill.style.width = pct === null ? '0%' : `${pct}%`;
+    const transfer = task.transfer;
+    document.getElementById('transferStats').hidden = !transfer;
+    document.getElementById('transferWarning').hidden = !transfer || !task.active;
+    if (transfer) {
+        document.getElementById('transferBytes').textContent = `${formatBytes(transfer.bytesTransferred)} / ${formatBytes(transfer.totalBytes)}`;
+        document.getElementById('transferSpeed').textContent = failed || completed ? '—' : Number.isFinite(transfer.bytesPerSecond) ? `${(transfer.bytesPerSecond / 1e6).toFixed(2)} MB/s` : 'Measuring…';
+        document.getElementById('transferEta').textContent = failed ? 'Interrupted' : completed ? 'Finished' : formatEta(transfer.etaSeconds);
     }
 }
 
 async function checkTaskStatus() {
     try {
         const res = await fetch('/api/status');
-        if (res.ok) {
-            const data = await res.json();
-            if (data.task) {
-                updateProgressUi(data.task);
-            }
-        }
+        if (!res.ok) throw new Error(`Status request returned HTTP ${res.status}`);
+        const data = await res.json();
+        if (data.task) updateProgressUi(data.task);
     } catch (e) {
-        // ignore poll errors
+        if (transferRunning) {
+            document.getElementById('transferSpeed').textContent = 'Unavailable';
+            document.getElementById('transferEta').textContent = 'Unavailable';
+            taskDetail.textContent = 'Cannot reach the toolbox server. Transfer status is unknown; check the connection and backup files before retrying.';
+        }
     }
 }
 
@@ -534,7 +596,7 @@ setInterval(checkTaskStatus, 500);
 
 // === AUTOMATIC SELF-SCAN PADA WAKTU BUKA APP ===
 async function startup() {
-    logToUi('Memulakan e.MAS 5 Desktop Control Center...');
+    logToUi('Starting e.MAS 5 Toolbox…');
     
     // Tunggu server backend sedia (retry jika baru bermula)
     for (let i = 0; i < 15; i++) {
@@ -558,18 +620,33 @@ async function startup() {
     await autoScan();
 }
 
-// Window control handlers (Minimize & Close)
-document.getElementById('winBtnClose')?.addEventListener('click', async () => {
-    try {
-        await fetch('/api/window/close', { method: 'POST' });
-    } catch (e) {}
-    window.close();
+// Native windows have custom controls; regular browsers use their own caption controls.
+const nativeWindow = window.chrome?.webview;
+document.querySelector('.window-controls').hidden = !nativeWindow;
+document.getElementById('winBtnMax').hidden = !nativeWindow;
+
+window.requestDesktopClose = () => {
+    if ((transferRunning || backupRequestPending) && !confirm('A backup is running. Closing Toolbox stops its server and can interrupt the transfer, leaving a partial image. Close anyway?')) return false;
+    closingConfirmed = true;
+    return true;
+};
+
+document.getElementById('winBtnClose').addEventListener('click', () => {
+    if (nativeWindow) nativeWindow.postMessage('close');
 });
 
-document.getElementById('winBtnMin')?.addEventListener('click', async () => {
-    try {
-        await fetch('/api/window/minimize', { method: 'POST' });
-    } catch (e) {}
+window.addEventListener('beforeunload', (event) => {
+    if ((!transferRunning && !backupRequestPending) || closingConfirmed) return;
+    event.preventDefault();
+    event.returnValue = '';
+});
+
+document.getElementById('winBtnMin').addEventListener('click', () => {
+    if (nativeWindow) nativeWindow.postMessage('minimize');
+});
+
+document.getElementById('winBtnMax').addEventListener('click', () => {
+    if (nativeWindow) nativeWindow.postMessage('maximize');
 });
 
 window.addEventListener('DOMContentLoaded', startup);
