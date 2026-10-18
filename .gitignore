@@ -159,3 +159,7 @@ GBA_Saves_Backup_*/
 !PAKEJ_*/adb.exe
 !PAKEJ_UNLOCK_ADB_EMAS5/*/adb.exe
 !PAKEJ_DRIVEMODE_EMAS5/payload/bin/
+
+# Pakej toolbox: daemon preset mesti di-track (jar 52KB, hash disahkan)
+!EMAS_TOOLBOX_DESKTOP/presets/daemons/
+!EMAS_TOOLBOX_DESKTOP/presets/daemons/*
