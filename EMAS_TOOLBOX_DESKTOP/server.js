@@ -449,7 +449,8 @@ function getPresetPath(subpath) {
     const localPreset = path.join(__dirname, 'presets', subpath);
     if (fs.existsSync(localPreset)) return localPreset;
 
-    const repoPreset = path.join(__dirname, '..', 'PAKEJ_KAWAN_EMAS5', '2_PASANG_SEMUA', subpath);
+    // Fallback: pakej unlock (dinamakan semula daripada PAKEJ_KAWAN_EMAS5).
+    const repoPreset = path.join(__dirname, '..', 'PAKEJ_UNLOCK_ADB_EMAS5', '2_PASANG_SEMUA', subpath);
     if (fs.existsSync(repoPreset)) return repoPreset;
 
     return null;
