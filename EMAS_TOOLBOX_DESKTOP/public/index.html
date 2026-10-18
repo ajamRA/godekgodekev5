@@ -36,7 +36,7 @@
 
             <div class="conn-controls">
                 <input type="text" id="inputCarIp" placeholder="192.168.1.18" value="192.168.1.18">
-                <button class="btn btn-primary" id="btnAutoScan">🔍 AUTO-SCAN WI-FI</button>
+                <button class="btn btn-primary" id="btnAutoScan">[ ] AUTO-SCAN WI-FI</button>
                 <button class="btn" id="btnManualConnect">SAMBUNG</button>
             </div>
         </section>
@@ -45,7 +45,7 @@
         <section class="task-progress-section" id="taskProgressSection" style="display: none;">
             <div class="progress-header">
                 <div class="progress-title-wrap">
-                    <span class="spinner" id="progressSpinner">⚡</span>
+                    <span class="spinner" id="progressSpinner">[!]</span>
                     <strong id="taskLabel">SEDANG MEMPROSES...</strong>
                 </div>
                 <div class="progress-pct" id="taskPct">0%</div>
@@ -75,7 +75,7 @@
                         <h2>PENGURUS SLOT APLIKASI</h2>
                         <p class="section-desc">Pilih slot aplikasi A-Store atau Sistem untuk ditimpa dengan APK anda.</p>
                     </div>
-                    <button class="btn btn-sm" id="btnRefreshSlots">🔄 IMBAS SEMULA</button>
+                    <button class="btn btn-sm" id="btnRefreshSlots">[R] IMBAS SEMULA</button>
                 </div>
 
                 <!-- Scanned Slots List -->
@@ -104,7 +104,7 @@
                         </select>
                     </div>
 
-                    <button class="btn btn-primary btn-block" id="btnInstallCustom">🚀 TIMPA &amp; PASANG KE SLOT KERETA</button>
+                    <button class="btn btn-primary btn-block" id="btnInstallCustom">[>] TIMPA &amp; PASANG KE SLOT KERETA</button>
                 </div>
             </div>
 
@@ -123,7 +123,7 @@
                     <div class="preset-group">
                         <div class="group-label">PAKEJ APLIKASI POPULAR (1-KLIK)</div>
                         <button class="btn btn-action" id="btnSmartTube">
-                            <span class="icon">▶</span>
+                            <span class="icon">[>]</span>
                             <div class="btn-text">
                                 <strong>PASANG SMARTTUBE (TIKTOK)</strong>
                                 <small>YouTube tanpa iklan · Menimpa slot TikTok</small>
@@ -139,7 +139,7 @@
                         </button>
 
                         <button class="btn btn-action" id="btnSteering">
-                            <span class="icon">🎮</span>
+                            <span class="icon">[G]</span>
                             <div class="btn-text">
                                 <strong>MOD BUTANG STERENG (HOLD 5S)</strong>
                                 <small>Hold Volume Down 5s untuk sorok/munculkan app</small>
@@ -154,7 +154,7 @@
                         <!-- Lock Sound -->
                         <div class="sound-control-box">
                             <div class="sound-control-header">
-                                <span>🔊 NADA KUNCI KENDERAAN (LOCK SOUND)</span>
+                                <span>[A] NADA KUNCI KENDERAAN (LOCK SOUND)</span>
                                 <span class="format-badge">48kHz · Stereo · 16-bit</span>
                             </div>
                             <div class="sound-row">
@@ -211,7 +211,7 @@
                         <div class="group-label">KESELAMATAN &amp; SERVIS KILANG</div>
 
                         <button class="btn btn-stealth" id="btnStealth">
-                            <span class="icon">🛡️</span>
+                            <span class="icon">[S]</span>
                             <div class="btn-text">
                                 <strong>AKTIFKAN STEALTH MODE (KE STANDBY SERVIS)</strong>
                                 <small>Sembunyi 10 apps · AVAS kilang · daemon mati · <b>bertahan selepas reboot</b></small>
@@ -219,7 +219,7 @@
                         </button>
 
                         <button class="btn btn-stealth-off mt-8" id="btnStealthOff">
-                            <span class="icon">🔓</span>
+                            <span class="icon">[U]</span>
                             <div class="btn-text">
                                 <strong>MATIKAN STEALTH (PULIH MOD NORMAL)</strong>
                                 <small>Hidupkan semula semua apps, AVAS custom, dan daemon</small>
@@ -227,7 +227,7 @@
                         </button>
 
                         <button class="btn btn-status mt-8" id="btnStealthStatus">
-                            <span class="icon">🔍</span>
+                            <span class="icon">[ ]</span>
                             <div class="btn-text">
                                 <strong>SEMAK STATUS SISTEM</strong>
                                 <small>Stealth / normal · bilangan apps tersembunyi · mount · daemon stereng</small>
@@ -237,7 +237,7 @@
                         <div class="group-label mt-16">KAWALAN STERENG (DRIVE MODE)</div>
 
                         <button class="btn btn-action mt-8" id="btnDriveInstall">
-                            <span class="icon">🎛️</span>
+                            <span class="icon">[D]</span>
                             <div class="btn-text">
                                 <strong>MULAKAN KAWALAN STERENG</strong>
                                 <small>Kanan 800ms = Drive Mode · Kiri 800ms = Regen · Bawah 5s = Stealth</small>
@@ -255,7 +255,7 @@
                         <!-- Detailed Full Backup Box -->
                         <div class="backup-info-card">
                             <div class="backup-info-header">
-                                <span class="icon">💾</span>
+                                <span class="icon">[B]</span>
                                 <div>
                                     <strong>SANDARAN SISTEM KECEMASAN (FAST UNBRICK RESCUE)</strong>
                                     <div class="backup-specs">
@@ -280,7 +280,7 @@
 
                             <!-- Peringatan Khas Full eMMC 30GB-45GB -->
                             <div class="emmc-warning-box">
-                                <div class="emmc-warn-title">⚠️ PERHATIAN TENTANG FULL STORAGE BACKUP (30 GB - 45 GB):</div>
+                                <div class="emmc-warn-title">! PERHATIAN TENTANG FULL STORAGE BACKUP (30 GB - 45 GB):</div>
                                 <p class="emmc-warn-text">
                                     Jika anda ingin klon keseluruhan storan kereta (<code>super.img</code> 14 GB + <code>userdata.img</code> 31 GB = <strong>~45 GB</strong>):<br>
                                     • Anda <strong>WAJIB duduk di kerusi pemandu &amp; pijak pedal brek</strong> sekali-sekala sepanjang proses.<br>
@@ -296,7 +296,7 @@
                             <!-- 3 PILIHAN SANDARAN: IDENTITI (60 MB), KECEMASAN (1.12 GB), ATAU KLON PENUH (45 GB) -->
                             <div class="backup-buttons-wrap">
                                 <button class="btn btn-action btn-backup-ident mt-8" id="btnBackupIdentity">
-                                    <span class="icon">🔑</span>
+                                    <span class="icon">[K]</span>
                                     <div class="btn-text">
                                         <strong>1. SANDARAN IDENTITI &amp; KALIBRASI UNIK (~60 MB)</strong>
                                         <small>Terpantas (10 saat) · Lindungi IMEI, MAC, Siri &amp; Sijil (proinfo, nvcfg, nvram, pki)</small>
@@ -304,7 +304,7 @@
                                 </button>
 
                                 <button class="btn btn-action btn-backup mt-8" id="btnBackupAll">
-                                    <span class="icon">⚡</span>
+                                    <span class="icon">[!]</span>
                                     <div class="btn-text">
                                         <strong>2. SANDARAN PANTAS KECEMASAN (1.12 GB)</strong>
                                         <small>Paling disyorkan · Siap dalam 1-2 minit (boot_a, ecarxpara, dtbo)</small>
@@ -312,7 +312,7 @@
                                 </button>
 
                                 <button class="btn btn-action btn-emmc-dump mt-8" id="btnBackupEmmc">
-                                    <span class="icon">💾</span>
+                                    <span class="icon">[B]</span>
                                     <div class="btn-text">
                                         <strong>3. KLON PENUH STORAN eMMC (~45 GB)</strong>
                                         <small>Wajib duduk dalam kereta &amp; pijak brek (super 14GB + userdata 31GB)</small>
@@ -322,7 +322,7 @@
                         </div>
 
                         <div class="btn-row mt-8">
-                            <button class="btn" id="btnReboot">🔄 REBOOT IHU</button>
+                            <button class="btn" id="btnReboot">[R] REBOOT IHU</button>
                             <button class="btn" id="btnScreenshot">📸 SCREENSHOT</button>
                         </div>
                     </div>

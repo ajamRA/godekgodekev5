@@ -75,7 +75,7 @@ async function autoScan() {
         const res = await fetch('/api/scan');
         const data = await res.json();
         if (data.success) {
-            logToUi(`🟢 Kereta Proton e.MAS 5 dikesan di alamat IP: ${data.ip}!`);
+            logToUi(`[+] Kereta Proton e.MAS 5 dikesan di alamat IP: ${data.ip}!`);
             setConnected(data.ip, data.model);
             await refreshSlots();
         } else {
@@ -168,7 +168,7 @@ function renderSlots(slots) {
             </div>
             <div>
                 <span class="slot-badge-status ${isOccupied ? '' : 'empty'}">
-                    ${isOccupied ? `✔ ${statusText}` : '○ SLOT KOSONG'}
+                    ${isOccupied ? `[x] ${statusText}` : '[ ] SLOT KOSONG'}
                 </span>
             </div>
         `;
@@ -187,8 +187,11 @@ function renderSlots(slots) {
         // Add to Dropdown with clear visual status
         const opt = document.createElement('option');
         opt.value = index;
-        const iconPrefix = isOccupied ? '🔴' : '🟢';
-        opt.textContent = `${iconPrefix} [${slot.type}] ${slot.name} — ${statusText}`;
+        const allowed = !slot.policy || slot.policy.allowed;
+        const iconPrefix = !allowed ? '[L]' : (isOccupied ? '[!]' : '[+]');
+        const polTag = !allowed ? ' — DILINDUNGI' : '';
+        opt.textContent = `${iconPrefix} [${slot.type}] ${slot.name} — ${statusText}${polTag}`;
+        if (!allowed) opt.style.color = '#c9a227';
         selectTargetSlot.appendChild(opt);
     });
 }

@@ -341,6 +341,85 @@ async function scanSubnets() {
     return [];
 }
 
+// ---------------------------------------------------------------------------
+// Senarai putih slot — HANYA slot ini boleh ditimpa.
+// Selebihnya dilindungi: komponen sistem teras atau aplikasi penting.
+// ---------------------------------------------------------------------------
+const SLOT_POLICY = {
+    // Slot media/pihak ketiga yang memang direka untuk diganti.
+    ALLOWED: ['ttincar_tiktok_ACO', 'JOOXMusic_ACO', 'AudioPlus_ACO'],
+    // Slot in-place replace (APK ditulis ganti, bukan bind mount).
+    // Ini disengajakan: TheNoor sudah diganti dengan EmasEnergy pada kereta ini.
+    ALLOWED_INPLACE: ['Noor', 'Noor_ACO', 'TheNoor_ACO'],
+    // Pola yang DILINDUNGI — menimpa ini boleh merosakkan IHU.
+    PROTECTED_PATTERNS: [
+        /^\/system\/priv-app\//,
+        /^\/vendor\//,
+        /^\/product\/app\//,
+        /launcher/i,
+        /settings/i,
+        /systemui/i,
+        /\.ecarx\./i,
+        /com\.android\./i,
+        /com\.google\.android\./i
+    ]
+};
+
+/**
+ * Tentukan sama ada slot boleh ditimpa.
+ * @returns {{allowed:boolean, reason:string, severity:string}}
+ */
+function checkSlotPolicy(slot) {
+    const p = slot.bindTarget || slot.apkPath || slot.targetPath || '';
+
+    // Slot A-STORE (dipasang pengguna) — dibenarkan, tetapi beri amaran.
+    if (slot.type === 'A-STORE') {
+        return {
+            allowed: true,
+            severity: 'warn',
+            reason: 'Aplikasi pihak ketiga (A-Store). Boleh ditimpa, tetapi aplikasi ini akan hilang dari senarai.'
+        };
+    }
+
+    // Slot SYSTEM — semak senarai putih.
+    const dirName = p.split('/').filter(Boolean).slice(-1)[0] || '';
+    const dirBase = dirName.replace(/\.apk$/i, '');
+
+    if (SLOT_POLICY.ALLOWED.includes(dirBase)) {
+        return {
+            allowed: true,
+            severity: 'ok',
+            reason: `Slot ${dirBase} dibenarkan (media/pihak ketiga).`
+        };
+    }
+
+    // Slot in-place replace — dibenarkan tetapi dengan amaran khusus.
+    if (SLOT_POLICY.ALLOWED_INPLACE.includes(dirBase)) {
+        return {
+            allowed: true,
+            severity: 'warn',
+            reason: `Slot ${dirBase} ialah in-place replace (APK ditulis ganti). Boleh ditimpa, tetapi APK asal tidak boleh dipulihkan tanpa sandaran/OTA.`
+        };
+    }
+
+    for (const re of SLOT_POLICY.PROTECTED_PATTERNS) {
+        if (re.test(p)) {
+            return {
+                allowed: false,
+                severity: 'block',
+                reason: `DILINDUNGI: ${p} ialah komponen sistem teras. Menimpanya boleh merosakkan IHU atau menghilangkan fungsi penting.`
+            };
+        }
+    }
+
+    // Tidak dikenali — tolak secara lalai (fail-safe).
+    return {
+        allowed: false,
+        severity: 'block',
+        reason: `TIDAK DIKENALI: ${p} bukan dalam senarai putih slot. Ditolak untuk keselamatan.`
+    };
+}
+
 // Robust Slot Scanner
 async function scanCarSlots(ip) {
     log(`Mengimbas slot aplikasi pada kereta (${ip})...`);
@@ -390,7 +469,11 @@ async function scanCarSlots(ip) {
             bindTarget: found.bindTarget,
             type: 'SYSTEM',
             isOverwritten: found.isOverwritten,
-            overwrittenBy: found.overwrittenBy
+            overwrittenBy: found.overwrittenBy,
+            policy: checkSlotPolicy({
+                type: 'SYSTEM', targetPath: found.targetPath,
+                apkPath: found.apkPath, bindTarget: found.bindTarget
+            })
         });
     }
 
@@ -436,7 +519,8 @@ async function scanCarSlots(ip) {
                     bindTarget: apkPath,
                     type: 'A-STORE',
                     isOverwritten,
-                    overwrittenBy
+                    overwrittenBy,
+                    policy: checkSlotPolicy({ type: 'A-STORE', apkPath, bindTarget: apkPath })
                 });
             }
         }
@@ -599,6 +683,18 @@ const server = http.createServer(async (req, res) => {
                 const { targetSlot, localApkPath, customAppName } = JSON.parse(body);
                 if (!connectedIp) return sendJson({ success: false, message: 'Kereta belum bersambung.' });
                 if (!fs.existsSync(localApkPath)) return sendJson({ success: false, message: 'Fail APK tempatan tidak dijumpai.' });
+
+                // Kuatkuasa senarai putih slot. Tolak jika dilindungi.
+                const pol = targetSlot.policy || checkSlotPolicy(targetSlot);
+                if (!pol.allowed) {
+                    const msg = `DITOLAK: ${pol.reason}`;
+                    log(msg);
+                    setProgress(100, 'Ditolak', pol.reason);
+                    return sendJson({ success: false, message: msg, policy: pol }, 403);
+                }
+                if (pol.severity === 'warn') {
+                    log(`AMARAN: ${pol.reason}`);
+                }
 
                 const safeName = (customAppName || 'CustomApp').replace(/[^a-zA-Z0-9_]/g, '');
                 const remoteDir = `/data/local/custom_apps/${safeName}`;

@@ -1,17 +1,33 @@
 /* SWISS DESIGN STYLING (International Typographic Style) */
 :root {
+    /* Monokrom — tanpa aksen merah. Garis nipis, grid, tipografi berat. */
     --bg-dark: #0a0a0a;
-    --bg-card: #141414;
-    --bg-card-hover: #1c1c1c;
-    --border-color: #262626;
-    --swiss-red: #E2001A;
-    --swiss-red-hover: #ff1934;
+    --bg-card: #111111;
+    --bg-card-hover: #181818;
+    --border-color: #2a2a2a;
+    --border-strong: #3d3d3d;
+
+    /* Aksen: putih tulen sahaja. */
+    --accent: #FFFFFF;
+    --accent-dim: #A0A0A0;
+
+    /* Warna status — digunakan secara minimal pada badge sahaja. */
+    --status-ok: #7BC47F;
+    --status-warn: #C9A227;
+    --status-block: #9A9A9A;
+
     --text-primary: #FFFFFF;
-    --text-secondary: #888888;
-    --status-green: #00E676;
-    --status-red: #FF3B30;
+    --text-secondary: #8A8A8A;
+    --text-muted: #5A5A5A;
+
     --font-stack: "Helvetica Neue", Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     --font-mono: "Consolas", "Cascadia Code", "Courier New", monospace;
+
+    /* Alias lama supaya tidak perlu ubah seluruh fail. */
+    --swiss-red: var(--accent);
+    --swiss-red-hover: var(--accent-dim);
+    --status-green: var(--status-ok);
+    --status-red: var(--status-block);
 }
 
 * {
@@ -38,16 +54,12 @@
 
 body {
     background-color: var(--bg-dark);
-    background-image:
-        radial-gradient(ellipse at top, rgba(226, 0, 26, 0.10) 0%, transparent 55%),
-        radial-gradient(ellipse at bottom right, rgba(226, 0, 26, 0.05) 0%, transparent 50%);
-    background-attachment: fixed;
     color: var(--text-primary);
     font-family: var(--font-stack);
     -webkit-font-smoothing: antialiased;
     font-size: 14px;
     line-height: 1.4;
-    padding: 24px;
+    padding: 28px 32px;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -68,9 +80,8 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    padding-bottom: 14px;
-    border-bottom: 2px solid var(--swiss-red);
-    box-shadow: 0 2px 12px -4px rgba(226, 0, 26, 0.5);
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border-strong);
 }
 
 .brand {
@@ -170,8 +181,8 @@ body {
 
 /* LIVE PROGRESS BAR */
 .task-progress-section {
-    background-color: #121813;
-    border: 1px solid #22c55e;
+    background-color: transparent;
+    border: 1px solid #7BC47F;
     padding: 14px 18px;
     margin-bottom: 12px;
     box-shadow: 0 0 15px rgba(34, 197, 94, 0.15);
@@ -193,35 +204,35 @@ body {
 .progress-title-wrap strong {
     font-size: 13px;
     font-weight: 900;
-    color: #4ade80;
+    color: #7BC47F;
     letter-spacing: 0.5px;
 }
 
 .progress-pct {
     font-size: 16px;
     font-weight: 900;
-    color: #4ade80;
+    color: #7BC47F;
     font-family: var(--font-mono);
 }
 
 .progress-bar-bg {
-    background-color: #052e16;
+    background-color: transparent;
     height: 12px;
-    border: 1px solid #166534;
+    border: 1px solid #3d3d3d;
     overflow: hidden;
     position: relative;
     margin-bottom: 6px;
 }
 
 .progress-bar-fill {
-    background: linear-gradient(90deg, #16a34a, #22c55e);
+    background: linear-gradient(90deg, #16a34a, #7BC47F);
     height: 100%;
     transition: width 0.25s ease-in-out;
 }
 
 .progress-detail {
     font-size: 11px;
-    color: #86efac;
+    color: #A0A0A0;
     font-family: var(--font-mono);
 }
 
@@ -230,11 +241,11 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
-    background-color: #241a0b;
-    border: 1px solid #f59e0b;
+    background-color: transparent;
+    border: 1px solid #C9A227;
     padding: 10px 14px;
     margin-bottom: 16px;
-    color: #fef3c7;
+    color: #A0A0A0;
 }
 
 .brake-icon {
@@ -245,7 +256,7 @@ body {
 .brake-tip-text {
     font-size: 11px;
     line-height: 1.4;
-    color: #fde68a;
+    color: #C9A227;
 }
 
 .brake-tip-text strong {
@@ -273,13 +284,16 @@ body {
 }
 
 .btn-primary {
-    background-color: var(--swiss-red);
-    border-color: var(--swiss-red);
+    background-color: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-weight: 700;
 }
 
 .btn-primary:hover {
-    background-color: var(--swiss-red-hover);
-    border-color: var(--swiss-red-hover);
+    background-color: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg-dark);
 }
 
 .btn-sm {
@@ -531,99 +545,101 @@ body {
     display: flex;
     align-items: center;
     gap: 14px;
-    padding: 14px 16px;
+    padding: 16px 18px;
     text-align: left;
-    background-color: #2a0b0f;
-    border: 2px solid var(--swiss-red);
-    color: #ff8a94;
+    background-color: transparent;
+    border: 1px solid var(--border-strong);
+    color: var(--text-primary);
     margin-bottom: 8px;
-    box-shadow: 0 0 0 0 rgba(226, 0, 26, 0.4);
-    animation: stealthPulse 2.8s ease-in-out infinite;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .btn-stealth:hover {
-    background-color: #3d0f14;
-    border-color: var(--swiss-red-hover);
-    color: #ffb3ba;
-}
-
-@keyframes stealthPulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(226, 0, 26, 0.35); }
-    50%      { box-shadow: 0 0 0 6px rgba(226, 0, 26, 0); }
+    background-color: var(--bg-card-hover);
+    border-color: var(--accent);
 }
 
 .btn-stealth-off {
     display: flex;
     align-items: center;
     gap: 14px;
-    padding: 14px 16px;
+    padding: 16px 18px;
     text-align: left;
-    background-color: #0f1a12;
-    border: 1px solid #2e7d32;
-    color: #a5d6a7;
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
     margin-bottom: 8px;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .btn-stealth-off:hover {
-    background-color: #15261a;
-    border-color: #43a047;
+    background-color: var(--bg-card-hover);
+    border-color: var(--border-strong);
+    color: var(--text-primary);
 }
 
 .btn-status {
     display: flex;
     align-items: center;
     gap: 14px;
-    padding: 14px 16px;
+    padding: 16px 18px;
     text-align: left;
-    background-color: #0d1420;
-    border: 1px solid #1e5aa8;
-    color: #90caf9;
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
     margin-bottom: 8px;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .btn-status:hover {
-    background-color: #122036;
-    border-color: #2b6fc4;
+    background-color: var(--bg-card-hover);
+    border-color: var(--border-strong);
+    color: var(--text-primary);
 }
 
 .btn-danger-soft {
     display: flex;
     align-items: center;
     gap: 14px;
-    padding: 14px 16px;
+    padding: 16px 18px;
     text-align: left;
-    background-color: #1a1214;
-    border: 1px solid #6b2a30;
-    color: #e88a92;
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
     margin-bottom: 8px;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .btn-danger-soft:hover {
-    background-color: #261619;
-    border-color: #8a343c;
+    background-color: var(--bg-card-hover);
+    border-color: var(--border-strong);
+    color: var(--text-secondary);
 }
 
 
 .btn-backup-ident {
-    background-color: #241d10;
-    border: 1px solid #b78103;
-    color: #ffe082;
+    background-color: transparent;
+    border: 1px solid var(--border-strong);
+    color: var(--text-primary);
     margin-bottom: 8px;
 }
 
 .btn-backup-ident:hover {
-    background-color: #382c14;
+    background-color: var(--bg-card-hover);
+    border-color: var(--accent);
 }
 
 .btn-backup {
-    background-color: #1a2218;
-    border: 1px solid #2e7d32;
-    color: #a5d6a7;
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
     margin-bottom: 8px;
 }
 
 .btn-backup:hover {
-    background-color: #233420;
+    background-color: var(--bg-card-hover);
+    border-color: var(--border-strong);
+    color: var(--text-primary);
 }
 
 .btn-row {
@@ -657,9 +673,9 @@ body {
 .format-badge {
     font-size: 9px;
     font-weight: 900;
-    color: #4ade80;
-    background-color: #052e16;
-    border: 1px solid #166534;
+    color: #7BC47F;
+    background-color: transparent;
+    border: 1px solid #3d3d3d;
     padding: 2px 6px;
     letter-spacing: 0.5px;
 }
@@ -689,18 +705,18 @@ body {
 }
 
 .btn-upload {
-    background-color: #222;
-    border: 1px solid #444;
-    color: #fff;
+    background-color: transparent;
+    border: 1px solid var(--border-strong);
+    color: var(--text-secondary);
     font-size: 10px;
     padding: 6px 10px;
     cursor: pointer;
-    white-space: nowrap;
 }
 
 .btn-upload:hover {
-    background-color: #333;
-    border-color: var(--swiss-red);
+    background-color: var(--bg-card-hover);
+    border-color: var(--accent);
+    color: var(--text-primary);
 }
 
 .upload-filename {
@@ -766,7 +782,7 @@ body {
 }
 
 .backup-part-item .part-name code {
-    color: #4ade80;
+    color: #7BC47F;
     font-family: var(--font-mono);
     font-size: 10px;
 }
@@ -802,7 +818,7 @@ body {
 
 .emmc-warn-text {
     font-size: 10.5px;
-    color: #fde68a;
+    color: #C9A227;
     line-height: 1.45;
     margin: 0;
 }
@@ -815,15 +831,15 @@ body {
 }
 
 .btn-emmc-dump {
-    background-color: #241604;
-    border: 1px solid #d97706;
-    color: #fde68a;
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
     margin-bottom: 8px;
 }
 
 .btn-emmc-dump:hover {
     background-color: #382104;
-    border-color: #f59e0b;
+    border-color: #C9A227;
 }
 
 .mt-8 { margin-top: 8px; }
