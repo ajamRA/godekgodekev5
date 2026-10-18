@@ -6,6 +6,22 @@ Repositori ini merangkumkan keseluruhan modul sistem, aplikasi kokpit tersuai, i
 
 ---
 
+### 💻 e.MAS 5 Toolbox Desktop (Windows Portable)
+[![Download Latest Release](https://img.shields.io/badge/Download_Toolbox-v1.0.0_Portable-126959?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/ajamRA/godekgodekev5/releases/tag/v1.0.0)
+
+Aplikasi desktop berasaskan **Microsoft Edge WebView2** dengan antaramuka moden tanpa frame Windows hodoh (*frameless*), kawalan tetingkap dalaman, dan operasi latar belakang senyap (*silent ADB*).
+
+<p align="center">
+  <img src="docs/images/toolbox-frameless-main.png" width="85%" alt="e.MAS 5 Toolbox Desktop Main Window" style="border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);" />
+</p>
+
+<p align="center">
+  <img src="docs/images/toolbox-aplikasi-tab.png" width="48%" alt="Aplikasi & Slot Tab" />
+  <img src="docs/images/toolbox-servis-tab.png" width="48%" alt="Sandaran & Servis Tab" />
+</p>
+
+---
+
 > [!TIP]
 > 🗺️ **PETA INDUK DIREKTORI & PANDUAN PANTAS ALATAN:**  
 > Untuk navigasi pantas fail, direktori, skrip, dan fail APK, rujuk:  
