@@ -151,3 +151,11 @@ EmasWirelessGameHub/APKS_SIAP_PASANG/
 
 # Sandaran save emulator (jangan masuk repo)
 GBA_Saves_Backup_*/
+
+# Pakej: benarkan JAR daemon stereng (52KB, hash disahkan)
+!PAKEJ_DRIVEMODE_EMAS5/payload/bin/*.jar
+
+# Pakej: benarkan adb.exe yang dibundel untuk pemasang
+!PAKEJ_*/adb.exe
+!PAKEJ_UNLOCK_ADB_EMAS5/*/adb.exe
+!PAKEJ_DRIVEMODE_EMAS5/payload/bin/

@@ -134,12 +134,69 @@ Rujukan penuh:
 
 ---
 
-## 📦 Pakej Pantas Untuk Rakan (`PAKEJ_UNLOCK_ADB_EMAS5`)
+## 📦 Tiga Pakej Berasingan
 
-Untuk rakan pemilik e.MAS 5 yang ingin mod kenderaan dengan mudah:
-1. `1_USB_UNLOCK/update.zip` — Unlock ADB TCP 5555 & akses root kekal melalui USB Flash Drive.
-2. `2_PASANG_SEMUA/pasang.ps1` — Skrip 1-klik memasang SmartTube, Netflix, dan kawalan stereng.
-3. `3_PULIHKAN_JOOX/` — Skrip pemulihan kilang jika ingin mengembalikan aplikasi asal.
+Pakej dipecahkan mengikut peringkat. Pasang mengikut urutan.
+
+### 1️⃣ `PAKEJ_UNLOCK_ADB_EMAS5` — Unlock ADB & Root
+
+Peringkat pertama. **Wajib** sebelum pakej lain.
+
+| Fail | Fungsi |
+| :--- | :--- |
+| `1_USB_UNLOCK/update.zip` | Unlock ADB TCP 5555 + root kekal melalui pendrive USB (2.07 GB) |
+| `2_PASANG_SEMUA/pasang.ps1` | Pasang SmartTube, Netflix, tingkap, kawalan stereng asas |
+| `3_PULIHKAN_JOOX/` | Pulihkan JOOX + TikTok asal jika perlu |
+
+📄 Panduan penuh: [`CARA_GUNA.txt`](file:///d:/apps/emas-ota/PAKEJ_UNLOCK_ADB_EMAS5/CARA_GUNA.txt)
+
+---
+
+### 2️⃣ `PAKEJ_STEALTH_EMAS5` — Mod Servis (Stealth)
+
+Menyembunyikan semua modifikasi sebelum ke Pusat Servis Proton.
+**Bertahan selepas reboot** — tidak bocor apabila kereta dihidupkan semula.
+
+```powershell
+.\PAKEJ_STEALTH_EMAS5\pasang_stealth.ps1 -Target 192.168.1.20
+```
+
+Yang dilakukan semasa aktif:
+- 10 pakej dilumpuhkan (SmartTube, Netflix, RetroArch, dll.)
+- Bind mount slot dibatal
+- AVAS ketiga-tiga slot dipulihkan ke fail kilang
+- Nada kunci kilang
+- Semua daemon kustom dimatikan
+- Steering daemon **dikekalkan** (perlu untuk butang Volume Down)
+
+📄 [`PAKEJ_STEALTH_EMAS5/README.md`](file:///d:/apps/emas-ota/PAKEJ_STEALTH_EMAS5/README.md)
+
+---
+
+### 3️⃣ `PAKEJ_DRIVEMODE_EMAS5` — Kawalan Stereng
+
+Drive Mode, Regen, dan toggle Stealth dari butang stereng.
+
+```powershell
+.\PAKEJ_DRIVEMODE_EMAS5\pasang_drivemode.ps1 -Target 192.168.1.20
+```
+
+| Butang | Tahan | Fungsi |
+| :--- | ---: | :--- |
+| Kanan | 800 ms | Comfort → Eco → Sport |
+| Kiri | 800 ms | Low → Medium → High |
+| Bawah | 5000 ms | Stealth ON/OFF |
+| Atas | — | Volume kilang (tidak diubah) |
+
+📄 [`PAKEJ_DRIVEMODE_EMAS5/README.md`](file:///d:/apps/emas-ota/PAKEJ_DRIVEMODE_EMAS5/README.md)
+
+---
+
+### Pasang semuanya sekali gus
+
+```powershell
+.\pasang_semua.ps1 -Target 192.168.1.20 -Drivemode
+```
 
 ---
 
