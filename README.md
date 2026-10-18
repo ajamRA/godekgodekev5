@@ -198,7 +198,19 @@ Drive Mode, Regen, dan toggle Stealth dari butang stereng.
 .\pasang_semua.ps1 -Target 192.168.1.20 -Drivemode
 ```
 
+### Jika ada masalah
+
+📄 [**`docs/PEMULIHAN_STEALTH_20261018.md`**](file:///d:/apps/emas-ota/docs/PEMULIHAN_STEALTH_20261018.md) — panduan pemulihan penuh: bootloop, apps tersembunyi, AVAS masih custom, butang mati, rollback.
+
+Urutan pemulihan yang betul:
+```powershell
+adb shell "sh /data/local/window/service_mode.sh off"   # 1. keluar Stealth
+.\pasang_stealth.ps1 -Rollback                           # 2. pulihkan .rc
+adb shell "reboot"                                       # 3. reboot sendiri
+```
+
 ---
+
 
 ## 📜 Tadbir Urus & SOP Operasi
 Sebelum menjalankan sebarang arahan ADB atau skrip pada kenderaan sebenar, patuhi:
