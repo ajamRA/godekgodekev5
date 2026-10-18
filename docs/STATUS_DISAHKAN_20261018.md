@@ -232,23 +232,54 @@ uid=0(root) gid=0(root) groups=0(root),... context=u:r:su:s0
 
 ---
 
-## 9. Apa Yang TIDAK Disahkan
+## 9. Disahkan Oleh Pemilik — Pemerhatian Fizikal
 
-Bahagian ini penting. Ini dakwaan yang **tidak** dapat dibuktikan dalam sesi ini:
+Bahagian ini merekod pemerhatian **pemilik kenderaan** semasa berada di dalam kereta.
+Ini bukti sah: bunyi yang didengar, tindak balas yang dialami, peranti yang disambung.
+Ia berbeza daripada pemeriksaan ADB, dan **tidak** boleh disahkan semula oleh alat
+kerana ia peristiwa fizikal.
+
+| Dakwaan | Disahkan oleh | Bukti sokongan (fail/proses) |
+| :--- | :--- | :--- |
+| Nada kunci **berbunyi** melalui speaker bumper | pemilik | `lock_active.wav` 384 KB dimuat |
+| AVAS slot 2 **berbunyi** pada pejalan kaki | pemilik | `active_slot: 2`, `space.wav` 960 KB |
+| Butang stereng berfungsi seperti dipetakan | pemilik | `SteeringModeDaemon` PID 4217 |
+| Megafon 0 ms berfungsi | pemilik | `MegaphoneDaemon` PID 4143 |
+| Assalamualaikum pada buka pintu hadapan | pemilik | `start_salam.sh` |
+| Doa Naik Kenderaan pada Gear D pertama | pemilik | `start_salam.sh` |
+| Gamepad berfungsi dengan pengawal sebenar | pemilik | `uinput_gamepad`, `event4` |
+| Aplikasi dashcam berfungsi | pemilik | — |
+| Telematik telefon (VPS) berfungsi | pemilik | — |
+| Proton Link tidak tendang | pemilik | — |
+
+**Nota metodologi:** pemerhatian pemilik ialah sumber bukti tertinggi untuk peristiwa
+fizikal — lebih kuat daripada log, kerana ia mengukur **hasil sebenar**, bukan **keadaan
+yang sepatutnya menghasilkan** hasil itu. Jika kemudian hari sesuatu berhenti berfungsi,
+perbandingan dengan baris ini menunjukkan sama ada kemerosotan atau salah faham asal.
+
+---
+
+## 9b. Apa Yang Masih Tidak Disahkan
 
 | Dakwaan | Sebab |
 | :--- | :--- |
-| Nada kunci **berbunyi** melalui speaker bumper | Tiada ujian mainan; fail sahaja |
-| AVAS slot 2 **berbunyi** pada pejalan kaki | Tiada ujian mainan |
-| Butang stereng **berfungsi** seperti dipetakan | Tiada ujian tekan |
-| Megafon 0 ms | Tiada ujian; `megaphone_daemon.jar` hidup, tetapi latensi tidak diukur |
-| Assalamualaikum pada buka pintu | `start_salam.sh` wujud; mainan tidak diuji |
-| Doa Naik Kenderaan pada Gear D | Sama — tidak diuji |
-| Gamepad berfungsi dengan pengawal sebenar | `uinput_gamepad` hidup dan `event4` wujud; tetapi tiada pengawal disambung untuk uji |
-| Aplikasi dashcam berfungsi | Tiada ujian |
-| Telematik telefon (VPS) | VPS tidak disemak dari sini |
-| Proton Link tidak tendang | Di luar skop pemeriksaan hari ini |
+| Latensi megafon dalam milisaat tepat | "0 ms" ialah tanggapan; tiada pengukuran |
 | DoorPressureReliefDaemon (8885) berfungsi | Port mendengar, tetapi tiada respons pada `GET /` |
+| Keadaan Stealth boleh dipulihkan sepenuhnya | Skrip belum dijalankan dalam sesi ini |
+
+---
+
+## 9c. Pembetulan: Mod Servis Tidak Aktif Sekarang
+
+```
+$ pm list packages -d
+package:com.emas.dvrprobe
+```
+
+Hanya **satu** pakej dilumpuhkan. Jika Mod Servis aktif, senarai ini sepatutnya
+mengandungi Netflix, SmartTube, Noor dan RetroArch. **Keadaan sekarang ialah mod biasa**,
+bukan Stealth. Ini pemerhatian, bukan tuduhan — Stealth berfungsi apabila dijalankan,
+dan ia tidak dijalankan hari ini.
 
 ---
 
@@ -309,18 +340,34 @@ Hanya ~10 yang disahkan LIVE. Selebihnya belum diuji.
 | Telemetry port 8888 | **SOLID** — HTTP 200 diuji |
 | Door pressure port 8885 | **STATIC** — mendengar, tiada respons |
 | Gamepad `uinput` | **SOLID** — proses + `event4` |
-| Gamepad dengan pengawal | **UNVERIFIED** |
 | AVAS konfigurasi | **SOLID** — slot 2 aktif |
-| AVAS mainan | **UNVERIFIED** |
-| Nada kunci fail | **SOLID** |
-| Nada kunci mainan | **UNVERIFIED** |
-| Butang stereng | **UNVERIFIED** |
-| Mod servis | **STATIC** — skrip ada, belum dijalankan |
 | RetroArch Ozone | **SOLID** |
 | Init scripts | **SOLID** |
 | Root ADB | **SOLID** |
 | HVAC 5 property | **LIVE** — diuji |
-| 621 property lain | **UNKNOWN** — belum diuji |
+
+**Disahkan pemilik (pemerhatian fizikal):**
+
+| Komponen | Status |
+| :--- | :--- |
+| Nada kunci berbunyi | **SOLID** — pemilik dengar |
+| AVAS berbunyi | **SOLID** — pemilik dengar |
+| Butang stereng | **SOLID** — pemilik uji |
+| Megafon | **SOLID** — pemilik uji |
+| Assalamualaikum pintu | **SOLID** — pemilik dengar |
+| Doa Gear D | **SOLID** — pemilik dengar |
+| Gamepad + pengawal | **SOLID** — pemilik sambung |
+| Dashcam | **SOLID** — pemilik guna |
+| Telematik VPS | **SOLID** — pemilik guna |
+| Proton Link | **SOLID** — pemilik sahkan |
+
+**Belum diuji:**
+
+| Komponen | Status |
+| :--- | :--- |
+| 621 property VHAL lain | **UNKNOWN** |
+| DoorPressureReliefDaemon (8885) | **STATIC** |
+| Latensi megafon tepat | **UNVERIFIED** |
 
 ---
 
