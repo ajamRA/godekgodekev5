@@ -1,0 +1,32 @@
+# UJIAN REBOOT AKHIR — Sun Oct 18 19:46:11 +08 2026
+
+## boot_hook.log
+=== boot_hook start Sun Oct 18 19:45:27 +08 2026 ===
+2026-10-18 19:45:27 stealth=1 dry=0
+2026-10-18 19:45:27 STEALTH: skip semua mount slot aplikasi
+2026-10-18 19:45:27 STEALTH: skip retroarch cfg
+Steering Daemon started with PID 468
+2026-10-18 19:45:27 steering daemon: RUNNING
+2026-10-18 19:45:27 STEALTH: skip semua daemon kustom
+2026-10-18 19:45:27 === boot_hook end ===
+
+## daemon
+app_process /data/local/window com.emas.telemetry.TelemetryDaemon
+app_process /data/local/window com.emas.window.DoorPressureReliefDaemon
+app_process /data/local/window com.emas.megaphone.MegaphoneDaemon
+app_process /data/local/window com.emas.steering.SteeringModeDaemon
+app_process /data/local/window/salam SalamBoot /data/local/window/salam/salam.wav /data/local/window/salam/doa.wav
+
+## mount slot
+8
+
+## avas
+  1: FACTORY
+  2: FACTORY
+  3: FACTORY
+
+## port
+2
+
+## steering
+RUNNING

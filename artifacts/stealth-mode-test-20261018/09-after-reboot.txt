@@ -1,0 +1,47 @@
+# SELEPAS REBOOT — Sun Oct 18 19:41:59 +08 2026
+
+## boot_hook.log
+2026-10-18 19:33:09 stealth=1 dry=1
+2026-10-18 19:33:09 STEALTH: skip semua mount slot aplikasi
+2026-10-18 19:33:09 STEALTH: skip retroarch cfg
+2026-10-18 19:33:09 WOULD start SteeringModeDaemon
+2026-10-18 19:33:09 STEALTH: skip semua daemon kustom
+2026-10-18 19:33:14 stealth=1 dry=1
+2026-10-18 19:33:14 STEALTH: skip semua mount slot aplikasi
+2026-10-18 19:33:14 STEALTH: skip retroarch cfg
+2026-10-18 19:33:14 WOULD start SteeringModeDaemon
+2026-10-18 19:33:14 STEALTH: skip semua daemon kustom
+2026-10-18 19:33:23 stealth=0 dry=1
+2026-10-18 19:33:23 WOULD MOUNT /data/local/custom_apps/SmartTube -> /system/app/ttincar_tiktok_ACO
+2026-10-18 19:33:23 WOULD MOUNT /data/local/custom_apps/Netflix -> /system/app/JOOXMusic_ACO
+2026-10-18 19:33:23 WOULD MOUNT Settings_MOLEAD
+2026-10-18 19:33:23 WOULD install retroarch.cfg (0444, u0_a90)
+2026-10-18 19:33:23 WOULD start SteeringModeDaemon
+2026-10-18 19:33:23 WOULD start start_telemetry.sh
+2026-10-18 19:33:23 WOULD start start_megaphone.sh
+2026-10-18 19:33:23 WOULD start start_door_chime.sh
+2026-10-18 19:33:23 WOULD start start_salam.sh
+
+## status
+flag A : PRESENT
+flag B : PRESENT
+state  : STEALTH
+steering: STOPPED
+
+## daemon
+app_process /data/local/window com.emas.telemetry.TelemetryDaemon
+app_process /data/local/window DoorChime /data/local/window/door_chime.wav /data/local/window/door_close_chime.wav
+app_process /data/local/window com.emas.megaphone.MegaphoneDaemon
+app_process /data/local/window com.emas.window.DoorPressureReliefDaemon
+app_process /data/local/window/salam SalamBoot /data/local/window/salam/salam.wav /data/local/window/salam/doa.wav
+
+## mount slot
+16
+
+## avas
+  1: CUSTOM
+CUSTOM
+  2: CUSTOM
+CUSTOM
+  3: CUSTOM
+CUSTOM

@@ -1,0 +1,25 @@
+# REBOOT BERSIH — Sun Oct 18 19:51:05 +08 2026
+
+## boot_hook.log
+=== boot_hook start Sun Oct 18 19:50:14 +08 2026 ===
+2026-10-18 19:50:14 stealth=1 dry=0
+2026-10-18 19:50:14 STEALTH: skip semua mount slot aplikasi
+2026-10-18 19:50:14 STEALTH: skip retroarch cfg
+Steering Daemon started with PID 468
+2026-10-18 19:50:14 steering daemon: RUNNING
+2026-10-18 19:50:14 STEALTH: skip semua daemon kustom
+2026-10-18 19:50:14 === boot_hook end ===
+
+## daemon
+app_process /data/local/window com.emas.steering.SteeringModeDaemon
+
+## mount slot
+0
+
+## avas
+  1: FACTORY
+  2: FACTORY
+  3: FACTORY
+
+## port
+0

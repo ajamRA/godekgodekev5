@@ -1,0 +1,17 @@
+# Proton e.MAS 5 (IHU801P) — Persistent Boot Hook
+#
+# Satu baris sahaja. Semua logik berada dalam /data/local/window/boot_hook.sh
+# supaya /system tidak perlu disentuh lagi apabila logik berubah.
+#
+# Skrip itu:
+#   - semak bendera Mod Servis (SERVICE_MODE_ACTIVE / .service_mode)
+#   - jika Stealth aktif: skip semua mount dan daemon kustom
+#   - jika tidak: pasang bind mount, kunci RetroArch, start daemon
+#   - SENTIASA start SteeringModeDaemon (perlu untuk toggle Volume Down)
+#   - log ke /data/local/window/boot_hook.log
+#
+# timeout 25: jika skrip hang, init tidak tersekat -> elak bootloop.
+# u:r:su:s0: domain yang dibenarkan execute dari /data dan mount.
+
+on post-fs-data
+    exec u:r:su:s0 root root -- /system/bin/timeout 25 /system/bin/sh /data/local/window/boot_hook.sh

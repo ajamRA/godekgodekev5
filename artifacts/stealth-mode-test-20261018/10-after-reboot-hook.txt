@@ -1,0 +1,29 @@
+# SELEPAS REBOOT v2 — HOOK DIPASANG — Sun Oct 18 19:44:07 +08 2026
+
+## status
+flag A : PRESENT
+flag B : PRESENT
+state  : STEALTH
+steering: RUNNING
+
+## daemon
+app_process /data/local/window com.emas.steering.SteeringModeDaemon
+app_process /data/local/window com.emas.telemetry.TelemetryDaemon
+app_process /data/local/window DoorChime /data/local/window/door_chime.wav /data/local/window/door_close_chime.wav
+app_process /data/local/window com.emas.window.DoorPressureReliefDaemon
+app_process /data/local/window com.emas.megaphone.MegaphoneDaemon
+app_process /data/local/window/salam SalamBoot /data/local/window/salam/salam.wav /data/local/window/salam/doa.wav
+
+## mount slot
+8
+
+## avas
+  1: CUSTOM
+  2: CUSTOM
+  3: CUSTOM
+
+## apps disabled
+10
+
+## port
+2

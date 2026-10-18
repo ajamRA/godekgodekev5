@@ -1,0 +1,15 @@
+# Persistent custom mounts (Netflix, SmartTube, AVAS V8)
+on post-fs-data
+    mount none /data/local/custom_apps/SmartTube /system/app/ttincar_tiktok_ACO bind rec
+    mount none /data/local/custom_apps/Netflix /system/app/JOOXMusic_ACO bind rec
+    mount none /data/local/avas/Settings_MOLEAD_v8.apk /system/app/Settings_MOLEAD/Settings_MOLEAD.apk bind rec
+    mount none /data/local/avas/v8_clean.wav /vendor/etc/avas/sound_type_3/pixel.wav bind rec
+
+
+# Telemetry-only daemon (dual path with zzz_telemetry_boot.rc)
+    exec_background u:r:su:s0 root root -- /system/bin/sh /data/local/window/start_telemetry.sh
+
+# RetroArch Config Lock
+    copy /data/local/retroarch_golden.cfg /data/data/com.retroarch.aarch64/retroarch.cfg
+    chmod 0444 /data/data/com.retroarch.aarch64/retroarch.cfg
+    chown u0_a90 u0_a90 /data/data/com.retroarch.aarch64/retroarch.cfg

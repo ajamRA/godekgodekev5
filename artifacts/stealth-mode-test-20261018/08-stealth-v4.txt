@@ -1,0 +1,21 @@
+# STEALTH v4 — AVAS BOOT+PATCH — Sun Oct 18 19:40:57 +08 2026
+
+## status
+flag A : PRESENT
+flag B : PRESENT
+state  : STEALTH
+steering: RUNNING
+
+## daemon
+app_process /data/local/window com.emas.steering.SteeringModeDaemon
+
+## mount slot
+0
+
+## avas
+  1: FACTORY
+  2: FACTORY
+  3: FACTORY
+
+## port
+0
