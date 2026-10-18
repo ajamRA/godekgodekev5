@@ -78,77 +78,74 @@ function cmdPush(rest) {
 function cmdReboot() {
   console.log('[sandbox] reboot: mensimulasi init post-fs-data');
 
-  // 1. init memproses SEMUA fail dalam /system/etc/init/ — termasuk .bak
   const initDir = P('/system/etc/init');
-  let bootProcs = ['com.emas.steering.SteeringModeDaemon'];
+  let bootProcs = [];
   let bootMounts = [];
 
+  // ---- 1. Jalankan boot_hook.sh DAHULU (post-fs-data) ----
+  // Dalam init sebenar, post-fs-data berlaku sebelum boot_completed.
+  const hook = P('/data/local/window/boot_hook.sh');
+  if (fs.existsSync(hook)) {
+    console.log('  [init] post-fs-data -> boot_hook.sh');
+    try {
+      const out = execFileSync('node',
+        [path.join(__dirname, 'run-sh.cjs'), hook],
+        { encoding: 'utf8', timeout: 20000 });
+      for (const line of out.split(/\r?\n/).filter(Boolean)) {
+        console.log(`  [hook] ${line}`);
+      }
+      // hook menulis ke log, bukan stdout; baca log untuk tentukan steering
+      const hookLog = P('/data/local/window/boot_hook.log');
+      if (fs.existsSync(hookLog)) {
+        const lg = fs.readFileSync(hookLog, 'utf8');
+        if (lg.includes('steering daemon: RUNNING') || lg.includes('Steering Daemon started')) {
+          bootProcs.push('com.emas.steering.SteeringModeDaemon');
+        }
+        // log juga merekod skip
+        if (lg.includes('STEALTH: skip semua daemon kustom')) {
+          bootProcs = bootProcs.filter(p => p.includes('steering'));
+        }
+        if (lg.includes('STEALTH: skip semua mount')) { bootMounts = []; }
+      }
+      if (!out.includes('STEALTH: skip semua mount')) {
+        // hook memasang mount sendiri; kita rekod dari rootfs sebenar
+      }
+    } catch (e) {
+      console.log(`  [hook] GAGAL: ${e.message}`);
+    }
+  }
+
+  // ---- 2. Proses SEMUA fail .rc (init tidak tapis sambungan) ----
   if (fs.existsSync(initDir)) {
     for (const name of fs.readdirSync(initDir).sort()) {
       const f = path.join(initDir, name);
       if (!fs.statSync(f).isFile()) continue;
       const txt = fs.readFileSync(f, 'utf8');
 
-      // Fail .bak yang masih mengandungi mount -> diproses sebagai aktif
+      // mount langsung dalam .rc
       const mountMatches = txt.match(/mount (?:none|-o bind) (\S+) (\S+)/g) || [];
       if (mountMatches.length) {
-        console.log(`  [init] ${name} -> ${mountMatches.length} mount (DIPROSES)`);
+        console.log(`  [init] ${name} -> ${mountMatches.length} mount`);
         for (const m of mountMatches) {
-          const tgt = m.split(/\s+/).slice(-1)[0];
-          bootMounts.push(tgt);
+          bootMounts.push(m.split(/\s+/).slice(-1)[0]);
         }
       }
-      // exec/exec_background yang memanggil skrip daemon
+
+      // exec ... start_xxx.sh
       const execMatches = txt.match(/exec(?:_background)?[^\n]*\/data\/local\/window\/(start_\w+\.sh)/g) || [];
       for (const m of execMatches) {
         const script = m.match(/start_\w+\.sh/)[0];
         console.log(`  [init] ${name} -> exec ${script}`);
-        if (script.includes('telemetry')) bootProcs.push('com.emas.telemetry.TelemetryDaemon');
-        if (script.includes('megaphone')) bootProcs.push('com.emas.megaphone.MegaphoneDaemon');
-        if (script.includes('door_chime')) bootProcs.push('DoorChime');
+        runStartScript(script, bootProcs);
       }
-      // service yang dipanggil pada boot_completed
-      const svcStart = txt.match(/service (\w+) \/system\/bin\/sh (\S+)/);
-      if (svcStart && txt.includes('boot_completed')) {
-        const target = svcStart[2];
-        console.log(`  [init] ${name} -> service ${svcStart[1]} (${target})`);
-        if (target.includes('avas_boot')) {
-          if (target.includes('/data/local/')) {
-            bootProcs.push('AVAS-BOOT-DATA');
-          } else {
-            bootProcs.push('SalamBoot', 'com.emas.megaphone.MegaphoneDaemon');
-          }
-        }
-        if (target.includes('telemetry')) {
-          bootProcs.push('com.emas.telemetry.TelemetryDaemon');
-        }
-      }
-    }
-  }
 
-  // 2. Jalankan boot_hook jika wujud (menggantikan logik lama)
-  const hook = P('/data/local/window/boot_hook.sh');
-  if (fs.existsSync(hook)) {
-    console.log('  [init] menjalankan boot_hook.sh');
-    try {
-      const out = execFileSync('node', [require('path').join(__dirname,'run-sh.cjs'), hook], { encoding: 'utf8', timeout: 20000 });
-      for (const line of out.split(/\r?\n/).filter(Boolean)) {
-        console.log(`  [hook] ${line}`);
-        if (line.includes('steering daemon: RUNNING')) {
-          if (!bootProcs.includes('com.emas.steering.SteeringModeDaemon')) {
-            bootProcs.push('com.emas.steering.SteeringModeDaemon');
-          }
-        }
+      // service ... pada boot_completed -> jalankan skrip sebenar
+      const svc = txt.match(/service (\w+) \/system\/bin\/sh (\S+)/);
+      if (svc && txt.includes('boot_completed')) {
+        const target = svc[2];
+        console.log(`  [init] ${name} -> service ${svc[1]} (${target})`);
+        runServiceScript(target, bootProcs);
       }
-      // hook yang berjaya menang: jika ia skip, kosongkan daemon kustom
-      if (out.includes('STEALTH: skip semua daemon kustom')) {
-        bootProcs = ['com.emas.steering.SteeringModeDaemon'];
-      }
-      if (out.includes('STEALTH: skip semua mount')) {
-        bootMounts = [];
-      }
-    } catch (e) {
-      console.log(`  [hook] GAGAL: ${e.message}`);
     }
   }
 
@@ -157,6 +154,50 @@ function cmdReboot() {
 
   console.log(`  [init] daemon: ${running().length}, mount: ${mounted().length}`);
   console.log('[sandbox] boot selesai');
+}
+
+/** Jalankan skrip start_*.sh yang sebenar; daemon yang dicetak = hidup. */
+function runStartScript(script, procs) {
+  const p = P(`/data/local/window/${script}`);
+  if (!fs.existsSync(p)) return;
+  try {
+    const out = execFileSync('node',
+      [path.join(__dirname, 'run-sh.cjs'), p],
+      { encoding: 'utf8', timeout: 15000 });
+    for (const line of out.split(/\r?\n/).filter(Boolean)) {
+      if (line.includes('Steering')) procs.push('com.emas.steering.SteeringModeDaemon');
+      if (line.includes('Telemetry')) procs.push('com.emas.telemetry.TelemetryDaemon');
+      if (line.includes('Megaphone')) procs.push('com.emas.megaphone.MegaphoneDaemon');
+      if (line.includes('DoorChime')) procs.push('DoorChime');
+      if (line.includes('SalamBoot')) procs.push('SalamBoot');
+      if (line.includes('PressureRelief')) procs.push('com.emas.window.DoorPressureReliefDaemon');
+    }
+  } catch (_) {}
+}
+
+/** Jalankan skrip service; hormati semakan bendera di dalamnya. */
+function runServiceScript(target, procs) {
+  const p = target.startsWith('/data/local/') || target.startsWith('/system/')
+    ? P(target)
+    : null;
+  if (!p || !fs.existsSync(p)) {
+    // skrip tiada -> tiada daemon
+    return;
+  }
+  try {
+    const out = execFileSync('node',
+      [path.join(__dirname, 'run-sh.cjs'), p],
+      { encoding: 'utf8', timeout: 15000 });
+    for (const line of out.split(/\r?\n/).filter(Boolean)) {
+      if (line.includes('SKIP') || line.includes('NOT started')) {
+        console.log(`  [svc] ${path.basename(p)}: ${line}`);
+      }
+      if (line.includes('Steering')) procs.push('com.emas.steering.SteeringModeDaemon');
+      if (line.includes('Telemetry')) procs.push('com.emas.telemetry.TelemetryDaemon');
+      if (line.includes('Megaphone')) procs.push('com.emas.megaphone.MegaphoneDaemon');
+      if (line.includes('SalamBoot')) procs.push('SalamBoot');
+    }
+  } catch (_) {}
 }
 
 // ------------------------------------------------------------------ shell
@@ -314,6 +355,23 @@ function shell(cmd) {
   if (cmd.startsWith('if pgrep')) {
     const found = running().some(p => p.includes('Steering'));
     console.log(found ? 'RUNNING' : 'STOPPED');
+    return 0;
+  }
+
+  // pgrep biasa (tanpa if) — pulangkan 0 jika ada, 1 jika tiada
+  if (cmd.startsWith('pgrep')) {
+    const found = running().some(p => p.includes('Steering'));
+    return found ? 0 : 1;
+  }
+
+  // start_*.sh yang dicetak oleh skrip -> daftar daemon dalam state
+  if (cmd.includes('start_steering_daemon.sh')) {
+    const r = running();
+    if (!r.includes('com.emas.steering.SteeringModeDaemon')) {
+      r.push('com.emas.steering.SteeringModeDaemon');
+      setRunning(r);
+    }
+    console.log('Steering Daemon started with PID 900');
     return 0;
   }
 

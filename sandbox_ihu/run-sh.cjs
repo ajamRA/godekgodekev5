@@ -1,13 +1,18 @@
 #!/usr/bin/env node
 /**
- * run-sh.js — Jalankan skrip shell sandbox dengan laluan Android dipetakan
+ * run-sh.cjs — Jalankan skrip shell sandbox dengan laluan Android dipetakan
  * ke rootfs palsu.
  *
  * Masalah: skrip seperti boot_hook.sh menulis ke /data/local/window/... yang
  * pada Windows menjadi D:\data\local\window\... (tiada).
  *
- * Penyelesaian: baca skrip, gantikan setiap laluan mutlak Android dengan
- * laluan rootfs, tulis ke fail sementara, jalankan.
+ * Pendekatan: satu laluan regex beranchor. Pemetaan berlaku dalam SATU
+ * pusingan sahaja, jadi hasil pemetaan tidak akan dipetakan semula
+ * (punca laluan bercantum "rootfsD:/.../rootfs/...").
+ *
+ * Anchor `(^|\s|=|"|'|`|\$\(|\$\{|\()`. Tidak anchor `:` kerana laluan
+ * Android sebenar tidak pernah didahului `:` — dan kita tidak mahu memetakan
+ * teks dalam laluan Windows.
  */
 
 const fs = require('fs');
@@ -18,7 +23,8 @@ const { execFileSync } = require('child_process');
 const BASE = __dirname;
 const ROOTFS = path.join(BASE, 'rootfs');
 
-// Laluan Android yang perlu dipetakan
+// Semua awalan Android yang wujud. Disusun panjang -> pendek supaya
+// /data/local/window menang sebelum /data/local.
 const PREFIXES = [
   '/data/local/window',
   '/data/local/avas',
@@ -37,31 +43,67 @@ function toPosix(p) {
   return p.replace(/\\/g, '/');
 }
 
+/**
+ * Petakan sekali sahaja.
+ * Regex: (anchor)(prefix)(?![A-Za-z0-9_\-])
+ *   - anchor mesti awal baris, ruang, '=', petikan, backtick, atau dalam $( )
+ *   - lookahead menghalang pemadanan separa seperti /systemXYZ
+ *   - ganti dengan $1 + rootfs + prefix
+ */
 function rewrite(src) {
-  let out = src;
-  // Susun dari paling spesifik ke paling umum, dan guna penanda sementara
-  // supaya penggantian tidak berulang (cth. /data/local dipetakan dua kali).
-  const ordered = [...PREFIXES].sort((a, b) => b.length - a.length);
+  // Alternatif regex diisih panjang -> pendek; JS regex alternation
+  // menggunakan yang pertama padan, jadi susunan ini penting.
+  const alts = PREFIXES
+    .slice()
+    .sort((a, b) => b.length - a.length)
+    .map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('|');
 
-  ordered.forEach((pre, i) => {
-    const marker = `__SANDBOX_${i}__`;
-    const target = toPosix(path.join(ROOTFS, pre.replace(/^\//, '')));
-    out = out.split(pre).join(marker);
-    out = out.split(marker).join(target);
+  const re = new RegExp(
+    `(^|[\\s="'\`(]|\\$\\()(${alts})(?=[/\\s"'\`);|&]|$)`,
+    'gm'
+  );
+
+  const rootPosix = toPosix(ROOTFS);
+
+  return src.replace(re, (_m, lead, pre) => {
+    return `${lead}${rootPosix}${pre}`;
   });
-  return out;
+}
+
+function findSh() {
+  const candidates = [
+    'sh',
+    'C:\\Program Files\\Git\\bin\\sh.exe',
+    'C:\\Program Files\\Git\\usr\\bin\\sh.exe',
+    process.env.GIT_INSTALL_ROOT ? path.join(process.env.GIT_INSTALL_ROOT, 'bin', 'sh.exe') : null,
+    process.env.LOCALAPPDATA ? path.join(process.env.LOCALAPPDATA, 'Programs', 'Git', 'bin', 'sh.exe') : null,
+  ].filter(Boolean);
+  for (const c of candidates) {
+    if (c === 'sh') {
+      try {
+        const { execSync } = require('child_process');
+        execSync('where sh.exe', { stdio: 'ignore' });
+        return 'sh';
+      } catch (_) {}
+    } else if (fs.existsSync(c)) {
+      return c;
+    }
+  }
+  return 'sh';
 }
 
 function main() {
   const [scriptArg, ...rest] = process.argv.slice(2);
   if (!scriptArg) {
-    console.error('usage: node run-sh.js <script> [args...]');
+    console.error('usage: node run-sh.cjs <script> [args...]');
     process.exit(2);
   }
 
-  const real = scriptArg.startsWith(ROOTFS)
-    ? scriptArg
-    : path.join(ROOTFS, scriptArg.replace(/^\//, ''));
+  const normalized = toPosix(scriptArg);
+  const real = normalized.startsWith(toPosix(ROOTFS))
+    ? path.join(...normalized.split('/'))
+    : path.join(ROOTFS, normalized.replace(/^\//, ''));
 
   if (!fs.existsSync(real)) {
     console.error(`run-sh: ${real}: not found`);
@@ -76,15 +118,26 @@ function main() {
   fs.chmodSync(tmp, 0o755);
 
   try {
-    const out = execFileSync('sh', [tmp, ...rest], {
+    const shBin = findSh();
+    const shDir = path.isAbsolute(shBin) ? path.dirname(shBin) : null;
+    const env = { 
+      ...process.env, 
+      PATH: (shDir ? shDir + ';' : '') + path.join(BASE, 'bin') + ';' + (process.env.PATH || '') 
+    };
+    const out = execFileSync(shBin, [tmp, ...rest], {
+      env,
       encoding: 'utf8',
-      timeout: 20000,
+      timeout: 25000,
+      stdio: ['ignore', 'pipe', 'pipe'],
     });
     process.stdout.write(out);
     process.exit(0);
   } catch (e) {
     if (e.stdout) process.stdout.write(e.stdout);
     if (e.stderr) process.stderr.write(e.stderr);
+    if (!e.stdout && !e.stderr && e.message) {
+      console.error(`run-sh: ${e.message}`);
+    }
     process.exit(e.status || 1);
   } finally {
     try { fs.unlinkSync(tmp); } catch (_) {}

@@ -203,13 +203,18 @@ Write-Host "  -> selesai, /system dikunci semula (ro)" -ForegroundColor Green
 # ujian dry-run
 # ---------------------------------------------------------------------------
 Write-Host "`n[6/7] Ujian dry-run boot hook..." -ForegroundColor White
-$dry = Sh "sh /data/local/window/boot_hook.sh --dry-run"
-$dry | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkGray }
+$dryRaw = Sh "sh /data/local/window/boot_hook.sh --dry-run"
+$dryText = ($dryRaw | Out-String)
+$dryRaw | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkGray }
 
-if ($dry -notmatch 'stealth=') {
+if ($dryText -notmatch 'stealth=') {
     throw "boot_hook.sh tidak berjalan dengan betul. Semak output di atas."
 }
-Write-Host "  -> boot hook berfungsi" -ForegroundColor Green
+if ($dryText -match 'STEALTH: skip') {
+    Write-Host "  -> boot hook berfungsi (mod Stealth)" -ForegroundColor Green
+} else {
+    Write-Host "  -> boot hook berfungsi (mod normal)" -ForegroundColor Green
+}
 
 # ---------------------------------------------------------------------------
 # ringkasan
