@@ -43,8 +43,12 @@ case "$1" in
 esac
 
 # --- log ---
+# Pastikan direktori wujud. Pada kereta baharu /data/local/window mungkin
+# belum ada, dan `>>` gagal sebelum apa-apa ditulis.
+mkdir -p /data/local/window 2>/dev/null
+
 log() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') $*" >> "$LOG"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') $*" >> "$LOG" 2>/dev/null
     [ "$DRY" = "1" ] && echo "$*"
 }
 
@@ -63,24 +67,27 @@ log "stealth=$STEALTH dry=$DRY"
 # 1. MOUNT SLOT APLIKASI — hanya jika bukan Stealth
 # ==============================================================================
 if [ "$STEALTH" = "0" ]; then
-    for pair in \
-        "/data/local/custom_apps/SmartTube:/system/app/ttincar_tiktok_ACO" \
-        "/data/local/custom_apps/Netflix:/system/app/JOOXMusic_ACO"
-    do
-        SRC="${pair%%:*}"
-        TGT="${pair##*:}"
-        if [ -d "$SRC" ]; then
+    # Guna pemanggilan fungsi, bukan senarai "src:tgt". Tanda ':' boleh wujud
+    # dalam laluan (cth. pemacu Windows semasa ujian sandbox) dan memecahkan
+    # pemisah.
+    do_mount() {
+        _src="$1"
+        _tgt="$2"
+        if [ -d "$_src" ]; then
             if [ "$DRY" = "1" ]; then
-                log "WOULD MOUNT $SRC -> $TGT"
+                log "WOULD MOUNT $_src -> $_tgt"
             else
-                mount none "$SRC" "$TGT" bind rec 2>>"$LOG" \
-                    && log "mount OK $TGT" \
-                    || log "mount FAIL $TGT"
+                mount none "$_src" "$_tgt" bind rec 2>>"$LOG" \
+                    && log "mount OK $_tgt" \
+                    || log "mount FAIL $_tgt"
             fi
         else
-            log "skip (tiada sumber): $SRC"
+            log "skip (tiada sumber): $_src"
         fi
-    done
+    }
+
+    do_mount "/data/local/custom_apps/SmartTube" "/system/app/ttincar_tiktok_ACO"
+    do_mount "/data/local/custom_apps/Netflix"    "/system/app/JOOXMusic_ACO"
 
     # Settings_MOLEAD — fail tunggal
     if [ -f /data/local/avas/Settings_MOLEAD_v8.apk ]; then
