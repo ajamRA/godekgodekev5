@@ -1,0 +1,67 @@
+# BASELINE — NORMAL MODE — 18 Okt 2026
+Sun Oct 18 18:52:47 +08 2026
+
+## flag + status
+NORMAL_MODE_ACTIVE
+
+## disabled packages
+package:com.emas.dvrprobe
+
+## daemons
+ 2221 app_process /data/local/window com.emas.telemetry.TelemetryDaemon
+ 2243 app_process /data/local/window DoorChime /data/local/window/door_chime.wav /data/local/window/door_close_chime.wav
+ 3978 app_process /data/local/window com.emas.window.DoorPressureReliefDaemon
+ 4143 app_process /data/local/window com.emas.megaphone.MegaphoneDaemon
+ 4217 app_process /data/local/window com.emas.steering.SteeringModeDaemon
+
+## avas config
+{
+  "active_slot": 2,
+  "slots": {
+    "1": {
+      "name": "Slot 1 (Galaxy)",
+      "custom_name": "Paddle Pop",
+      "audio_file": "slot1.wav",
+      "mute_chime": true,
+      "volume": [0, 5, 5, 6, 7, 2, 0],
+      "pitch": [100, 100, 100, 100, 100, 100, 100]
+    },
+    "2": {
+      "name": "Slot 2 (Space)",
+      "custom_name": "Dodge V8 Rumble",
+      "audio_file": "slot2.wav",
+      "mute_chime": true,
+      "volume": [0, 8, 10, 13, 16, 7, 0],
+      "pitch": [100, 100, 100, 100, 100, 100, 100]
+    },
+    "3": {
+      "name": "Slot 3 (Pixel)",
+      "custom_name": "Super Mario Bros Theme",
+      "audio_file": "slot3.wav",
+      "mute_chime": true,
+      "volume": [0, 4, 5, 6, 7, 3, 0],
+      "pitch": [100, 102, 105, 108, 112, 116, 120]
+    }
+  }
+}
+
+## avas mounts
+/dev/block/mmcblk0p54 on /vendor/etc/avas/sound_type_1/yinheyinfu.wav type ext4 (rw,seclabel,nosuid,nodev,noatime,noauto_da_alloc,resgid=1065,errors=panic,data=ordered)
+/dev/block/mmcblk0p54 on /vendor/etc/avas/sound_type_2/space.wav type ext4 (rw,seclabel,nosuid,nodev,noatime,noauto_da_alloc,resgid=1065,errors=panic,data=ordered)
+/dev/block/mmcblk0p54 on /vendor/etc/avas/sound_type_2/tuning.txt type ext4 (rw,seclabel,nosuid,nodev,noatime,noauto_da_alloc,resgid=1065,errors=panic,data=ordered)
+/dev/block/mmcblk0p54 on /vendor/etc/avas/sound_type_3/pixel.wav type ext4 (rw,seclabel,nosuid,nodev,noatime,noauto_da_alloc,resgid=1065,errors=panic,data=ordered)
+/dev/block/mmcblk0p54 on /vendor/etc/avas/sound_type_3/tuning.txt type ext4 (rw,seclabel,nosuid,nodev,noatime,noauto_da_alloc,resgid=1065,errors=panic,data=ordered)
+
+## slot mounts
+/dev/block/mmcblk0p54 on /system/app/ttincar_tiktok_ACO type ext4 (rw,seclabel,nosuid,nodev,noatime,noauto_da_alloc,resgid=1065,errors=panic,data=ordered)
+/dev/block/mmcblk0p54 on /system/app/JOOXMusic_ACO type ext4 (rw,seclabel,nosuid,nodev,noatime,noauto_da_alloc,resgid=1065,errors=panic,data=ordered)
+/dev/block/mmcblk0p54 on /system/app/ttincar_tiktok_ACO type ext4 (rw,seclabel,nosuid,nodev,noatime,noauto_da_alloc,resgid=1065,errors=panic,data=ordered)
+/dev/block/mmcblk0p54 on /system/app/JOOXMusic_ACO type ext4 (rw,seclabel,nosuid,nodev,noatime,noauto_da_alloc,resgid=1065,errors=panic,data=ordered)
+/dev/block/mmcblk0p54 on /system/app/ttincar_tiktok_ACO type ext4 (rw,seclabel,nosuid,nodev,noatime,noauto_da_alloc,resgid=1065,errors=panic,data=ordered)
+/dev/block/mmcblk0p54 on /system/app/ttincar_tiktok_ACO type ext4 (rw,seclabel,nosuid,nodev,noatime,noauto_da_alloc,resgid=1065,errors=panic,data=ordered)
+/dev/block/mmcblk0p54 on /system/app/JOOXMusic_ACO type ext4 (rw,seclabel,nosuid,nodev,noatime,noauto_da_alloc,resgid=1065,errors=panic,data=ordered)
+/dev/block/mmcblk0p54 on /system/app/JOOXMusic_ACO type ext4 (rw,seclabel,nosuid,nodev,noatime,noauto_da_alloc,resgid=1065,errors=panic,data=ordered)
+
+## lock sound md5
+1680435af018fe16327699e80ec32684  /sdcard/V3_Vehicle_Locked_Single.wav
+1680435af018fe16327699e80ec32684  /data/local/window/locksounds/lock_active.wav

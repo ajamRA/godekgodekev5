@@ -1,0 +1,18 @@
+# STEALTH AKHIR — SELEPAS SEMUA TAMPALAN — Sun Oct 18 19:00:52 +08 2026
+
+## status
+SERVICE_MODE_ACTIVE
+
+## daemon hidup
+17221 app_process /data/local/window com.emas.steering.SteeringModeDaemon
+
+## disabled pkg count
+9
+
+## avas state
+  slot 1: FACTORY
+  slot 2: FACTORY
+  slot 3: FACTORY
+
+## port LISTEN (8888/8890)
+(kosong = tiada)

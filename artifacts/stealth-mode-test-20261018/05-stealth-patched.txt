@@ -1,0 +1,46 @@
+# STEALTH SELEPAS TAMPALAN — Sun Oct 18 18:59:34 +08 2026
+
+## status
+SERVICE_MODE_ACTIVE
+
+## disabled
+package:com.vivaldi.browser.automotive
+package:org.smarttube.stable
+package:me.zhanghai.android.files
+package:com.emas.dvrprobe
+package:com.malaysia.syok
+package:com.thisisaim.hotfm
+package:com.cybercat.acbridge
+package:com.netflix.mediaclient
+package:com.noor.thenoorcar
+
+## daemon hidup
+14944 app_process /data/local/window com.emas.steering.SteeringModeDaemon
+15090 app_process /data/local/window/salam SalamBoot /data/local/window/salam/salam.wav /data/local/window/salam/doa.wav
+
+## port 8888/8890 masih dengar?
+tcp6       0      0 ::ffff:127.0.0.1:8888   ::ffff:127.0.0.1:42488  TIME_WAIT   -
+tcp6       0      0 ::ffff:127.0.0.1:8888   ::ffff:127.0.0.1:42418  TIME_WAIT   -
+tcp6       0      0 ::ffff:127.0.0.1:8888   ::ffff:127.0.0.1:42608  TIME_WAIT   -
+tcp6       0      0 ::ffff:127.0.0.1:8888   ::ffff:127.0.0.1:42586  TIME_WAIT   -
+tcp6       0      0 ::ffff:127.0.0.1:8888   ::ffff:127.0.0.1:42564  TIME_WAIT   -
+tcp6       0      0 ::ffff:127.0.0.1:8888   ::ffff:127.0.0.1:42562  TIME_WAIT   -
+tcp6       0      0 ::ffff:127.0.0.1:8888   ::ffff:127.0.0.1:42460  TIME_WAIT   -
+tcp6       0      0 ::ffff:127.0.0.1:8888   ::ffff:127.0.0.1:42432  TIME_WAIT   -
+tcp6       0      0 ::ffff:127.0.0.1:8888   ::ffff:127.0.0.1:42616  TIME_WAIT   -
+tcp6       0      0 ::ffff:127.0.0.1:8888   ::ffff:127.0.0.1:42592  TIME_WAIT   -
+tcp6       0      0 ::ffff:127.0.0.1:8888   ::ffff:127.0.0.1:42388  TIME_WAIT   -
+tcp6       0      0 ::ffff:127.0.0.1:8888   ::ffff:127.0.0.1:42516  TIME_WAIT   -
+tcp6       0      0 ::ffff:127.0.0.1:8888   ::ffff:127.0.0.1:42446  TIME_WAIT   -
+tcp6       0      0 ::ffff:127.0.0.1:8888   ::ffff:127.0.0.1:42548  TIME_WAIT   -
+tcp6       0      0 ::ffff:127.0.0.1:8888   ::ffff:127.0.0.1:42530  TIME_WAIT   -
+tcp6       0      0 ::ffff:127.0.0.1:8888   ::ffff:127.0.0.1:42474  TIME_WAIT   -
+tcp6       0      0 ::ffff:127.0.0.1:8888   ::ffff:127.0.0.1:42612  TIME_WAIT   -
+tcp6       0      0 ::ffff:127.0.0.1:8888   ::ffff:127.0.0.1:42404  TIME_WAIT   -
+tcp6       0      0 ::ffff:127.0.0.1:8888   ::ffff:127.0.0.1:42544  TIME_WAIT   -
+(kosong = mati)
+
+## avas
+/dev/block/mmcblk0p54 on /vendor/etc/avas/sound_type_1/yinheyinfu.wav type ext4 (rw,seclabel,nosuid,nodev,noatime,noauto_da_alloc,resgid=1065,errors=panic,data=ordered)
+/dev/block/mmcblk0p54 on /vendor/etc/avas/sound_type_2/space.wav type ext4 (rw,seclabel,nosuid,nodev,noatime,noauto_da_alloc,resgid=1065,errors=panic,data=ordered)
+/dev/block/mmcblk0p54 on /vendor/etc/avas/sound_type_3/pixel.wav type ext4 (rw,seclabel,nosuid,nodev,noatime,noauto_da_alloc,resgid=1065,errors=panic,data=ordered)

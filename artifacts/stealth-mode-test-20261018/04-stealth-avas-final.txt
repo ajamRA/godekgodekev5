@@ -1,0 +1,17 @@
+# STEALTH + AVAS DIPERBETULKAN — Sun Oct 18 18:57:57 +08 2026
+
+## mounts
+/dev/block/mmcblk0p54 on /vendor/etc/avas/sound_type_3/tuning.txt type ext4 (rw,seclabel,nosuid,nodev,noatime,noauto_da_alloc,resgid=1065,errors=panic,data=ordered)
+/dev/block/mmcblk0p54 on /vendor/etc/avas/sound_type_2/space.wav type ext4 (rw,seclabel,nosuid,nodev,noatime,noauto_da_alloc,resgid=1065,errors=panic,data=ordered)
+/dev/block/mmcblk0p54 on /vendor/etc/avas/sound_type_1/yinheyinfu.wav type ext4 (rw,seclabel,nosuid,nodev,noatime,noauto_da_alloc,resgid=1065,errors=panic,data=ordered)
+/dev/block/mmcblk0p54 on /vendor/etc/avas/sound_type_3/pixel.wav type ext4 (rw,seclabel,nosuid,nodev,noatime,noauto_da_alloc,resgid=1065,errors=panic,data=ordered)
+
+## md5 slot vs factory
+slot 1 MATCH factory
+slot 2 MATCH factory
+slot 3 MATCH factory
+
+## saiz
+-rw-r--r-- 1 root root 1428582 2009-01-01 08:00 /vendor/etc/avas/sound_type_1/yinheyinfu.wav
+-rw-r--r-- 1 root root 1164462 2009-01-01 08:00 /vendor/etc/avas/sound_type_2/space.wav
+-rw-r--r-- 1 root root  581788 2026-09-22 14:05 /vendor/etc/avas/sound_type_3/pixel.wav

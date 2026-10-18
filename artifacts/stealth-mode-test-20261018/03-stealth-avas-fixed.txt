@@ -1,0 +1,8 @@
+## avas mounts
+/dev/block/mmcblk0p54 on /vendor/etc/avas/sound_type_3/tuning.txt type ext4 (rw,seclabel,nosuid,nodev,noatime,noauto_da_alloc,resgid=1065,errors=panic,data=ordered)
+/dev/block/mmcblk0p54 on /vendor/etc/avas/sound_type_2/space.wav type ext4 (rw,seclabel,nosuid,nodev,noatime,noauto_da_alloc,resgid=1065,errors=panic,data=ordered)
+
+## md5 ketiga-tiga slot
+slot 1: d41d8cd98f00b204e9800998ecf8427e  /vendor/etc/avas/sound_type_1/yinheyinfu.wav
+slot 2: d87f824857a4aab1f7fbf2eb27030182  /vendor/etc/avas/sound_type_2/space.wav
+slot 3: d41d8cd98f00b204e9800998ecf8427e  /vendor/etc/avas/sound_type_3/pixel.wav
