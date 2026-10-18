@@ -108,12 +108,20 @@ if [ "$ACTION" = "on" ]; then
 
     # 5c. Batal bind mount slot aplikasi supaya APK asal kilang kembali terbaca.
     #     Laluan custom disimpan; Stealth off akan mount semula.
-    sleep 0.5
-    umount -l /system/app/ttincar_tiktok_ACO 2>/dev/null
-    umount -l /system/app/JOOXMusic_ACO 2>/dev/null
-    umount -l /system/app/Settings_MOLEAD/Settings_MOLEAD.apk 2>/dev/null
-    _left=$(mount | grep -cE 'ttincar|JOOX')
-    echo "[SERVICE_MODE] App slot bind mounts released (remaining: $_left)."
+    #     pm disable-user adalah tidak segerak — proses mungkin masih memegang
+    #     fail. Cuba beberapa kali dengan jeda.
+    sleep 1
+    _try=0
+    while [ $_try -lt 4 ]; do
+        umount -l /system/app/ttincar_tiktok_ACO 2>/dev/null
+        umount -l /system/app/JOOXMusic_ACO 2>/dev/null
+        umount -l /system/app/Settings_MOLEAD/Settings_MOLEAD.apk 2>/dev/null
+        sleep 1
+        _left=$(mount | grep -cE 'ttincar|JOOX')
+        [ "$_left" -eq 0 ] && break
+        _try=$((_try + 1))
+    done
+    echo "[SERVICE_MODE] App slot bind mounts released (attempts: $((_try + 1)), remaining: ${_left:-0})."
 
     # 6. Audio chime feedback dua kali beep
     if [ -f "$CHIME" ]; then
