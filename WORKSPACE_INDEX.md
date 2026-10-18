@@ -23,6 +23,7 @@ Jika anda seorang **AI Agent** atau **Developer** yang baru masuk ke workspace i
 | **Cari backup penuh kereta & dump vendor** | [`_backups/`](file:///d:/apps/emas-ota/_backups) | `full_backup_car/`, `firmware_backup/`, `backup_before_rumble/`, partition dumps. |
 | **Cari game retro & ROM emulator** | [`_retro_gaming/`](file:///d:/apps/emas-ota/_retro_gaming) | `CarRetroROMs/`, `IHU_RetroGaming_Pack/`, `pokemon_pack/`, `MetalSlugGBA/`. |
 | **Analisis firmware IHU801G (Geely Xingyuan)** | [`Geely Xingyuan/`](file:///d:/apps/emas-ota/Geely%20Xingyuan) | 22 GB dump firmware, 3 versi OTA, `vendor.img`, `boot.img`, `init_rc/`, `scatter.txt`. **Bukan model e.MAS 5.** Rujuk [`docs/ANALISIS_FIRMWARE_IHU801G_20261018.md`](file:///d:/apps/emas-ota/docs/ANALISIS_FIRMWARE_IHU801G_20261018.md). |
+| **Simulasi unbrick & ujian kegagalan** | [`simulation_sandbox/`](file:///d:/apps/emas-ota/simulation_sandbox) | Makmal ujian simulasi kerosakan kernel, Wi-Fi terputus semasa flash, dan UDS watchdog timeout. Rujuk `simulate_ihu_unbrick.py`. |
 
 ---
 
