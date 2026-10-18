@@ -134,7 +134,7 @@ Rujukan penuh:
 
 ---
 
-## 📦 Pakej Pantas Untuk Rakan (`PAKEJ_KAWAN_EMAS5`)
+## 📦 Pakej Pantas Untuk Rakan (`PAKEJ_UNLOCK_ADB_EMAS5`)
 
 Untuk rakan pemilik e.MAS 5 yang ingin mod kenderaan dengan mudah:
 1. `1_USB_UNLOCK/update.zip` — Unlock ADB TCP 5555 & akses root kekal melalui USB Flash Drive.

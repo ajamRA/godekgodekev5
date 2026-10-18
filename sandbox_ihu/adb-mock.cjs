@@ -202,7 +202,7 @@ function runServiceScript(target, procs) {
 
 // ------------------------------------------------------------------ shell
 function shell(cmd) {
-  cmd = cmd.trim();
+  cmd = cmd.trim().replace(/\s*2>\/dev\/null/g, "").replace(/\s*\|\s*cut[^;]*/g, "");
 
   // dry-run / status sesuatu skrip
   const scriptCall = cmd.match(/^sh\s+(\/\S+)\s+(--\S+)$/);
@@ -279,6 +279,17 @@ function shell(cmd) {
     const [, src, dst] = cmd.split(/\s+/);
     const d = P(dst);
     if (dst.startsWith('/system/') && !isRw()) { console.error(`mv: ${dst}: Read-only`); return 1; }
+
+    // Jika src tiada glob, ini pemindahan fail biasa
+    if (!src.includes('*')) {
+      const s = P(src);
+      if (!fs.existsSync(s)) { console.error(`mv: ${src}: No such file`); return 1; }
+      fs.mkdirSync(path.dirname(d), { recursive: true });
+      fs.renameSync(s, d);
+      return 0;
+    }
+
+    // glob
     fs.mkdirSync(d, { recursive: true });
     const dir = path.dirname(P(src));
     const pat = path.basename(src).replace(/\*/g, '');
@@ -304,11 +315,12 @@ function shell(cmd) {
 
   // if [ -f X ]; then echo YES; else echo NO; fi
   if (cmd.startsWith('if [')) {
-    const m = cmd.match(/\[ -(f|d) ([^\]]+) \]/);
+    const m = cmd.match(/\[ -(f|d|x) ([^\]]+) \]/);
     if (m) {
-      const exists = m[1] === 'f' ? fs.existsSync(P(m[2].trim())) && fs.statSync(P(m[2].trim())).isFile()
-                                   : fs.existsSync(P(m[2].trim())) && fs.statSync(P(m[2].trim())).isDirectory();
-      console.log(exists ? 'YES' : 'NO');
+      const p = P(m[2].trim());
+      let ok = false;
+      try { ok = m[1] === 'd' ? fs.statSync(p).isDirectory() : fs.statSync(p).isFile(); } catch(_) { ok = false; }
+      console.log(ok ? 'YES' : 'NO');
       return 0;
     }
     return 0;
@@ -376,6 +388,60 @@ function shell(cmd) {
   }
 
   // wc -l (kaitan dengan paip di pemasang)
+  // sha256sum <path> [| cut -d' ' -f1]
+  if (cmd.startsWith('sha256sum')) {
+    const p = cmd.split(/\s+/)[1];
+    const real = P(p);
+    let st = null;
+    try { st = fs.statSync(real); } catch (_) { st = null; }
+    if (!st || !st.isFile()) {
+      console.error(`sha256sum: ${p}: No such file`);
+      return 1;
+    }
+    const crypto = require('crypto');
+    const hash = crypto.createHash('sha256').update(fs.readFileSync(real)).digest('hex');
+    console.log(`${hash}  ${p}`);
+    return 0;
+  }
+
+  // grep -c pattern file
+  if (cmd.startsWith('grep ')) {
+    const m = cmd.match(/grep\s+-c\s+(\S+)\s+(\S+)/);
+    if (m) {
+      const f = P(m[2]);
+      if (!fs.existsSync(f)) { console.log('0'); return 1; }
+      const txt = fs.readFileSync(f, 'utf8');
+      const n = txt.split(/\r?\n/).filter(l => l.includes(m[1])).length;
+      console.log(String(n));
+      return n > 0 ? 0 : 1;
+    }
+    return 0;
+  }
+
+  // test -f/-x/-d path
+  if (cmd.startsWith('test ') && cmd.includes('echo  ')) {
+    const m = cmd.match(/test\s+-(f|x|d)\s+(\S+?);/);
+    if (m) {
+      const p = P(m[2]);
+      let ok = false;
+      try { ok = m[1] === 'd' ? fs.statSync(p).isDirectory() : fs.statSync(p).isFile(); } catch(_) { ok = false; }
+      console.log(ok ? '0' : '1');
+      return 0;
+    }
+  }
+
+  if (cmd.startsWith('test ')) {
+    const m = cmd.match(/test\s+-(f|x|d)\s+(\S+)/);
+    if (m) {
+      const p = P(m[2]);
+      let ok = false;
+      try { if (m[1] === 'd') ok = fs.statSync(p).isDirectory();
+            else ok = fs.statSync(p).isFile(); } catch (_) { ok = false; }
+      return ok ? 0 : 1;
+    }
+    return 1;
+  }
+
   if (cmd.startsWith('wc')) { console.log('0'); return 0; }
 
   // netstat

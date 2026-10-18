@@ -6,7 +6,7 @@ kereta dihantar ke Pusat Servis Proton.
 
 > [!IMPORTANT]
 > Pakej ini **tidak** membuka ADB atau root. Ia menganggap kedua-duanya sudah
-> ada. Jika belum, gunakan `PAKEJ_KAWAN_EMAS5/1_USB_UNLOCK` dahulu.
+> ada. Jika belum, gunakan `PAKEJ_UNLOCK_ADB_EMAS5/1_USB_UNLOCK` dahulu.
 
 ---
 

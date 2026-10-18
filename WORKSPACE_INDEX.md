@@ -10,7 +10,7 @@ Jika anda seorang **AI Agent** atau **Developer** yang baru masuk ke workspace i
 
 | Anda Nak Cari / Buat Apa? | Lokasi Direktori | Keterangan & Fail Penting |
 | :--- | :--- | :--- |
-| **Bantu kawan unlock & pasang apps** | [`PAKEJ_KAWAN_EMAS5/`](file:///d:/apps/emas-ota/PAKEJ_KAWAN_EMAS5) | Pakej lengkap 1-klik: `1_USB_UNLOCK/update.zip`, `2_PASANG_SEMUA/pasang.ps1`, `3_PULIHKAN_JOOX/`. |
+| **Bantu kawan unlock & pasang apps** | [`PAKEJ_UNLOCK_ADB_EMAS5/`](file:///d:/apps/emas-ota/PAKEJ_UNLOCK_ADB_EMAS5) | Pakej lengkap 1-klik: `1_USB_UNLOCK/update.zip`, `2_PASANG_SEMUA/pasang.ps1`, `3_PULIHKAN_JOOX/`. |
 | **Remote debug kereta kawan (Beda network/VPS)** | [`REMOTE_KERETA_VPS/`](file:///d:/apps/emas-ota/REMOTE_KERETA_VPS) | `1_SISI_KERETA_TEMPAT_KERJA/` (kawan jalankan) & `2_LAPTOP_RUMAH_DEBUG/` (anda jalankan). |
 | **Cari APK mentah untuk dipasang** | [`apks/`](file:///d:/apps/emas-ota/apks) | 44 fail APK sedia guna: `voiceservice_ACO.apk`, `XCCamera360.apk`, `SmartTube.apk`, dll. |
 | **Cari skrip automasi (PowerShell / Python / Shell)** | [`tools/`](file:///d:/apps/emas-ota/tools) | Pecahan: `powershell/`, `python/`, `shell/`, `batch/`, `binaries/` (`yt-dlp`, `payload-dumper-go`). |
@@ -31,7 +31,7 @@ Jika anda seorang **AI Agent** atau **Developer** yang baru masuk ke workspace i
 
 Folder-folder ini adalah projek aplikasi mandiri yang aktif dibangunkan:
 
-### 1.1 [`PAKEJ_KAWAN_EMAS5/`](file:///d:/apps/emas-ota/PAKEJ_KAWAN_EMAS5)
+### 1.1 [`PAKEJ_UNLOCK_ADB_EMAS5/`](file:///d:/apps/emas-ota/PAKEJ_UNLOCK_ADB_EMAS5)
 Pakej siap pasang untuk kenderaan rakan:
 - **`1_USB_UNLOCK/update.zip`** (2.07 GB): Pakej OTA penuh pengaktifan kekal port ADB TCP 5555 & akses root.
 - **`2_PASANG_SEMUA/`**: Skrip automatik memasang SmartTube (atas TikTok), Netflix (atas JOOX), dan kawalan mod servis stereng (Hold Volume Down 5 saat).
