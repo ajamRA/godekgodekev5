@@ -1,15 +1,27 @@
-# Proton e.MAS 5 (Geely EX2 / IHU801P) Customization & Telematics Suite 🚗⚡
+# e.MAS 5 (Geely EX2 / IHU801P) Customization & Telematics Suite 🚗⚡
 
-Pusat dokumentasi teknikal induk, artifak teruji, dan arkib perisian untuk kenderaan elektrik **Proton e.MAS 5** (Platform `Geely EX2` / `IHU801P` Android 10).
+<p align="center">
+  <img src="https://img.shields.io/badge/Platform-IHU801P%20%7C%20Android%2010-0b5144?style=for-the-badge&logo=android&logoColor=white" alt="Platform" />
+  <img src="https://img.shields.io/badge/Vehicle-e.MAS%205%20%2F%20Geely%20EX2-126959?style=for-the-badge&logo=car&logoColor=white" alt="Vehicle" />
+  <img src="https://img.shields.io/badge/Release-v1.0.0%20Portable-187548?style=for-the-badge&logo=github&logoColor=white" alt="Version" />
+  <img src="https://img.shields.io/badge/Architecture-ARM64%20MT8666-3b5998?style=for-the-badge" alt="Arch" />
+</p>
+
+Pusat dokumentasi teknikal induk, artifak teruji, dan arkib perisian untuk kenderaan elektrik **e.MAS 5** (Platform `Geely EX2` / `IHU801P` Android 10).
 
 Repositori ini merangkumkan keseluruhan modul sistem, aplikasi kokpit tersuai, integrasi audio luaran AVAS, kawalan telematik jarak jauh, perlindungan servis, serta kajian firmware dan keselamatan storan eMMC.
 
 ---
 
 ### 💻 e.MAS 5 Toolbox Desktop (Windows Portable)
-[![Download Latest Release](https://img.shields.io/badge/Download_Toolbox-v1.0.0_Portable-126959?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/ajamRA/godekgodekev5/releases/tag/v1.0.0)
 
-Aplikasi desktop berasaskan **Microsoft Edge WebView2** dengan antaramuka moden tanpa frame Windows hodoh (*frameless*), kawalan tetingkap dalaman, dan operasi latar belakang senyap (*silent ADB*).
+<p align="center">
+  <a href="https://github.com/ajamRA/godekgodekev5/releases/tag/v1.0.0">
+    <img src="https://img.shields.io/badge/Download_Toolbox-v1.0.0_Portable_(296MB)-126959?style=for-the-badge&logo=windows&logoColor=white" alt="Download" />
+  </a>
+</p>
+
+Aplikasi desktop moden berasaskan **Microsoft Edge WebView2** dengan antaramuka *frameless* (tanpa header tetingkap Windows yang kaku), kawalan tetingkap dalaman, dan enjin latar belakang senyap (*silent ADB without console pop-up*).
 
 <p align="center">
   <img src="docs/images/toolbox-frameless-main.png" width="85%" alt="e.MAS 5 Toolbox Desktop Main Window" style="border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);" />
@@ -19,6 +31,24 @@ Aplikasi desktop berasaskan **Microsoft Edge WebView2** dengan antaramuka moden 
   <img src="docs/images/toolbox-aplikasi-tab.png" width="48%" alt="Aplikasi & Slot Tab" />
   <img src="docs/images/toolbox-servis-tab.png" width="48%" alt="Sandaran & Servis Tab" />
 </p>
+
+#### ⚡ Quick-Start (3 Langkah Mudah):
+1. **Muat Turun**: Ambil [`eMAS5_Toolbox_v1.0_Portable.zip`](https://github.com/ajamRA/godekgodekev5/releases/tag/v1.0.0) dan ekstrak ke mana-mana folder pada laptop.
+2. **Sambung Wi-Fi**: Sambungkan laptop dan kereta pada satu rangkaian Wi-Fi yang sama (cth: Hotspot telefon).
+3. **Lancarkan**: Klik dua kali pada **`EmasTool.exe`** $\rightarrow$ Tekan *Cari kereta di Wi-Fi* $\rightarrow$ Sedia untuk ubah aplikasi, audio dan sandaran!
+
+---
+
+### 📊 Perbandingan: Asal vs Selepas Dipasang Modifikasi
+
+| Ciri Sistem | Standard Asal Kilang | Selepas e.MAS 5 Modifikasi ⚡ |
+| :--- | :---: | :---: |
+| **Penstriman Media** | ❌ Terhad (TikTok / JOOX Music) | ✅ **SmartTube (Tanpa Iklan)** + **Netflix** |
+| **Audio Luaran (AVAS)** | ❌ 3 nada kilang monoton | ✅ **WAV Tersuai** (Retro, supercar, custom chime) |
+| **Pusat Permainan** | ❌ Tiada | ✅ **RetroArch Ozone** + Gamepad Bluetooth |
+| **Kawalan Butang Stereng**| ❌ Fungsi volum biasa | ✅ **Volume Down 5s = Toggle Stealth / Drive Mode** |
+| **Pusat Servis SC Check** | ⚠️ Risiko warranty jika dikesan | ✅ **1-Klik Stealth Mode** (100% rupa standard asal) |
+| **Sandaran Keselamatan** | ❌ Tiada akses fail sistem | ✅ **Klon Penuh eMMC (~45GB)** & Sandaran Identiti |
 
 ---
 
@@ -31,11 +61,9 @@ Aplikasi desktop berasaskan **Microsoft Edge WebView2** dengan antaramuka moden 
 
 ## 🌟 Senarai Modifikasi & Ciri Tersuai Lengkap (Full Features Catalogue)
 
-Projek ini telah menghasilkan ekosistem modifikasi lengkap merangkumi 6 kategori utama:
-
 ```
                                ┌─────────────────────────────────┐
-                               │   PROTON e.MAS 5 CUSTOM SUITE   │
+                               │    e.MAS 5 CUSTOM WORKSPACE     │
                                └────────────────┬────────────────┘
          ┌───────────────────┬──────────────────┼──────────────────┬───────────────────┐
          ▼                   ▼                  ▼                  ▼                   ▼
@@ -69,7 +97,7 @@ Memanfaatkan pembesar suara bumper hadapan (*external bumper speaker*) kenderaan
 Aplikasi kokpit berdefinisi tinggi yang disepadukan dengan sistem asal kenderaan:
 
 * **Tema Kokpit Rata (Flat Cockpit Clean Theme):**
-  * Butang terapung mengganggu `APPS >` dibuang sepenuhnya bagi mengekalkan estetik 100% konsisten dengan tema Proton Flyme Auto asal.
+  * Butang terapung mengganggu `APPS >` dibuang sepenuhnya bagi mengekalkan estetik 100% konsisten dengan tema Flyme Auto asal.
 * **Pemantauan Bateri & Graf Kuasa Masa Nyata (Live Telemetry & EV Power Graph):**
   * Membaca SoC sebenar bateri, arus (Amperes), voltan sistem, dan suhu bateri melalui `BatteryTelemetryDecoder.java`.
   * Graf penggunaan kuasa masa nyata serta bacaan brek regeneratif (*regen braking*).
@@ -87,17 +115,17 @@ Sistem kawalan telematik bebas menggunakan pelayan awan peribadi (*private cloud
   * Memantau baki bateri, mengunci/membuka kunci pintu, menghidupkan penyaman udara (AC), dan mengawal tingkap terus dari telefon.
 * **Terowong Jarak Jauh Dua Hala (Workplace <-> Home ADB Tunnel):**
   * Membolehkan penyelenggaraan atau debugging dilakukan dari rumah ke kereta di tempat kerja melalui IP selamat `43.159.63.29` tanpa pendedahan port awam.
-* **Perlindungan Anti-Tendang Aplikasi Rasmi (Proton Link Anti-Kick Guarantee):**
-  * Logik token ACO Cloud dilindungi sepenuhnya supaya aplikasi rasmi Proton Link pada telefon pemilik tidak pernah tertendang keluar (*never logged out*).
+* **Perlindungan Anti-Tendang Aplikasi Rasmi (Link Anti-Kick Guarantee):**
+  * Logik token ACO Cloud dilindungi sepenuhnya supaya sesi pada telefon pemilik tidak tertendang keluar (*never logged out*).
 
 ---
 
-### 🛡️ 4. Perlindungan Servis Pusat (Proton SC Stealth Mode)
-Ciri penting bagi melindungi jaminan dan melepasi pemeriksaan pusat servis Proton:
+### 🛡️ 4. Perlindungan Servis Pusat (SC Stealth Mode)
+Ciri penting bagi melindungi jaminan dan melepasi pemeriksaan pusat servis:
 
-* **1-Klik Proton SC Stealth Mode:**
+* **1-Klik SC Stealth Mode:**
   * Skrip automatik menyembunyikan semua mount aplikasi pihak ketiga, memulihkan JOOX Music & TikTok asal, dan mematikan port debug.
-  * Sistem kereta kelihatan 100% standard kilang di hadapan alat pengimbas diagnostik Proton Service Center.
+  * Sistem kereta kelihatan 100% standard kilang di hadapan alat pengimbas diagnostik Service Center.
 * **Pintasan Stereng Pantas (Steering Wheel Stealth Toggle):**
   * Pemandu boleh mengaktifkan atau mematikan Mod Servis terus dari tempat duduk pemandu hanya dengan **menekan butang Volume Down pada stereng selama 5 saat**!
 
@@ -141,7 +169,7 @@ Perisian pengurusan lengkap untuk pengguna dan pembangun:
 
 Hasil analisis terperinci terhadap pakej firmware MediaTek MT8666:
 
-* **Peta Memori Fizikal (`scatter.txt`):** Mengesahkan susunan alamat fizikal eMMC adalah 100% sama antara Geely Xingyuan (China) dan Proton e.MAS 5 (Malaysia), membolehkan pemetaan unbrick tepat.
+* **Peta Memori Fizikal (`scatter.txt`):** Mengesahkan susunan alamat fizikal eMMC adalah 100% sama antara Geely Xingyuan (China) dan e.MAS 5 (Malaysia), membolehkan pemetaan unbrick tepat.
 * **Evolusi Firmware MCU (`fsl_app.s19`):** Mengenal pasti peralihan perkakasan kilang dari MCU 768 KB ke 1 MB (`fsl_app_1m.s19`) yang diuruskan melalui semakan pin perkakasan `get_mcu_hw_gpio()`.
 * **Rangkaian Komunikasi VHAL:** Menjejaki aliran data CAN dari MCU ➡️ `/dev/ecp_uart_1` ➡️ `vehicleBootService` ➡️ `/dev/socket/mcu_bsp` ➡️ Android VHAL.
 
@@ -170,7 +198,7 @@ Peringkat pertama. **Wajib** sebelum pakej lain.
 
 ### 2️⃣ `PAKEJ_STEALTH_EMAS5` — Mod Servis (Stealth)
 
-Menyembunyikan semua modifikasi sebelum ke Pusat Servis Proton.
+Menyembunyikan semua modifikasi sebelum ke Pusat Servis.
 **Bertahan selepas reboot** — tidak bocor apabila kereta dihidupkan semula.
 
 ```powershell
@@ -227,7 +255,6 @@ adb shell "reboot"                                       # 3. reboot sendiri
 
 ---
 
-
 ## 📜 Tadbir Urus & SOP Operasi
 Sebelum menjalankan sebarang arahan ADB atau skrip pada kenderaan sebenar, patuhi:
 * [**`docs/ARAHAN_ASAS_EMAS5.md`**](file:///d:/apps/emas-ota/docs/ARAHAN_ASAS_EMAS5.md) *(Prinsip Keselamatan & Had Skop)*
@@ -236,4 +263,4 @@ Sebelum menjalankan sebarang arahan ADB atau skrip pada kenderaan sebenar, patuh
 
 ---
 
-*Hak Cipta Terpelihara (c) 2026 — Pembangunan Komuniti Kejuruteraan Terbuka Proton e.MAS 5.*
+*Hak Cipta Terpelihara (c) 2026 — Pembangunan Komuniti Kejuruteraan Terbuka e.MAS 5.*
