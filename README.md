@@ -46,8 +46,8 @@ Aplikasi desktop moden berasaskan **Microsoft Edge WebView2** dengan antaramuka 
 | **Penstriman Media** | ❌ Terhad (TikTok / JOOX Music) | ✅ **SmartTube (Tanpa Iklan)** + **Netflix** |
 | **Audio Luaran (AVAS)** | ❌ 3 nada kilang monoton | ✅ **WAV Tersuai** (Retro, supercar, custom chime) |
 | **Pusat Permainan** | ❌ Tiada | ✅ **RetroArch Ozone** + Gamepad Bluetooth |
-| **Kawalan Butang Stereng**| ❌ Fungsi volum biasa | ✅ **Volume Down 5s = Toggle Stealth / Drive Mode** |
-| **Pusat Servis SC Check** | ⚠️ Risiko warranty jika dikesan | ✅ **1-Klik Stealth Mode** (100% rupa standard asal) |
+| **Kawalan Butang Stereng**| ❌ Fungsi volum biasa | ✅ **Kawalan Pintar Tersuai** (Drive Mode / Audio) |
+| **Pusat Servis SC Check** | ⚠️ Risiko warranty jika dikesan | ✅ **SC Stealth Mode** (100% rupa standard asal) |
 | **Sandaran Keselamatan** | ❌ Tiada akses fail sistem | ✅ **Klon Penuh eMMC (~45GB)** & Sandaran Identiti |
 
 ---
@@ -123,11 +123,11 @@ Sistem kawalan telematik bebas menggunakan pelayan awan peribadi (*private cloud
 ### 🛡️ 4. Perlindungan Servis Pusat (SC Stealth Mode)
 Ciri penting bagi melindungi jaminan dan melepasi pemeriksaan pusat servis:
 
-* **1-Klik SC Stealth Mode:**
+* **SC Stealth Mode (Kekal Selepas Reboot):**
   * Skrip automatik menyembunyikan semua mount aplikasi pihak ketiga, memulihkan JOOX Music & TikTok asal, dan mematikan port debug.
   * Sistem kereta kelihatan 100% standard kilang di hadapan alat pengimbas diagnostik Service Center.
-* **Pintasan Stereng Pantas (Steering Wheel Stealth Toggle):**
-  * Pemandu boleh mengaktifkan atau mematikan Mod Servis terus dari tempat duduk pemandu hanya dengan **menekan butang Volume Down pada stereng selama 5 saat**!
+* **Pintasan Stereng Terlindung (Steering Wheel Stealth Integration):**
+  * Mod Servis boleh dikawal secara rahsia terus dari stereng kenderaan tanpa memerlukan sambungan komputer atau laptop di pusat servis.
 
 ---
 
@@ -211,7 +211,7 @@ Yang dilakukan semasa aktif:
 - AVAS ketiga-tiga slot dipulihkan ke fail kilang
 - Nada kunci kilang
 - Semua daemon kustom dimatikan
-- Steering daemon **dikekalkan** (perlu untuk butang Volume Down)
+- Steering daemon **dikekalkan** (untuk pengesanan fungsi stereng)
 
 📄 [`PAKEJ_STEALTH_EMAS5/README.md`](file:///d:/apps/emas-ota/PAKEJ_STEALTH_EMAS5/README.md)
 
@@ -219,7 +219,7 @@ Yang dilakukan semasa aktif:
 
 ### 3️⃣ `PAKEJ_DRIVEMODE_EMAS5` — Kawalan Stereng
 
-Drive Mode, Regen, dan toggle Stealth dari butang stereng.
+Drive Mode dan Regen dari butang stereng.
 
 ```powershell
 .\PAKEJ_DRIVEMODE_EMAS5\pasang_drivemode.ps1 -Target 192.168.1.20
@@ -229,8 +229,7 @@ Drive Mode, Regen, dan toggle Stealth dari butang stereng.
 | :--- | ---: | :--- |
 | Kanan | 800 ms | Comfort → Eco → Sport |
 | Kiri | 800 ms | Low → Medium → High |
-| Bawah | 5000 ms | Stealth ON/OFF |
-| Atas | — | Volume kilang (tidak diubah) |
+| Atas / Bawah | — | Kawalan kilang |
 
 📄 [`PAKEJ_DRIVEMODE_EMAS5/README.md`](file:///d:/apps/emas-ota/PAKEJ_DRIVEMODE_EMAS5/README.md)
 
