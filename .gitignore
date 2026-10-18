@@ -107,3 +107,44 @@ litecamrvcdev
 calib_front.bmp
 *.idsig
 *.txt
+
+# =======================================================
+# 2026-10-18 — Pengecualian artifak besar (bukan source)
+# Folder ini kekal di laptop sebagai arkib/bukti, tetapi tidak
+# dimasukkan dalam git kerana saiz berbilion bait.
+# =======================================================
+
+# Dump/decompile besar
+_re_decompiled/
+Geely Xingyuan/
+_backups/
+builds/
+apks/
+_retro_gaming/
+_build_temp/
+_archive_experiments/
+null/
+"PowerShell 7.6.5/"
+
+# Bukti & build artifacts (sebahagian daripadanya di-ignore oleh corak di atas;
+# baris di bawah memastikan tiada tinggalan lolos)
+artifacts/
+scratch/
+
+# Binary/tools yang dibundel dalam toolbox (adb, ffmpeg, node portable)
+EMAS_TOOLBOX_DESKTOP/tools/
+EMAS_TOOLBOX_DESKTOP/presets/
+
+# Pakej 2 GB untuk kawan (update.zip dll.)
+PAKEJ_KAWAN_EMAS5/1_USB_UNLOCK/
+PAKEJ_KAWAN_EMAS5/2_PASANG_SEMUA/apps/
+PAKEJ_KAWAN_EMAS5/3_PULIHKAN_JOOX/
+
+# Output build Gradle (EmasWirelessGameHub)
+EmasWirelessGameHub/**/build/
+EmasWirelessGameHub/.gradle/
+EmasWirelessGameHub/APKS_SIAP_PASANG/
+
+# Snapshot APK / attachment pihak ketiga
+.codex-remote-attachments/
+.netlify/

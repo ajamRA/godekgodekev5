@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "crack_percent": 7,
+  "ventilation_mode": false,
+  "ventilation_duration_min": 30,
+  "ventilation_start_time": 0,
+  "unlock_sound_enabled": true,
+  "unlock_sound_output": "both",
+  "unlock_sound_preset": "omar_hana",
+  "abrp_token": "afe5e7d9-1bf9-41ef-b438-143905977494",
+  "drive_mode_lock_enabled": false,
+  "locked_drive_mode": 2,
+  "locked_regen_level": 3,
+  "locked_brake_pedal": 2,
+  "locked_comfort_brake": 0
+}

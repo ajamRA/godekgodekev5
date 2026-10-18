@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>e.MAS Living AI Voice Orb</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #020906;
+    cursor: pointer;
+    touch-action: manipulation;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  #canvas-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+  }
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .vignette {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+    background: radial-gradient(circle at center, transparent 40%, rgba(2, 9, 6, 0.65) 75%, #020906 100%);
+  }
+
+  /* Ethereal Floating Synced Lyrics (No Box / No Border) */
+  #synced-lyrics-overlay {
+    position: absolute;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 700px;
+    text-align: center;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1), transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  #synced-lyrics-overlay.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-6px);
+  }
+
+  .arabic-text {
+    font-family: "Amiri", "Traditional Arabic", "Scheherazade New", serif;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.5;
+    color: #6ee7b7;
+    text-shadow: 0 0 25px rgba(110, 231, 183, 0.75), 0 0 50px rgba(16, 185, 129, 0.45);
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+  }
+
+  .rumi-text {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: #e2e8f0;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
+    margin-bottom: 4px;
+  }
+
+  .meaning-text {
+    font-size: 12px;
+    font-weight: 400;
+    color: #94a3b8;
+    letter-spacing: 0.3px;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+  }
+
+  @media (max-width: 768px) {
+    #synced-lyrics-overlay {
+      bottom: 35px;
+      width: 92%;
+    }
+    .arabic-text {
+      font-size: 25px;
+      line-height: 1.4;
+    }
+    .rumi-text {
+      font-size: 12px;
+    }
+    .meaning-text {
+      font-size: 11px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="vignette"></div>
+
+<div id="canvas-container">
+  <canvas id="glcanvas"></canvas>
+</div>
+
+<!-- Ethereal Floating Synced Lyrics -->
+<div id="synced-lyrics-overlay">
+  <div class="arabic-text" id="lyric-arabic"></div>
+  <div class="rumi-text" id="lyric-rumi"></div>
+  <div class="meaning-text" id="lyric-meaning"></div>
+</div>
+
+<!-- WebGL Raymarching Shader Pipeline -->
+<script id="vs" type="x-shader/x-vertex">
+  attribute vec2 position;
+  void main() {
+    gl_Position = vec4(position, 0.0, 1.0);
+  }
+</script>
+
+<script id="fs" type="x-shader/x-fragment">
+  precision highp float;
+  uniform vec2 u_resolution;
+  uniform float u_time;
+  uniform float u_audio_bass;
+  uniform float u_audio_mid;
+  uniform float u_audio_high;
+  uniform float u_audio_vol;
+
+  // Rotation helpers
+  mat2 rot(float a) {
+    float s = sin(a), c = cos(a);
+    return mat2(c, -s, s, c);
+  }
+
+  // Smooth Minimum for organic fluid metaball fusion
+  float smin(float a, float b, float k) {
+    float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
+    return mix(b, a, h) - k * h * (1.0 - h);
+  }
+
+  // Distance to a smooth rounded capsule / ellipsoid
+  float sdCapsule(vec3 p, vec3 a, vec3 b, float r) {
+    vec3 pa = p - a, ba = b - a;
+    float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+    return length(pa - ba * h) - r;
+  }
+
+  // Exact 3D Multi-Lobe Organic Molecular SDF (Compact Jade Scale)
+  float map(vec3 p) {
+    float t = u_time * 0.7;
+
+    // Gentle 3D rotation of the entire cluster
+    p.xz *= rot(sin(t * 0.4) * 0.25);
+    p.yz *= rot(cos(t * 0.3) * 0.15);
+
+    // Audio reactivity expansion
+    float bassExpand = u_audio_bass * 0.24;
+    float midMorph = u_audio_mid * 0.20;
+    float voiceVol = u_audio_vol * 0.16;
+
+    // 1. Central Core compact capsule
+    vec3 cA = vec3(0.0, -0.32, 0.0);
+    vec3 cB = vec3(0.0,  0.32, 0.0);
+    float coreRadius = 0.44 + bassExpand + voiceVol * 0.4;
+    float d = sdCapsule(p, cA, cB, coreRadius);
+
+    // 2. Orbital Fused Lobes (Smooth, Velvety, Translucent metaballs)
+    float orbitalRadius = 0.64 + midMorph * 0.32;
+    for (int i = 0; i < 6; i++) {
+      float fi = float(i);
+      float angle = fi * 1.047197 + t * 0.6; // 60-degree rotation
+      
+      // Vertical breathing and gentle undulating wave
+      float yPos = sin(t * 1.2 + fi * 1.2) * 0.28 + cos(t * 0.8 + fi * 0.5) * 0.12;
+      float zOffset = sin(angle + t * 0.5) * orbitalRadius;
+      float xOffset = cos(angle + t * 0.5) * orbitalRadius;
+
+      vec3 lobePos = vec3(xOffset, yPos, zOffset);
+      float lobeR = 0.32 + sin(t * 1.5 + fi * 1.1) * 0.04 + midMorph * 0.22;
+
+      float dLobe = length(p - lobePos) - lobeR;
+      // Soft organic blend
+      d = smin(d, dLobe, 0.40);
+    }
+
+    // 3. Very subtle, ultra-soft silky surface wave
+    float ripple = sin(p.y * 4.2 + t * 2.2) * cos(p.x * 4.2 + t * 1.8) * (0.015 + u_audio_high * 0.025);
+    d += ripple;
+
+    return d;
+  }
+
+  vec3 calcNormal(vec3 p) {
+    const float eps = 0.0015;
+    const vec2 h = vec2(eps, 0.0);
+    return normalize(vec3(
+      map(p + h.xyy) - map(p - h.xyy),
+      map(p + h.yxy) - map(p - h.yxy),
+      map(p + h.yyx) - map(p - h.yyx)
+    ));
+  }
+
+  void main() {
+    vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution.xy) / min(u_resolution.y, u_resolution.x);
+
+    // Camera ray setup positioned cleanly back for compact proportion
+    vec3 ro = vec3(0.0, 0.0, 5.8);
+    vec3 rd = normalize(vec3(uv, -1.8));
+
+    // Raymarching with volumetric glow accumulation
+    float t = 0.0;
+    float d = 0.0;
+    float glowAcc = 0.0;
+    float minD = 100.0;
+
+    for (int i = 0; i < 80; i++) {
+      vec3 p = ro + rd * t;
+      d = map(p);
+      minD = min(minD, d);
+      
+      // Accumulate smooth volumetric jade aura along the ray
+      glowAcc += exp(-max(d, 0.0) * 4.6) * 0.022;
+
+      if (d < 0.001 || t > 9.5) break;
+      t += d * 0.75;
+    }
+
+    // Deep obsidian jade cosmic backdrop color
+    vec3 col = vec3(0.004, 0.018, 0.014);
+
+    // Floating twinkling cosmic particles (Mint Jade)
+    vec2 pGrid = uv * 10.0;
+    vec2 id = floor(pGrid);
+    float starRand = fract(sin(dot(id, vec2(12.9898, 78.233))) * 43758.5453);
+    if (starRand > 0.94) {
+      vec2 gv = fract(pGrid) - 0.5;
+      float starDist = length(gv);
+      float sparkle = sin(u_time * 2.5 + starRand * 6.28) * 0.5 + 0.5;
+      float starGlow = smoothstep(0.09, 0.0, starDist) * (0.35 + sparkle * 0.65 + u_audio_high * 0.5);
+      col += vec3(0.35, 1.0, 0.72) * starGlow * 0.8;
+    }
+
+    // Outer ethereal Jade Green / Emerald atmospheric scattering aura
+    vec3 auraColor = mix(vec3(0.02, 0.52, 0.34), vec3(0.18, 0.95, 0.65), u_audio_vol * 0.7);
+    col += auraColor * glowAcc * (1.1 + u_audio_vol * 1.6);
+    col += auraColor * (0.018 / (minD * minD + 0.025)) * (0.6 + u_audio_vol * 1.2);
+
+    // Hit the Blob Surface
+    if (t < 9.5) {
+      vec3 p = ro + rd * t;
+      vec3 n = calcNormal(p);
+      vec3 v = -rd;
+
+      // Lighting components
+      float fresnel = pow(1.0 - max(dot(n, v), 0.0), 2.2);
+      float rim = pow(1.0 - max(dot(n, v), 0.0), 4.0);
+      float diff = max(dot(n, normalize(vec3(0.4, 0.75, 1.0))), 0.0);
+      float sss = pow(max(dot(n, -v), 0.0), 2.8) * 0.65; // Subsurface scattering
+
+      // Jade Green Signature Palette
+      vec3 deepJade     = vec3(0.01, 0.17, 0.12);
+      vec3 midJade      = vec3(0.06, 0.62, 0.40);
+      vec3 coreJade     = vec3(0.35, 0.96, 0.68);
+      vec3 rimHighlight = vec3(0.70, 0.98, 0.85);
+
+      // Gradient shading
+      vec3 surfColor = mix(deepJade, midJade, diff * 0.65 + 0.35);
+      surfColor = mix(surfColor, coreJade, fresnel * 0.6 + u_audio_bass * 0.3);
+      surfColor += coreJade * sss * 1.25;
+      surfColor += rimHighlight * (rim * 1.45 + u_audio_vol * 0.5);
+
+      // Internal energy pulsation (Jade Mint glow)
+      surfColor += vec3(0.20, 0.92, 0.65) * (u_audio_bass * 0.45 + u_audio_mid * 0.35);
+
+      col = mix(col, surfColor, 0.96);
+    }
+
+    // High quality ACES-like Tone mapping & soft saturation
+    col = col / (1.0 + col * 0.65);
+    col = pow(col, vec3(0.95));
+
+    gl_FragColor = vec4(col, 1.0);
+  }
+</script>
+
+<script>
+  // WebGL Pipeline Setup
+  const canvas = document.getElementById('glcanvas');
+  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+
+  function resize() {
+    canvas.width = window.innerWidth * (window.devicePixelRatio || 1);
+    canvas.height = window.innerHeight * (window.devicePixelRatio || 1);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function createShader(gl, type, source) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, source);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+      console.error(gl.getShaderInfoLog(s));
+      gl.deleteShader(s);
+      return null;
+    }
+    return s;
+  }
+
+  const vsSource = document.getElementById('vs').text;
+  const fsSource = document.getElementById('fs').text;
+  const vs = createShader(gl, gl.VERTEX_SHADER, vsSource);
+  const fs = createShader(gl, gl.FRAGMENT_SHADER, fsSource);
+  const program = gl.createProgram();
+  gl.attachShader(program, vs);
+  gl.attachShader(program, fs);
+  gl.linkProgram(program);
+  gl.useProgram(program);
+
+  const quadBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    -1, -1,  1, -1, -1,  1,
+    -1,  1,  1, -1,  1,  1
+  ]), gl.STATIC_DRAW);
+
+  const posAttr = gl.getAttribLocation(program, 'position');
+  gl.enableVertexAttribArray(posAttr);
+  gl.vertexAttribPointer(posAttr, 2, gl.FLOAT, false, 0, 0);
+
+  const uResolution = gl.getUniformLocation(program, 'u_resolution');
+  const uTime = gl.getUniformLocation(program, 'u_time');
+  const uAudioBass = gl.getUniformLocation(program, 'u_audio_bass');
+  const uAudioMid = gl.getUniformLocation(program, 'u_audio_mid');
+  const uAudioHigh = gl.getUniformLocation(program, 'u_audio_high');
+  const uAudioVol = gl.getUniformLocation(program, 'u_audio_vol');
+
+  // Audio Engine & Analyzer
+  let audioCtx = null;
+  let analyser = null;
+  let currentSourceNode = null;
+  let audioBuffers = {};
+
+  let activeTrack = null;
+  let trackStartTime = 0;
+  let activeLyric = null;
+  let trackIndex = 0;
+
+  let audioValues = { bass: 0, mid: 0, high: 0, vol: 0 };
+  let targetAudio = { bass: 0, mid: 0, high: 0, vol: 0 };
+
+  const TRACKS = [
+    {
+      id: 'salam',
+      title: 'Salam Kenderaan',
+      file: 'salam.wav',
+      duration: 3.05,
+      lyrics: [
+        {
+          start: 0.0,
+          end: 3.05,
+          arabic: "السَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ",
+          rumi: "Assalamu'alaikum Warahmatullahi Wabarakatuh",
+          meaning: "Selamat Datang ke Proton e.MAS 5"
+        }
+      ]
+    },
+    {
+      id: 'doa',
+      title: 'Doa Naik Kenderaan',
+      file: 'gear_doa.wav',
+      duration: 18.79,
+      lyrics: [
+        {
+          start: 0.0,
+          end: 3.2,
+          arabic: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
+          rumi: "Bismillahir-Rahmanir-Rahim",
+          meaning: "Dengan nama Allah Yang Maha Pengasih, Maha Penyayang"
+        },
+        {
+          start: 3.2,
+          end: 8.8,
+          arabic: "سُبْحَانَ الَّذِي سَخَّرَ لَنَا هَٰذَا",
+          rumi: "Subhanallazi sakh-khara lana haza",
+          meaning: "Maha Suci Allah yang memudahkan kenderaan ini bagi kami"
+        },
+        {
+          start: 8.8,
+          end: 13.5,
+          arabic: "وَمَا كُنَّا لَهُ مُقْرِنِينَ",
+          rumi: "Wa ma kunna lahu muqrinin",
+          meaning: "Sedang kami sebelumnya tidak mampu menguasainya"
+        },
+        {
+          start: 13.5,
+          end: 18.79,
+          arabic: "وَإِنَّا إِلَىٰ رَبِّنَا لَمُنقَلِبُونَ",
+          rumi: "Wa inna ila Rabbina lamunqalibun",
+          meaning: "Dan sesungguhnya kepada Tuhan kamilah kami akan kembali"
+        }
+      ]
+    }
+  ];
+
+  function initAudioContext() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.8;
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  }
+
+  async function loadAudioBuffer(url) {
+    if (audioBuffers[url]) return audioBuffers[url];
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const arrBuf = await res.arrayBuffer();
+      const decoded = await audioCtx.decodeAudioData(arrBuf);
+      audioBuffers[url] = decoded;
+      return decoded;
+    } catch (err) {
+      console.warn('Cannot load audio file ' + url + ':', err);
+      return null;
+    }
+  }
+
+  function stopAllAudio() {
+    if (currentSourceNode) {
+      try {
+        currentSourceNode.stop();
+        currentSourceNode.disconnect();
+      } catch (e) {}
+      currentSourceNode = null;
+    }
+    activeTrack = null;
+    trackStartTime = 0;
+    activeLyric = null;
+    hideLyricDOM();
+  }
+
+  async function playTrack(idx) {
+    initAudioContext();
+    stopAllAudio();
+
+    const track = TRACKS[idx];
+    if (!track) return;
+
+    activeTrack = track;
+    trackStartTime = audioCtx.currentTime;
+    activeLyric = null;
+
+    const buffer = await loadAudioBuffer(track.file);
+    if (buffer && activeTrack === track) {
+      const src = audioCtx.createBufferSource();
+      src.buffer = buffer;
+
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(1.0, audioCtx.currentTime);
+
+      src.connect(analyser);
+      src.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      src.start(0);
+      currentSourceNode = src;
+
+      src.onended = () => {
+        if (activeTrack === track) {
+          stopAllAudio();
+          // Auto advance to next track in sequence (Salam -> Doa)
+          if (idx + 1 < TRACKS.length) {
+            setTimeout(() => {
+              playTrack(idx + 1);
+            }, 600);
+          }
+        }
+      };
+    } else {
+      // Fallback synthetic voice if fetch fails
+      playSynthFallback(track, idx);
+    }
+  }
+
+  function playSynthFallback(track, idx) {
+    const osc1 = audioCtx.createOscillator();
+    const osc2 = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    const filter = audioCtx.createBiquadFilter();
+
+    filter.type = 'bandpass';
+    filter.Q.value = 4.0;
+    osc1.type = 'sawtooth';
+    osc2.type = 'triangle';
+
+    const now = audioCtx.currentTime;
+    const duration = track.duration;
+
+    osc1.frequency.setValueAtTime(150, now);
+    osc1.frequency.linearRampToValueAtTime(180, now + duration * 0.5);
+    osc1.frequency.linearRampToValueAtTime(140, now + duration);
+
+    osc2.frequency.setValueAtTime(300, now);
+    osc2.frequency.linearRampToValueAtTime(360, now + duration * 0.5);
+    osc2.frequency.linearRampToValueAtTime(280, now + duration);
+
+    filter.frequency.setValueAtTime(900, now);
+    filter.frequency.linearRampToValueAtTime(1500, now + duration * 0.5);
+    filter.frequency.linearRampToValueAtTime(850, now + duration);
+
+    gainNode.gain.setValueAtTime(0.001, now);
+    gainNode.gain.linearRampToValueAtTime(0.35, now + 0.2);
+    gainNode.gain.setValueAtTime(0.35, now + duration - 0.4);
+    gainNode.gain.linearRampToValueAtTime(0.001, now + duration);
+
+    osc1.connect(filter);
+    osc2.connect(filter);
+    filter.connect(gainNode);
+    gainNode.connect(analyser);
+    gainNode.connect(audioCtx.destination);
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + duration);
+    osc2.stop(now + duration);
+
+    currentSourceNode = {
+      stop: () => {
+        try { osc1.stop(); osc2.stop(); } catch(e){}
+      },
+      disconnect: () => {}
+    };
+
+    setTimeout(() => {
+      if (activeTrack === track) {
+        stopAllAudio();
+        if (typeof idx === 'number' && idx + 1 < TRACKS.length) {
+          setTimeout(() => playTrack(idx + 1), 600);
+        }
+      }
+    }, duration * 1000);
+  }
+
+  const lyricOverlay = document.getElementById('synced-lyrics-overlay');
+  const lyricArabic = document.getElementById('lyric-arabic');
+  const lyricRumi = document.getElementById('lyric-rumi');
+  const lyricMeaning = document.getElementById('lyric-meaning');
+
+  function updateLyricDOM(arabic, rumi, meaning) {
+    lyricArabic.textContent = arabic;
+    lyricRumi.textContent = rumi;
+    lyricMeaning.textContent = meaning;
+    lyricOverlay.classList.add('visible');
+  }
+
+  function hideLyricDOM() {
+    lyricOverlay.classList.remove('visible');
+  }
+
+  // Auto-run sequence on page load immediately
+  window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      playTrack(0);
+    }, 300);
+  });
+
+  // Tap anywhere on screen to restart / cycle
+  function handleScreenTap() {
+    initAudioContext();
+    trackIndex = (trackIndex + 1) % TRACKS.length;
+    playTrack(trackIndex);
+  }
+
+  window.addEventListener('click', handleScreenTap);
+  window.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    handleScreenTap();
+  }, { passive: false });
+
+  // Animation Loop & Render Pipeline
+  const dataArray = new Uint8Array(128);
+  let startTime = performance.now();
+
+  function render(time) {
+    const elapsed = (time - startTime) * 0.001;
+
+    // Synchronize lyrics with audio playback
+    if (activeTrack && trackStartTime > 0 && audioCtx) {
+      const audioElapsed = audioCtx.currentTime - trackStartTime;
+      const currentLyric = activeTrack.lyrics.find(l => audioElapsed >= l.start && audioElapsed < l.end);
+
+      if (currentLyric) {
+        if (activeLyric !== currentLyric) {
+          activeLyric = currentLyric;
+          updateLyricDOM(currentLyric.arabic, currentLyric.rumi, currentLyric.meaning);
+        }
+      } else if (audioElapsed >= activeTrack.duration) {
+        hideLyricDOM();
+      }
+    }
+
+    // Read Audio Analyzer Frequencies
+    if (analyser) {
+      analyser.getByteFrequencyData(dataArray);
+
+      let bSum = 0, mSum = 0, hSum = 0;
+      for (let i = 0; i < 8; i++) bSum += dataArray[i];
+      for (let i = 8; i < 40; i++) mSum += dataArray[i];
+      for (let i = 40; i < 100; i++) hSum += dataArray[i];
+
+      targetAudio.bass = (bSum / 8.0) / 255.0;
+      targetAudio.mid = (mSum / 32.0) / 255.0;
+      targetAudio.high = (hSum / 60.0) / 255.0;
+      targetAudio.vol = (targetAudio.bass * 0.5 + targetAudio.mid * 0.35 + targetAudio.high * 0.15);
+    }
+
+    const lerpSpeed = 0.18;
+    audioValues.bass += (targetAudio.bass - audioValues.bass) * lerpSpeed;
+    audioValues.mid += (targetAudio.mid - audioValues.mid) * lerpSpeed;
+    audioValues.high += (targetAudio.high - audioValues.high) * lerpSpeed;
+    audioValues.vol += (targetAudio.vol - audioValues.vol) * lerpSpeed;
+
+    gl.useProgram(program);
+    gl.uniform2f(uResolution, canvas.width, canvas.height);
+    gl.uniform1f(uTime, elapsed);
+    gl.uniform1f(uAudioBass, audioValues.bass);
+    gl.uniform1f(uAudioMid, audioValues.mid);
+    gl.uniform1f(uAudioHigh, audioValues.high);
+    gl.uniform1f(uAudioVol, audioValues.vol);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    requestAnimationFrame(render);
+  }
+
+  requestAnimationFrame(render);
+</script>
+</body>
+</html>

@@ -7,7 +7,7 @@
 # 3. Hidupkan semula daemon (GearAudio, Megaphone, Telemetry).
 # ==============================================================================
 
-$targetIp = "192.168.1.19"
+$targetIp = "192.168.1.20"
 if ($args.Count -gt 0) { $targetIp = $args[0] }
 $device = "${targetIp}:5555"
 
@@ -31,7 +31,8 @@ $appsToEnable = @(
     "com.netflix.mediaclient",
     "org.smarttube.stable",
     "com.noor.thenoorcar",
-    "com.cybercat.acbridge"
+    "com.cybercat.acbridge",
+    "com.retroarch.aarch64"
 )
 
 foreach ($pkg in $appsToEnable) {

@@ -1,0 +1,17 @@
+# Android AVAS scripts must retain LF when checked out on Windows.
+start_avas_daemon.sh text eol=lf
+avas_cli.sh text eol=lf
+avas_boot.sh text eol=lf
+sync_avas.sh text eol=lf
+resume_avas_on_boot.sh text eol=lf
+avas_recovery_guard.sh text eol=lf
+avas_recovery_guard.rc text eol=lf
+thermal_manager_wrapper.sh text eol=lf
+start_resources_avas.sh text eol=lf
+start_megaphone.sh text eol=lf
+stop_megaphone.sh text eol=lf
+apply_ota_avas.sh text eol=lf
+avas_fix.sh text eol=lf
+init_avas_bind.sh text eol=lf
+dist_avas/*.sh text eol=lf
+EMAS_TOOLBOX_DESKTOP/presets/avas/*.sh text eol=lf

@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="ms" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Proton e.MAS 5 — Swiss Complete Cockpit Launcher</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"IBM Plex Sans"', 'system-ui', 'sans-serif'],
+            mono: ['"IBM Plex Mono"', 'monospace'],
+          },
+          colors: {
+            swiss: {
+              red: '#E11D48',
+              surface: '#1C1917',
+              border: '#292524',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .tabular {
+      font-variant-numeric: tabular-nums;
+    }
+    .map-pattern {
+      background-color: #0c0a09;
+      background-image: 
+        radial-gradient(circle at 50% 50%, rgba(225, 29, 72, 0.05) 0%, transparent 60%),
+        linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+      background-size: 100% 100%, 36px 36px, 36px 36px;
+    }
+  </style>
+</head>
+<body class="bg-stone-950 text-stone-50 h-screen w-screen overflow-hidden flex flex-col justify-between p-5 antialiased">
+
+  <!-- ================= TOP HEADER (STATUS & MAIN NAVIGATION TABS) ================= -->
+  <header class="grid grid-cols-12 items-center border-b border-stone-800 pb-3 text-xs">
+    <!-- Left: Car Identity -->
+    <div class="col-span-3 flex items-center space-x-3">
+      <span class="font-semibold tracking-widest text-stone-100 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-rose-600 inline-block"></span>
+        PROTON e.MAS 5
+      </span>
+      <span class="text-stone-500 font-mono text-[11px]" id="clock">12:45:00</span>
+    </div>
+
+    <!-- Center: 4 Master Cockpit Tabs (Swiss Segmented Bar) -->
+    <nav class="col-span-6 flex justify-center items-center">
+      <div class="grid grid-cols-4 gap-1 p-1 bg-stone-900 border border-stone-800 rounded-xl font-mono text-[11px] w-full max-w-lg text-center">
+        <button onclick="switchPage('nav')" id="tab-nav" class="py-2 px-3 rounded-lg font-medium tracking-wider transition-all bg-stone-800 text-stone-50 border border-stone-700 shadow-sm flex items-center justify-center gap-1.5">
+          <span>🗺️</span> MAPS
+        </button>
+        <button onclick="switchPage('charging')" id="tab-charging" class="py-2 px-3 rounded-lg font-medium tracking-wider transition-all text-stone-400 hover:text-stone-200 flex items-center justify-center gap-1.5">
+          <span>⚡</span> CHARGE
+        </button>
+        <button onclick="switchPage('radio')" id="tab-radio" class="py-2 px-3 rounded-lg font-medium tracking-wider transition-all text-stone-400 hover:text-stone-200 flex items-center justify-center gap-1.5">
+          <span>📻</span> RADIO
+        </button>
+        <button onclick="switchPage('controls')" id="tab-controls" class="py-2 px-3 rounded-lg font-medium tracking-wider transition-all text-stone-400 hover:text-stone-200 flex items-center justify-center gap-1.5">
+          <span>🚗</span> CAR
+        </button>
+      </div>
+    </nav>
+
+    <!-- Right: Telemetry & Indicators -->
+    <div class="col-span-3 flex justify-end items-center space-x-5 font-mono text-stone-400 text-xs">
+      <div class="flex items-center gap-1.5">
+        <span class="text-stone-500 text-[10px]">BATTERY</span>
+        <span class="text-stone-100 font-medium tabular text-sm">84%</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="text-stone-500 text-[10px]">RANGE</span>
+        <span class="text-rose-400 font-medium tabular text-sm">325&nbsp;KM</span>
+      </div>
+      <span class="text-emerald-400 text-[11px] font-sans font-medium tracking-widest">READY</span>
+    </div>
+  </header>
+
+  <!-- ================= MAIN VIEWPORT (SPLIT LAYOUT: PERMANENT HUD + DYNAMIC PAGE) ================= -->
+  <main class="grid grid-cols-12 gap-5 my-auto flex-1 items-stretch py-4 overflow-hidden">
+
+    <!-- ================= PERMANENT LEFT HUD (COL 1-3) ================= -->
+    <aside class="col-span-3 bg-stone-900/60 border border-stone-800/90 rounded-2xl p-5 flex flex-col justify-between">
+      <!-- Speedometer -->
+      <div>
+        <div class="flex justify-between items-center text-stone-400 text-xs tracking-wider uppercase font-mono mb-1">
+          <span>SPEED</span>
+          <span class="text-stone-500">LIMIT 110</span>
+        </div>
+        <div class="flex items-baseline space-x-2">
+          <span class="text-7xl font-light tracking-tight tabular text-stone-50" id="hud-speed">0</span>
+          <span class="text-lg font-normal text-stone-400 font-mono">KM/H</span>
+        </div>
+      </div>
+
+      <!-- Gear Selector -->
+      <div class="py-3 border-y border-stone-800/60">
+        <div class="text-[10px] text-stone-500 uppercase tracking-widest font-mono mb-2">PRND TRANSMISSION</div>
+        <div class="grid grid-cols-4 gap-1.5 font-mono font-medium text-center text-xs">
+          <button class="py-1.5 rounded bg-stone-950 border border-stone-800 text-rose-500 font-bold">P</button>
+          <button class="py-1.5 rounded text-stone-600 hover:text-stone-300">R</button>
+          <button class="py-1.5 rounded text-stone-600 hover:text-stone-300">N</button>
+          <button class="py-1.5 rounded text-stone-600 hover:text-stone-300">D</button>
+        </div>
+      </div>
+
+      <!-- 3 Real Drive Modes for e.MAS 5 -->
+      <div>
+        <div class="flex justify-between items-center text-[11px] tracking-wider uppercase text-stone-400 font-mono mb-2">
+          <span>DRIVE MODE</span>
+          <span class="text-rose-400 font-medium" id="hud-mode-text">COMFORT</span>
+        </div>
+        <div class="grid grid-cols-3 gap-1.5 p-1 bg-stone-950 rounded-xl border border-stone-800">
+          <button onclick="setDriveMode('ECO')" id="hud-eco" class="py-2 text-xs font-medium tracking-wider rounded-lg text-stone-400 hover:text-stone-200 transition">
+            ECO
+          </button>
+          <button onclick="setDriveMode('COMFORT')" id="hud-comfort" class="py-2 text-xs font-medium tracking-wider rounded-lg bg-stone-800 text-stone-50 border border-stone-700 shadow-sm transition">
+            COMF
+          </button>
+          <button onclick="setDriveMode('SPORT')" id="hud-sport" class="py-2 text-xs font-medium tracking-wider rounded-lg text-stone-400 hover:text-stone-200 transition">
+            SPORT
+          </button>
+        </div>
+      </div>
+
+      <!-- Regen Braking -->
+      <div class="pt-2">
+        <div class="text-[10px] text-stone-500 uppercase tracking-widest font-mono mb-2">REGENERATIVE BRAKING</div>
+        <div class="grid grid-cols-3 gap-1 bg-stone-950 p-1 rounded-xl border border-stone-800 font-mono text-xs text-center">
+          <button onclick="setRegen(this)" class="py-1 text-stone-400 hover:text-stone-200">LOW</button>
+          <button onclick="setRegen(this)" class="py-1 bg-stone-800 text-stone-50 rounded border border-stone-700">MID</button>
+          <button onclick="setRegen(this)" class="py-1 text-stone-400 hover:text-stone-200">HIGH</button>
+        </div>
+      </div>
+
+      <!-- 360 Camera Quick Trigger Button -->
+      <button onclick="launch360()" class="w-full py-3 bg-stone-950 hover:bg-stone-800 border border-stone-800 rounded-xl flex items-center justify-center gap-2 text-xs font-medium text-stone-200 transition">
+        <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+        LAUNCH 360° CAM
+      </button>
+    </aside>
+
+    <!-- ================= DYNAMIC VIEWPORT (COL 4-12) ================= -->
+    <div class="col-span-9 bg-stone-900/60 border border-stone-800/90 rounded-2xl p-6 flex flex-col justify-between overflow-hidden relative">
+
+      <!-- ================= 1. PAGE: MAPS & NAVIGATION ================= -->
+      <section id="page-nav" class="h-full flex flex-col justify-between">
+        <!-- Map Header bar -->
+        <div class="flex justify-between items-center pb-4 border-b border-stone-800/80 z-10">
+          <div class="flex items-center space-x-3">
+            <span class="w-3 h-3 rounded-full bg-rose-600"></span>
+            <span class="text-sm font-medium text-stone-100">Jalan Tun Razak, Kuala Lumpur</span>
+            <span class="text-stone-500 text-xs font-mono">→ Menuju KLCC (4.2 km · 9 Minit)</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="launchExternalNav('waze')" class="px-3 py-1.5 bg-stone-950 hover:bg-stone-800 border border-stone-800 rounded-lg text-xs font-mono text-stone-300">Waze</button>
+            <button onclick="launchExternalNav('abrp')" class="px-3 py-1.5 bg-stone-950 hover:bg-stone-800 border border-stone-800 rounded-lg text-xs font-mono text-stone-300">ABRP</button>
+            <button onclick="launchExternalNav('gmaps')" class="px-3 py-1.5 bg-stone-950 hover:bg-stone-800 border border-stone-800 rounded-lg text-xs font-mono text-stone-300">Google Maps</button>
+          </div>
+        </div>
+
+        <!-- Embedded Map Display Canvas -->
+        <div class="flex-1 my-4 rounded-xl border border-stone-800/90 map-pattern flex items-center justify-center relative overflow-hidden">
+          <div class="text-center space-y-2 z-10">
+            <div class="text-xs uppercase tracking-widest text-stone-400 font-mono">EMBEDDED AUTOMOTIVE GPS VIEW</div>
+            <div class="text-2xl font-light text-stone-100">Belok Kiri Dalam 350 Meter</div>
+            <div class="text-sm text-rose-400 font-mono">Masuk ke Persiaran Petronas</div>
+          </div>
+          <!-- Route overlay line -->
+          <div class="absolute bottom-6 left-6 bg-stone-950/90 border border-stone-800 p-3 rounded-xl flex items-center space-x-4 text-xs font-mono">
+            <div>
+              <span class="text-stone-500 block text-[10px]">JARAK KE DESTINASI</span>
+              <span class="text-stone-100 font-medium tabular">4.2 KM</span>
+            </div>
+            <div class="border-l border-stone-800 pl-4">
+              <span class="text-stone-500 block text-[10px]">TIBA PADA</span>
+              <span class="text-stone-100 font-medium tabular">12:54 PM</span>
+            </div>
+            <div class="border-l border-stone-800 pl-4">
+              <span class="text-stone-500 block text-[10px]">BATERI SEMASA TIBA</span>
+              <span class="text-emerald-400 font-medium tabular">82%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search & Destinations Quick Bar -->
+        <div class="flex items-center space-x-3 pt-2">
+          <input type="text" placeholder="Cari stesen pengecas (DC Fast Charger), destinasi..." class="flex-1 bg-stone-950 border border-stone-800 px-4 py-2.5 rounded-xl text-xs text-stone-200 placeholder-stone-600 focus:outline-none focus:border-stone-700 font-sans">
+          <button class="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-medium rounded-xl text-xs tracking-wider transition">CARI</button>
+        </div>
+      </section>
+
+      <!-- ================= 2. PAGE: CHARGING & ENERGY ================= -->
+      <section id="page-charging" class="h-full flex flex-col justify-between hidden">
+        <div class="flex justify-between items-center pb-3 border-b border-stone-800/80">
+          <div>
+            <span class="text-stone-400 text-xs tracking-wider uppercase font-mono block">EV ENERGY CENTER</span>
+            <h2 class="text-base font-medium text-stone-100">Status Pengecasan &amp; Pengurusan Bateri e.MAS 5</h2>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="px-3 py-1 bg-stone-950 border border-stone-800 text-emerald-400 text-xs font-mono rounded-lg">🔌 CONNECTOR: PLUGGED (STANDBY)</span>
+            <button onclick="showToast('Port Pengecas Dibuka Kunci')" class="px-3 py-1 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 text-xs font-mono rounded-lg">BUKA KUNCI PORT</button>
+          </div>
+        </div>
+
+        <!-- Charging Status Dashboard -->
+        <div class="grid grid-cols-3 gap-4 my-auto py-2">
+          <!-- Main SOC Card -->
+          <div class="bg-stone-950 border border-stone-800 rounded-xl p-5 flex flex-col justify-between">
+            <span class="text-stone-500 font-mono text-[11px] uppercase tracking-wider">KAPASITI BATERI (SOC)</span>
+            <div class="my-3">
+              <span class="text-6xl font-light tabular text-stone-50">84</span>
+              <span class="text-2xl text-stone-400 font-mono">%</span>
+            </div>
+            <!-- Battery Bar -->
+            <div class="w-full bg-stone-800 h-2.5 rounded-full overflow-hidden">
+              <div class="bg-rose-500 h-full rounded-full" style="width: 84%"></div>
+            </div>
+            <span class="text-stone-500 font-mono text-[10px] mt-2 block">Kapasiti Pek: 49.5 kWh (LFP)</span>
+          </div>
+
+          <!-- Telemetry Stats Card -->
+          <div class="bg-stone-950 border border-stone-800 rounded-xl p-5 flex flex-col justify-between font-mono text-xs">
+            <span class="text-stone-500 text-[11px] uppercase tracking-wider font-sans">TELEMETRI PEK BATERI</span>
+            <div class="space-y-3 my-2">
+              <div class="flex justify-between">
+                <span class="text-stone-400">Voltan Pek (V):</span>
+                <span class="text-stone-100 font-medium tabular">365.4 V</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-stone-400">Arus Bateri (A):</span>
+                <span class="text-stone-100 font-medium tabular">38.8 A</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-stone-400">Kuasa Semasa:</span>
+                <span class="text-rose-400 font-medium tabular">+14.2 kW</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-stone-400">Suhu Pek Bateri:</span>
+                <span class="text-stone-100 font-medium tabular">31.5°C</span>
+              </div>
+            </div>
+            <span class="text-emerald-400 text-[10px]">SOH: 99.8% (Cemerlang)</span>
+          </div>
+
+          <!-- Charging Settings & Limits -->
+          <div class="bg-stone-950 border border-stone-800 rounded-xl p-5 flex flex-col justify-between font-mono text-xs">
+            <span class="text-stone-500 text-[11px] uppercase tracking-wider font-sans">HAD PENGECASAN</span>
+            <div>
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-stone-300">Had Harian / Trip:</span>
+                <span class="text-rose-400 font-bold text-sm" id="charge-limit-text">80%</span>
+              </div>
+              <div class="grid grid-cols-2 gap-2 mb-4">
+                <button onclick="setChargeLimit(80)" id="limit-80" class="py-2 rounded-lg bg-stone-800 text-stone-50 border border-stone-700 font-bold">80% (Harian)</button>
+                <button onclick="setChargeLimit(100)" id="limit-100" class="py-2 rounded-lg text-stone-500 hover:text-stone-200 border border-stone-800 font-bold">100% (Trip)</button>
+              </div>
+            </div>
+            
+            <!-- V2L Discharge & Schedule -->
+            <div class="pt-3 border-t border-stone-800/80 space-y-2 text-[11px]">
+              <div class="flex justify-between items-center">
+                <span class="text-stone-400">Nyahcas V2L (3.3kW):</span>
+                <button onclick="toggleSmall(this)" class="px-2 py-0.5 bg-stone-900 border border-stone-800 rounded text-stone-400">STANDBY</button>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-stone-400">Waktu Cas Bermasa:</span>
+                <span class="text-stone-300">11:00 PM – 06:00 AM</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Tip -->
+        <div class="bg-stone-950/60 border border-stone-800/80 p-3 rounded-xl flex justify-between items-center text-xs font-mono text-stone-400">
+          <span>Anggaran Masa Pengecasan DC Fast (30% → 80%): ~28 Minit</span>
+          <span class="text-stone-500">Purata Penggunaan: 14.8 kWh / 100 km</span>
+        </div>
+      </section>
+
+      <!-- ================= 3. PAGE: RADIO & AUDIO TUNER ================= -->
+      <section id="page-radio" class="h-full flex flex-col justify-between hidden">
+        <div class="flex justify-between items-center pb-3 border-b border-stone-800/80">
+          <div>
+            <span class="text-stone-400 text-xs tracking-wider uppercase font-mono block">RADIO &amp; TUNER</span>
+            <h2 class="text-base font-medium text-stone-100">FM / AM Analog &amp; Digital Radio Broadcast</h2>
+          </div>
+          <!-- FM / AM Switch -->
+          <div class="flex bg-stone-950 p-1 rounded-xl border border-stone-800 font-mono text-xs">
+            <button class="px-4 py-1.5 rounded-lg bg-stone-800 text-stone-50 font-bold border border-stone-700">FM</button>
+            <button class="px-4 py-1.5 rounded-lg text-stone-500 hover:text-stone-200">AM</button>
+          </div>
+        </div>
+
+        <!-- Big Radio Frequency Display -->
+        <div class="my-auto text-center py-4 bg-stone-950 border border-stone-800 rounded-2xl relative overflow-hidden">
+          <div class="text-stone-500 text-xs font-mono uppercase tracking-widest mb-1">TUNED FREQUENCY</div>
+          <div class="flex items-baseline justify-center space-x-3">
+            <span class="text-7xl font-light text-stone-50 tabular" id="radio-freq">97.6</span>
+            <span class="text-2xl font-mono text-stone-400">MHZ</span>
+          </div>
+          <div class="text-sm text-rose-400 font-medium mt-1 font-mono tracking-wide" id="radio-name">HITZ FM (KUALA LUMPUR)</div>
+
+          <!-- Step buttons -->
+          <div class="flex justify-center items-center space-x-6 mt-4">
+            <button onclick="tuneFreq(-0.1)" class="px-4 py-2 bg-stone-900 hover:bg-stone-800 border border-stone-800 rounded-xl font-mono text-xs text-stone-300">◄ -0.1</button>
+            <button onclick="scanRadio()" class="px-6 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-mono text-xs tracking-wider">AUTO SCAN</button>
+            <button onclick="tuneFreq(0.1)" class="px-4 py-2 bg-stone-900 hover:bg-stone-800 border border-stone-800 rounded-xl font-mono text-xs text-stone-300">+0.1 ►</button>
+          </div>
+        </div>
+
+        <!-- Stored Station Presets (Fast Access) -->
+        <div>
+          <span class="text-stone-500 font-mono text-[11px] uppercase tracking-wider block mb-2">STATION PRESETS (PILIHAN PANTAS)</span>
+          <div class="grid grid-cols-6 gap-2">
+            <button onclick="setStation(88.9, 'GOXUAN')" class="p-3 bg-stone-950 hover:bg-stone-800 border border-stone-800 rounded-xl text-left font-mono">
+              <div class="text-xs font-bold text-stone-200">88.9</div>
+              <div class="text-[10px] text-stone-500 truncate">GOXUAN</div>
+            </button>
+            <button onclick="setStation(92.9, 'MIX FM')" class="p-3 bg-stone-950 hover:bg-stone-800 border border-stone-800 rounded-xl text-left font-mono">
+              <div class="text-xs font-bold text-stone-200">92.9</div>
+              <div class="text-[10px] text-stone-500 truncate">MIX FM</div>
+            </button>
+            <button onclick="setStation(97.6, 'HITZ FM')" class="p-3 bg-stone-800 border border-stone-700 rounded-xl text-left font-mono shadow-sm">
+              <div class="text-xs font-bold text-rose-400">97.6</div>
+              <div class="text-[10px] text-stone-300 truncate">HITZ FM</div>
+            </button>
+            <button onclick="setStation(100.7, 'MY FM')" class="p-3 bg-stone-950 hover:bg-stone-800 border border-stone-800 rounded-xl text-left font-mono">
+              <div class="text-xs font-bold text-stone-200">100.7</div>
+              <div class="text-[10px] text-stone-500 truncate">MY FM</div>
+            </button>
+            <button onclick="setStation(103.3, 'ERA FM')" class="p-3 bg-stone-950 hover:bg-stone-800 border border-stone-800 rounded-xl text-left font-mono">
+              <div class="text-xs font-bold text-stone-200">103.3</div>
+              <div class="text-[10px] text-stone-500 truncate">ERA FM</div>
+            </button>
+            <button onclick="setStation(105.7, 'LITE FM')" class="p-3 bg-stone-950 hover:bg-stone-800 border border-stone-800 rounded-xl text-left font-mono">
+              <div class="text-xs font-bold text-stone-200">105.7</div>
+              <div class="text-[10px] text-stone-500 truncate">LITE FM</div>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 4. PAGE: VEHICLE CONTROLS ================= -->
+      <section id="page-controls" class="h-full flex flex-col justify-between hidden">
+        <div class="flex justify-between items-center pb-3 border-b border-stone-800/80">
+          <div>
+            <span class="text-stone-400 text-xs tracking-wider uppercase font-mono block">VEHICLE HARDWARE CONTROLS</span>
+            <h2 class="text-base font-medium text-stone-100">Suis Fizikal &amp; Kawalan Kenderaan Proton e.MAS 5</h2>
+          </div>
+          <span class="text-stone-500 text-xs font-mono">Spesifikasi Rasmi e.MAS 5</span>
+        </div>
+
+        <!-- 8 Real Functional Tiles for e.MAS 5 -->
+        <div class="grid grid-cols-4 gap-3 my-auto py-2">
+          
+          <!-- 1. 360 Camera -->
+          <button onclick="launch360()" class="p-4 bg-stone-950 hover:bg-stone-800 border border-stone-800 rounded-2xl flex flex-col justify-between text-left transition h-28">
+            <div class="w-2.5 h-2.5 rounded-full bg-rose-500"></div>
+            <div>
+              <div class="text-xs font-medium text-stone-100">Kamera 360°</div>
+              <div class="text-[10px] text-stone-500 font-mono mt-0.5">LAUNCH AVM</div>
+            </div>
+          </button>
+
+          <!-- 2. Auto Hold -->
+          <button onclick="toggleBtn(this)" class="p-4 bg-stone-950 hover:bg-stone-800 border border-stone-800 rounded-2xl flex flex-col justify-between text-left transition h-28">
+            <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 indicator"></div>
+            <div>
+              <div class="text-xs font-medium text-stone-100">Auto Hold</div>
+              <div class="text-[10px] text-emerald-400 font-mono state-label mt-0.5">ACTIVE</div>
+            </div>
+          </button>
+
+          <!-- 3. Hill Descent Control (HDC) -->
+          <button onclick="toggleBtn(this)" class="p-4 bg-stone-950 hover:bg-stone-800 border border-stone-800 rounded-2xl flex flex-col justify-between text-left transition h-28">
+            <div class="w-2.5 h-2.5 rounded-full bg-stone-600 indicator"></div>
+            <div>
+              <div class="text-xs font-medium text-stone-100">HDC (Turun Bukit)</div>
+              <div class="text-[10px] text-stone-500 font-mono state-label mt-0.5">STANDBY</div>
+            </div>
+          </button>
+
+          <!-- 4. Intelligent High Beam (IHBC) -->
+          <button onclick="toggleBtn(this)" class="p-4 bg-stone-950 hover:bg-stone-800 border border-stone-800 rounded-2xl flex flex-col justify-between text-left transition h-28">
+            <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 indicator"></div>
+            <div>
+              <div class="text-xs font-medium text-stone-100">Auto High Beam</div>
+              <div class="text-[10px] text-emerald-400 font-mono state-label mt-0.5">IHBC ON</div>
+            </div>
+          </button>
+
+          <!-- 5. ESC / Traction Control -->
+          <button onclick="toggleBtn(this)" class="p-4 bg-stone-950 hover:bg-stone-800 border border-stone-800 rounded-2xl flex flex-col justify-between text-left transition h-28">
+            <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 indicator"></div>
+            <div>
+              <div class="text-xs font-medium text-stone-100">ESC Traction</div>
+              <div class="text-[10px] text-emerald-400 font-mono state-label mt-0.5">STABILITY ON</div>
+            </div>
+          </button>
+
+          <!-- 6. Camp Mode (Keep A/C On) -->
+          <button onclick="toggleBtn(this)" class="p-4 bg-stone-950 hover:bg-stone-800 border border-stone-800 rounded-2xl flex flex-col justify-between text-left transition h-28">
+            <div class="w-2.5 h-2.5 rounded-full bg-stone-600 indicator"></div>
+            <div>
+              <div class="text-xs font-medium text-stone-100">Camp Mode</div>
+              <div class="text-[10px] text-stone-500 font-mono state-label mt-0.5">OFF (Normal)</div>
+            </div>
+          </button>
+
+          <!-- 7. Headlights Master Control -->
+          <div class="p-3 bg-stone-950 border border-stone-800 rounded-2xl flex flex-col justify-between text-left h-28">
+            <div class="text-[10px] text-stone-500 font-mono uppercase">LAMPU DEPAN</div>
+            <div class="grid grid-cols-4 gap-1 font-mono text-[10px] text-center">
+              <button class="py-1 bg-stone-800 text-stone-50 rounded border border-stone-700">AUTO</button>
+              <button class="py-1 text-stone-500 hover:text-stone-200">PARK</button>
+              <button class="py-1 text-stone-500 hover:text-stone-200">LOW</button>
+              <button class="py-1 text-stone-500 hover:text-stone-200">OFF</button>
+            </div>
+          </div>
+
+          <!-- 8. Rear Boot / Trunk Release -->
+          <button onclick="openTrunk()" class="p-4 bg-stone-950 hover:bg-stone-800 border border-stone-800 rounded-2xl flex flex-col justify-between text-left transition h-28">
+            <div class="w-2.5 h-2.5 rounded-full bg-rose-500"></div>
+            <div>
+              <div class="text-xs font-medium text-stone-100">Buka Bonet Blkg</div>
+              <div class="text-[10px] text-stone-500 font-mono mt-0.5">TRUNK RELEASE</div>
+            </div>
+          </button>
+
+        </div>
+
+        <div class="bg-stone-950 border border-stone-800 p-3 rounded-xl flex justify-between items-center text-xs font-mono text-stone-400">
+          <span>Follow-Me-Home Delay: 30 Saat</span>
+          <span>Pelarasan Ketinggian Lampu: Level 0 (Beban Biasa)</span>
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <!-- ================= PERMANENT BOTTOM CLIMATE DOCK & APP SHORTCUTS ================= -->
+  <footer class="grid grid-cols-12 items-center bg-stone-900/80 border border-stone-800/90 rounded-2xl p-3 text-xs">
+    
+    <!-- Left: App Launchers -->
+    <div class="col-span-4 flex items-center space-x-2">
+      <button onclick="showToast('Membuka App Drawer...')" class="px-3.5 py-2 bg-stone-950 hover:bg-stone-800 border border-stone-800 rounded-xl font-medium text-stone-200 flex items-center gap-1.5 transition">
+        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> APPS
+      </button>
+      <button onclick="showToast('Waze')" class="px-2.5 py-2 hover:bg-stone-800/60 rounded-xl text-stone-400 hover:text-stone-100 transition">Waze</button>
+      <button onclick="showToast('SmartTube')" class="px-2.5 py-2 hover:bg-stone-800/60 rounded-xl text-stone-400 hover:text-stone-100 transition">SmartTube</button>
+      <button onclick="showToast('Netflix')" class="px-2.5 py-2 hover:bg-stone-800/60 rounded-xl text-stone-400 hover:text-stone-100 transition">Netflix</button>
+      <button onclick="showToast('Spotify')" class="px-2.5 py-2 hover:bg-stone-800/60 rounded-xl text-stone-400 hover:text-stone-100 transition">Spotify</button>
+    </div>
+
+    <!-- Center: Temperature & Exact 9-Step Fan (0 to 8) -->
+    <div class="col-span-5 flex items-center justify-center space-x-6">
+      <!-- Temperature Control -->
+      <div class="flex items-center space-x-2 bg-stone-950 border border-stone-800 px-3 py-1.5 rounded-xl">
+        <button onclick="adjustTemp(-0.5)" class="w-6 h-6 flex items-center justify-center rounded hover:bg-stone-800 text-stone-300 font-mono text-sm">−</button>
+        <span class="font-mono text-sm font-medium text-stone-50 tabular" id="temp-display">22.0°C</span>
+        <button onclick="adjustTemp(0.5)" class="w-6 h-6 flex items-center justify-center rounded hover:bg-stone-800 text-stone-300 font-mono text-sm">+</button>
+      </div>
+
+      <!-- Fan Speed (0 to 8 Steps) -->
+      <div class="flex items-center space-x-2">
+        <span class="text-[10px] text-stone-400 font-mono uppercase">FAN</span>
+        <div class="flex space-x-1" id="fan-levels">
+          <!-- 8 Bars generated in JS -->
+        </div>
+      </div>
+
+      <!-- A/C Eco & Recirculation -->
+      <div class="flex items-center space-x-1.5">
+        <button onclick="toggleSmall(this)" class="px-2.5 py-1.5 bg-stone-800 border border-stone-700 text-stone-200 rounded-lg text-[11px] font-mono">A/C ECO</button>
+        <button onclick="toggleSmall(this)" class="px-2.5 py-1.5 bg-stone-800 border border-stone-700 text-stone-200 rounded-lg text-[11px] font-mono">RECIRC</button>
+      </div>
+    </div>
+
+    <!-- Right: Defrost & Volume -->
+    <div class="col-span-3 flex items-center justify-end space-x-3">
+      <button onclick="toggleSmall(this)" class="px-2.5 py-1.5 bg-stone-950 border border-stone-800 text-stone-400 hover:text-stone-200 rounded-lg text-[11px] font-mono">DEFROST</button>
+      <div class="flex items-center space-x-2 bg-stone-950 border border-stone-800 px-3 py-1.5 rounded-xl text-stone-400 font-mono text-xs">
+        <span>VOL</span>
+        <span class="text-stone-200 tabular">14</span>
+      </div>
+      <button onclick="showToast('Membuka Tetapan Kereta...')" class="p-2 hover:bg-stone-800 rounded-lg text-stone-400 hover:text-stone-100" title="Settings">
+        ⚙
+      </button>
+    </div>
+
+  </footer>
+
+  <!-- ================= TOAST NOTIFICATION SIMULATOR ================= -->
+  <div id="toast" class="fixed bottom-24 right-8 bg-stone-900 border border-stone-700 text-stone-100 px-4 py-2.5 rounded-xl text-xs font-mono shadow-2xl transition-all duration-300 opacity-0 pointer-events-none translate-y-2">
+    Action Triggered
+  </div>
+
+  <script>
+    // Live Clock
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('clock').innerText = now.toTimeString().split(' ')[0];
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Master Page Switcher
+    function switchPage(pageId) {
+      ['nav', 'charging', 'radio', 'controls'].forEach(p => {
+        const pageEl = document.getElementById('page-' + p);
+        const tabEl = document.getElementById('tab-' + p);
+        if (p === pageId) {
+          pageEl.classList.remove('hidden');
+          tabEl.className = "py-2 px-3 rounded-lg font-medium tracking-wider transition-all bg-stone-800 text-stone-50 border border-stone-700 shadow-sm flex items-center justify-center gap-1.5";
+        } else {
+          pageEl.classList.add('hidden');
+          tabEl.className = "py-2 px-3 rounded-lg font-medium tracking-wider transition-all text-stone-400 hover:text-stone-200 flex items-center justify-center gap-1.5";
+        }
+      });
+    }
+
+    // Drive Mode Selection
+    function setDriveMode(mode) {
+      document.getElementById('hud-mode-text').innerText = mode;
+      ['eco', 'comfort', 'sport'].forEach(m => {
+        const btn = document.getElementById(`hud-${m}`);
+        if (m.toUpperCase() === mode) {
+          btn.className = "py-2 text-xs font-medium tracking-wider rounded-lg bg-stone-800 text-stone-50 border border-stone-700 shadow-sm transition";
+        } else {
+          btn.className = "py-2 text-xs font-medium tracking-wider rounded-lg text-stone-400 hover:text-stone-200 transition";
+        }
+      });
+      showToast(`Drive Mode: ${mode} (VHAL 0x287000ea)`);
+    }
+
+    function setRegen(btn) {
+      btn.parentElement.querySelectorAll('button').forEach(b => {
+        b.className = "py-1 text-stone-400 hover:text-stone-200";
+      });
+      btn.className = "py-1 bg-stone-800 text-stone-50 rounded border border-stone-700";
+      showToast(`Regen Braking: ${btn.innerText}`);
+    }
+
+    // Toggle Buttons
+    function toggleBtn(btn) {
+      const indicator = btn.querySelector('.indicator');
+      const label = btn.querySelector('.state-label');
+      if (indicator.classList.contains('bg-emerald-400')) {
+        indicator.className = 'w-2.5 h-2.5 rounded-full bg-stone-600 indicator';
+        if (label) {
+          label.className = 'text-[10px] text-stone-500 font-mono state-label mt-0.5';
+          label.innerText = 'OFF';
+        }
+      } else {
+        indicator.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 indicator';
+        if (label) {
+          label.className = 'text-[10px] text-emerald-400 font-mono state-label mt-0.5';
+          label.innerText = 'ON';
+        }
+      }
+      showToast(`Toggled: ${btn.querySelector('.text-xs').innerText}`);
+    }
+
+    function toggleSmall(btn) {
+      if (btn.classList.contains('bg-stone-800')) {
+        btn.classList.remove('bg-stone-800', 'border-stone-700', 'text-stone-200');
+        btn.classList.add('bg-stone-950', 'border-stone-800', 'text-stone-500');
+      } else {
+        btn.classList.add('bg-stone-800', 'border-stone-700', 'text-stone-200');
+        btn.classList.remove('bg-stone-950', 'border-stone-800', 'text-stone-500');
+      }
+    }
+
+    // Temperature Control
+    let temp = 22.0;
+    function adjustTemp(delta) {
+      temp = Math.max(16.0, Math.min(30.0, temp + delta));
+      document.getElementById('temp-display').innerText = `${temp.toFixed(1)}°C`;
+    }
+
+    // Fan Speed (Exact 9-steps: 0 to 8)
+    let currentFan = 3;
+    const fanContainer = document.getElementById('fan-levels');
+    function renderFan() {
+      fanContainer.innerHTML = '';
+      for (let i = 1; i <= 8; i++) {
+        const bar = document.createElement('button');
+        bar.className = `w-1.5 h-4 rounded-sm transition-all ${i <= currentFan ? 'bg-rose-500' : 'bg-stone-800'}`;
+        bar.onclick = () => { currentFan = i; renderFan(); showToast(`HVAC Fan: Level ${i}`); };
+        fanContainer.appendChild(bar);
+      }
+    }
+    renderFan();
+
+    // Charging Limit Selection
+    function setChargeLimit(limit) {
+      document.getElementById('charge-limit-text').innerText = `${limit}%`;
+      const btn80 = document.getElementById('limit-80');
+      const btn100 = document.getElementById('limit-100');
+      if (limit === 80) {
+        btn80.className = "py-2 rounded-lg bg-stone-800 text-stone-50 border border-stone-700 font-bold";
+        btn100.className = "py-2 rounded-lg text-stone-500 hover:text-stone-200 border border-stone-800 font-bold";
+      } else {
+        btn100.className = "py-2 rounded-lg bg-stone-800 text-stone-50 border border-stone-700 font-bold";
+        btn80.className = "py-2 rounded-lg text-stone-500 hover:text-stone-200 border border-stone-800 font-bold";
+      }
+      showToast(`Had Cas Ditetapkan: ${limit}%`);
+    }
+
+    // Radio Tuner
+    let curFreq = 97.6;
+    function setStation(freq, name) {
+      curFreq = freq;
+      document.getElementById('radio-freq').innerText = freq.toFixed(1);
+      document.getElementById('radio-name').innerText = name;
+      showToast(`Tuned: ${freq.toFixed(1)} MHz · ${name}`);
+    }
+    function tuneFreq(delta) {
+      curFreq = Math.round((curFreq + delta) * 10) / 10;
+      document.getElementById('radio-freq').innerText = curFreq.toFixed(1);
+      document.getElementById('radio-name').innerText = `MANUAL TUNE (${curFreq.toFixed(1)} MHz)`;
+    }
+    function scanRadio() {
+      showToast('Sedang mencari stesen radio (FM Auto Scan)...');
+    }
+
+    function launch360() {
+      showToast('Intent: ecarx.camera.calibration (360° AVM)');
+    }
+    function openTrunk() {
+      showToast('Action: Trunk Release (Tailgate)');
+    }
+    function launchExternalNav(app) {
+      showToast(`Melancarkan aplikasi peta: ${app.toUpperCase()}`);
+    }
+
+    // Toast
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.classList.remove('opacity-0', 'translate-y-2');
+      t.classList.add('opacity-100', 'translate-y-0');
+      setTimeout(() => {
+        t.classList.remove('opacity-100', 'translate-y-0');
+        t.classList.add('opacity-0', 'translate-y-2');
+      }, 1800);
+    }
+  </script>
+</body>
+</html>

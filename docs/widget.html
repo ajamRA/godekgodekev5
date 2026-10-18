@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>e.MAS Voice Widget</title>
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0a0f1d">
+  <link rel="icon" type="image/png" href="/assets/icon-192.png">
+
+  <style>
+    :root {
+      --bg: #0a0f1d;
+      --card-bg: rgba(22, 30, 49, 0.85);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --primary: #3b82f6;
+      --primary-glow: rgba(59, 130, 246, 0.4);
+      --gemini-grad: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%);
+      --megafon-grad: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+      --text: #f1f5f9;
+      --text-dim: #94a3b8;
+      --green: #10b981;
+      --red: #ef4444;
+      --radius: 24px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 60%),
+        radial-gradient(circle at 80% 80%, rgba(124, 58, 237, 0.1) 0%, transparent 50%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      overflow-x: hidden;
+    }
+
+    .widget-container {
+      width: 100%;
+      max-width: 420px;
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      position: relative;
+    }
+
+    /* Header & Car Status */
+    .widget-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 15px;
+      color: #60a5fa;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #fff;
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .car-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: pulse-dot 2s infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    /* Mode Switcher Tabs */
+    .mode-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: rgba(15, 23, 42, 0.9);
+      padding: 4px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .mode-tab {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .mode-tab.active.gemini-mode {
+      background: var(--gemini-grad);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4);
+    }
+
+    .mode-tab.active.megafon-mode {
+      background: var(--megafon-grad);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
+    }
+
+    /* Visualizer & Mic Area */
+    .mic-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 0 20px;
+      position: relative;
+    }
+
+    .mic-button-wrapper {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    /* Pulsing Outer Rings */
+    .radar-ring {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 2px solid rgba(96, 165, 250, 0.4);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .recording .radar-ring:nth-child(1) {
+      animation: radar-wave 1.8s infinite cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .recording .radar-ring:nth-child(2) {
+      animation: radar-wave 1.8s infinite cubic-bezier(0.2, 0.8, 0.2, 1) 0.6s;
+    }
+    .recording .radar-ring:nth-child(3) {
+      animation: radar-wave 1.8s infinite cubic-bezier(0.2, 0.8, 0.2, 1) 1.2s;
+    }
+
+    @keyframes radar-wave {
+      0% { transform: scale(0.9); opacity: 0.8; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+
+    .mic-btn {
+      width: 105px;
+      height: 105px;
+      border-radius: 50%;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+      z-index: 2;
+    }
+
+    .mic-btn.gemini {
+      background: var(--gemini-grad);
+      box-shadow: 0 10px 30px rgba(124, 58, 237, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+    }
+
+    .mic-btn.megafon {
+      background: var(--megafon-grad);
+      box-shadow: 0 10px 30px rgba(239, 68, 68, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+    }
+
+    .mic-btn:active {
+      transform: scale(0.92);
+    }
+
+    .recording .mic-btn {
+      transform: scale(1.06);
+      box-shadow: 0 0 40px rgba(239, 68, 68, 0.8) !important;
+      background: linear-gradient(135deg, #ef4444, #b91c1c) !important;
+    }
+
+    .mic-icon {
+      width: 44px;
+      height: 44px;
+      fill: currentColor;
+    }
+
+    /* Waveform visualizer */
+    .visualizer-bars {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      height: 32px;
+      margin-bottom: 8px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .recording .visualizer-bars {
+      opacity: 1;
+    }
+
+    .v-bar {
+      width: 4px;
+      height: 8px;
+      background: #60a5fa;
+      border-radius: 4px;
+      transition: height 0.08s ease;
+    }
+
+    .status-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      text-align: center;
+      min-height: 20px;
+    }
+
+    .hint-subtext {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 4px;
+      text-align: center;
+    }
+
+    /* Live Transcription / Response Box */
+    .card-display {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 14px;
+      margin-top: 12px;
+      min-height: 72px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .card-display-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .card-display-content {
+      font-size: 13.5px;
+      line-height: 1.45;
+      color: #e2e8f0;
+      user-select: text;
+    }
+
+    .card-display-content.empty {
+      color: #64748b;
+      font-style: italic;
+    }
+
+    /* Quick Chips */
+    .quick-chips-wrap {
+      margin-top: 16px;
+    }
+
+    .chips-label {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .chips-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip-btn {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 7px 12px;
+      font-size: 12px;
+      color: #cbd5e1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .chip-btn:active {
+      transform: scale(0.96);
+      background: rgba(59, 130, 246, 0.3);
+      border-color: #60a5fa;
+      color: #fff;
+    }
+
+    /* Bottom Action Bar */
+    .bottom-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 12px;
+    }
+
+    .toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      color: var(--text-dim);
+    }
+
+    .toggle-checkbox {
+      accent-color: #3b82f6;
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .back-btn {
+      color: #60a5fa;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 600;
+    }
+
+    /* PWA Install Banner */
+    .pwa-hint {
+      margin-top: 16px;
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px dashed rgba(255, 255, 255, 0.15);
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-size: 11px;
+      line-height: 1.4;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pwa-hint-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="widget-container" id="widgetApp">
+    <!-- Header -->
+    <div class="widget-header">
+      <div class="brand-wrap">
+        <div class="brand-logo">e.M</div>
+        <div>
+          <div class="brand-title">e.MAS VOICE</div>
+          <div class="brand-sub">JC7988J • AVAS Bumper</div>
+        </div>
+      </div>
+      <div class="car-pill" id="carPill">
+        <span class="status-dot"></span>
+        <span id="carPillText">Memuatkan...</span>
+      </div>
+    </div>
+
+    <!-- Mode Selector -->
+    <div class="mode-tabs">
+      <div class="mode-tab active gemini-mode" id="tabGemini" onclick="switchMode('gemini')">
+        <span>🤖</span>
+        <span>Sembang Gemini</span>
+      </div>
+      <div class="mode-tab megafon-mode" id="tabMegafon" onclick="switchMode('megafon')">
+        <span>📢</span>
+        <span>Megafon Luar</span>
+      </div>
+    </div>
+
+    <!-- Mic Section -->
+    <div class="mic-section" id="micSection">
+      <div class="mic-button-wrapper" id="micWrapper">
+        <div class="radar-ring"></div>
+        <div class="radar-ring"></div>
+        <div class="radar-ring"></div>
+
+        <button class="mic-btn gemini" id="micBtn">
+          <!-- Mic SVG Icon -->
+          <svg class="mic-icon" viewBox="0 0 24 24" id="micSvg">
+            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Live audio visualizer bars -->
+      <div class="visualizer-bars" id="vBars">
+        <div class="v-bar"></div>
+        <div class="v-bar"></div>
+        <div class="v-bar"></div>
+        <div class="v-bar"></div>
+        <div class="v-bar"></div>
+        <div class="v-bar"></div>
+        <div class="v-bar"></div>
+        <div class="v-bar"></div>
+      </div>
+
+      <div class="status-text" id="statusText">Tekan & Bercakap</div>
+      <div class="hint-subtext" id="hintSubtext">Tekan sekali untuk mula, tekan lagi bila siap</div>
+    </div>
+
+    <!-- Response / Transcription Display -->
+    <div class="card-display" id="cardDisplay">
+      <div class="card-display-header">
+        <span id="displayHeaderTitle">Status Respons</span>
+        <span id="displayHeaderBadge" style="color: #60a5fa;">Bersedia</span>
+      </div>
+      <div class="card-display-content empty" id="displayContent">
+        Ketik butang mikrofon di atas untuk mula bercakap santai dengan kereta e.MAS anda.
+      </div>
+    </div>
+
+    <!-- Quick Chips -->
+    <div class="quick-chips-wrap">
+      <div class="chips-label">
+        <span id="chipsTitle">Pilihan Pantas (1-Tap):</span>
+      </div>
+      <div class="chips-grid" id="chipsGrid">
+        <!-- Injected dynamically based on mode -->
+      </div>
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="bottom-bar">
+      <label class="toggle-wrap" title="Mainkan juga audio respons pada telefon selain speaker kereta">
+        <input type="checkbox" id="phoneAudioToggle" class="toggle-checkbox" checked>
+        <span>Bunyi di telefon juga</span>
+      </label>
+      <a href="/" class="back-btn">
+        <span>Dashboard e.MAS</span>
+        <span>→</span>
+      </a>
+    </div>
+
+    <!-- PWA Install Tip -->
+    <div class="pwa-hint" id="pwaHint">
+      <div class="pwa-hint-icon">📱</div>
+      <div>
+        <strong>Tip Widget Skrin Telefon:</strong> Tekan menu Chrome <strong>⋮</strong> ➔ <strong>"Add to Home screen"</strong> untuk jadikan widget 1-tap di telefon anda!
+      </div>
+    </div>
+  </div>
+
+  <audio id="audioPlayer" style="display:none"></audio>
+
+  <script>
+    // App State
+    let currentMode = "gemini"; // "gemini" or "megafon"
+    let isRecording = false;
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recognition = null;
+    let speechTranscript = "";
+    let audioContext = null;
+    let analyser = null;
+    let animFrame = null;
+    let sourceNode = null;
+
+    // Elements
+    const tabGemini = document.getElementById("tabGemini");
+    const tabMegafon = document.getElementById("tabMegafon");
+    const micSection = document.getElementById("micSection");
+    const micBtn = document.getElementById("micBtn");
+    const statusText = document.getElementById("statusText");
+    const hintSubtext = document.getElementById("hintSubtext");
+    const displayHeaderTitle = document.getElementById("displayHeaderTitle");
+    const displayHeaderBadge = document.getElementById("displayHeaderBadge");
+    const displayContent = document.getElementById("displayContent");
+    const chipsTitle = document.getElementById("chipsTitle");
+    const chipsGrid = document.getElementById("chipsGrid");
+    const carPillText = document.getElementById("carPillText");
+    const phoneAudioToggle = document.getElementById("phoneAudioToggle");
+    const audioPlayer = document.getElementById("audioPlayer");
+    const vBars = document.querySelectorAll(".v-bar");
+
+    // Quick Chips presets
+    const GEMINI_CHIPS = [
+      { text: "Bateri tinggal berapa?", prompt: "Berapa baki peratus bateri dan jarak perjalanan saya sekarang?" },
+      { text: "Aircond sejuk tak?", prompt: "Aircond kereta buka ke tak dan berapa suhu kabin?" },
+      { text: "Pintu kereta berkunci?", prompt: "Adakah semua pintu dan tingkap kereta sudah tertutup rapat dan berkunci?" },
+      { text: "Siapa bos kau?", prompt: "Siapa bos kau dan apa khabar kau hari ni?" },
+      { text: "Jagakan kereta kejap", prompt: "Tolong perhatikan kawasan sekeliling dan jagakan kereta saya kejap ye e.MAS." }
+    ];
+
+    const MEGAFON_CHIPS = [
+      { text: "Tolong alihkan kereta", preset: "alihkan", prompt: "Tolong alihkan kenderaan anda, terima kasih!" },
+      { text: "Hati-hati undur", preset: "undur", prompt: "Perhatian, sila berhati-hati di hadapan dan belakang." },
+      { text: "Terima kasih banyak", preset: "terima_kasih", prompt: "Terima kasih banyak-banyak, selamat jalan!" },
+      { text: "Saya keluar kejap", preset: "keluar", prompt: "Saya keluar sekejap sahaja, terima kasih." }
+    ];
+
+    // Read URL mode params
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("mode") === "megafon") {
+      currentMode = "megafon";
+    }
+
+    function switchMode(mode) {
+      if (isRecording) stopRecording();
+      currentMode = mode;
+      if (mode === "gemini") {
+        tabGemini.className = "mode-tab active gemini-mode";
+        tabMegafon.className = "mode-tab megafon-mode";
+        micBtn.className = "mic-btn gemini";
+        displayHeaderTitle.innerText = "Jawapan e.MAS Gemini";
+        hintSubtext.innerText = "Bercakap santai, AI jawab terus keluar AVAS bumper";
+      } else {
+        tabMegafon.className = "mode-tab active megafon-mode";
+        tabGemini.className = "mode-tab gemini-mode";
+        micBtn.className = "mic-btn megafon";
+        displayHeaderTitle.innerText = "Siaran Megafon Luar";
+        hintSubtext.innerText = "Suara anda dipancarkan direct ke speaker bumper";
+      }
+      renderChips();
+    }
+
+    function renderChips() {
+      chipsGrid.innerHTML = "";
+      const list = currentMode === "gemini" ? GEMINI_CHIPS : MEGAFON_CHIPS;
+      chipsTitle.innerText = currentMode === "gemini" ? "Soalan Pantas Gemini:" : "Suara Pantas Megafon:";
+      
+      list.forEach(item => {
+        const btn = document.createElement("button");
+        btn.className = "chip-btn";
+        btn.innerHTML = `<span>${currentMode === 'gemini' ? '💬' : '📢'}</span> <span>${item.text}</span>`;
+        btn.onclick = () => handleChipClick(item);
+        chipsGrid.appendChild(btn);
+      });
+    }
+
+    async function handleChipClick(item) {
+      if (isRecording) stopRecording();
+      
+      if (currentMode === "gemini") {
+        displayContent.className = "card-display-content";
+        displayContent.innerText = `Menghantar: "${item.prompt}"...`;
+        displayHeaderBadge.innerText = "Memproses...";
+        displayHeaderBadge.style.color = "#f59e0b";
+        statusText.innerText = "Gemini sedang berfikir...";
+
+        try {
+          const res = await fetch("/api/car/jarvis", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt: item.prompt })
+          });
+          const data = await res.json();
+          if (data.ok) {
+            displayContent.innerText = `e.MAS: "${data.reply}"`;
+            displayHeaderBadge.innerText = "Dihantar ke AVAS";
+            displayHeaderBadge.style.color = "#10b981";
+            statusText.innerText = "Bercakap di Bumper Depan!";
+
+            if (phoneAudioToggle.checked && data.audio_url) {
+              audioPlayer.src = data.audio_url;
+              audioPlayer.play().catch(() => {});
+            }
+          } else {
+            displayContent.innerText = "Ralat: " + (data.error || "Gagal berhubung");
+          }
+        } catch (e) {
+          displayContent.innerText = "Ralat pelayan: " + e.message;
+        }
+      } else {
+        displayContent.className = "card-display-content";
+        displayContent.innerText = `Memancarkan: "${item.prompt}"...`;
+        displayHeaderBadge.innerText = "Menyiarkan...";
+        displayHeaderBadge.style.color = "#f59e0b";
+        statusText.innerText = "Megafon Berbunyi!";
+
+        try {
+          const res = await fetch("/api/megafon/speak", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: item.prompt, preset: item.preset || "" })
+          });
+          const data = await res.json();
+          if (data.ok) {
+            displayHeaderBadge.innerText = "Selesai Siar";
+            displayHeaderBadge.style.color = "#10b981";
+            if (phoneAudioToggle.checked) {
+              audioPlayer.src = `/static/megafon/${item.preset || 'alihkan'}.wav`;
+              audioPlayer.play().catch(() => {});
+            }
+          }
+        } catch (e) {
+          displayContent.innerText = "Ralat: " + e.message;
+        }
+      }
+    }
+
+    // Live Web Speech Recognition
+    function initSpeech() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = "ms-MY";
+
+        recognition.onresult = (event) => {
+          let interim = "";
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              speechTranscript += event.results[i][0].transcript + " ";
+            } else {
+              interim += event.results[i][0].transcript;
+            }
+          }
+          const fullText = (speechTranscript + interim).trim();
+          if (fullText) {
+            displayContent.className = "card-display-content";
+            displayContent.innerText = `"${fullText}"`;
+          }
+        };
+
+        recognition.onerror = (e) => {
+          console.warn("[Speech] Error:", e.error);
+        };
+      }
+    }
+
+    // Support Tap-to-Toggle and Touch-and-Hold
+    let touchStartTime = 0;
+    let isTouchHold = false;
+
+    micBtn.addEventListener("pointerdown", (e) => {
+      touchStartTime = Date.now();
+      isTouchHold = false;
+      if (!isRecording) {
+        // Prepare potential hold
+        setTimeout(() => {
+          if (touchStartTime > 0 && !isRecording) {
+            isTouchHold = true;
+            startRecording();
+          }
+        }, 350);
+      }
+    });
+
+    micBtn.addEventListener("pointerup", (e) => {
+      const duration = Date.now() - touchStartTime;
+      touchStartTime = 0;
+      if (isTouchHold && isRecording) {
+        // Was holding to talk -> release to send
+        setTimeout(() => stopRecording(), 200);
+      } else if (duration < 350) {
+        // Normal quick tap -> toggle
+        if (!isRecording) {
+          startRecording();
+        } else {
+          stopRecording();
+        }
+      }
+      isTouchHold = false;
+    });
+
+    async function startRecording() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        isRecording = true;
+        audioChunks = [];
+        speechTranscript = "";
+
+        micSection.classList.add("recording");
+        statusText.innerText = "Sedang Mendengar...";
+        displayHeaderBadge.innerText = "Merekod Suara";
+        displayHeaderBadge.style.color = "#ef4444";
+        displayContent.className = "card-display-content";
+        displayContent.innerText = "Bercakap sekarang... (Tekan mic sekali lagi bila siap)";
+
+        // Visualizer Setup
+        try {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          analyser = audioContext.createAnalyser();
+          analyser.fftSize = 32;
+          sourceNode = audioContext.createMediaStreamSource(stream);
+          sourceNode.connect(analyser);
+          updateVisualizer();
+        } catch (err) {
+          console.warn("[AudioContext] Error:", err);
+        }
+
+        // Speech recognition
+        if (currentMode === "gemini" && recognition) {
+          try { recognition.start(); } catch(e){}
+        }
+
+        // MediaRecorder
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) audioChunks.push(e.data);
+        };
+        mediaRecorder.onstop = () => {
+          stream.getTracks().forEach(track => track.stop());
+          const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || "audio/webm" });
+          handleAudioRecorded(audioBlob, speechTranscript.trim());
+        };
+        mediaRecorder.start();
+
+      } catch (err) {
+        alert("Sila benarkan akses mikrofon untuk menggunakan ciri ini!");
+        console.error(err);
+      }
+    }
+
+    function stopRecording() {
+      if (!isRecording) return;
+      isRecording = false;
+      micSection.classList.remove("recording");
+      statusText.innerText = "Menghantar ke Kereta...";
+      displayHeaderBadge.innerText = "Memproses";
+      displayHeaderBadge.style.color = "#f59e0b";
+
+      if (recognition) {
+        try { recognition.stop(); } catch(e){}
+      }
+      if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.stop();
+      }
+      if (animFrame) cancelAnimationFrame(animFrame);
+      if (audioContext) {
+        try { audioContext.close(); } catch(e){}
+      }
+      vBars.forEach(b => b.style.height = "8px");
+    }
+
+    function updateVisualizer() {
+      if (!isRecording || !analyser) return;
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      analyser.getByteFrequencyData(dataArray);
+
+      vBars.forEach((bar, index) => {
+        const val = dataArray[index % dataArray.length] || 0;
+        const h = Math.max(6, Math.min(32, val / 4));
+        bar.style.height = `${h}px`;
+      });
+
+      animFrame = requestAnimationFrame(updateVisualizer);
+    }
+
+    async function handleAudioRecorded(audioBlob, transcript) {
+      if (currentMode === "megafon") {
+        // Direct Megafon Upload
+        displayContent.innerText = "Menghantar suara terus ke AVAS speaker bumper...";
+        const formData = new FormData();
+        formData.append("file", audioBlob, "voice.webm");
+
+        try {
+          const res = await fetch("/api/megafon/upload", {
+            method: "POST",
+            body: formData
+          });
+          const data = await res.json();
+          if (data.ok) {
+            displayContent.innerText = "Suara anda berjaya dimainkan di bumper depan kereta!";
+            displayHeaderBadge.innerText = "Selesai";
+            displayHeaderBadge.style.color = "#10b981";
+            statusText.innerText = "Berjaya Disiarkan!";
+          } else {
+            displayContent.innerText = "Ralat megafon: " + (data.error || "Gagal hantar");
+          }
+        } catch (e) {
+          displayContent.innerText = "Ralat hantar: " + e.message;
+        }
+
+      } else {
+        // Gemini AI Mode
+        displayContent.innerText = transcript ? `Anda: "${transcript}"\ne.MAS berfikir...` : "Menghantar suara ke Gemini...";
+        const formData = new FormData();
+        formData.append("file", audioBlob, "voice.webm");
+        if (transcript) formData.append("transcript", transcript);
+
+        try {
+          const res = await fetch("/api/car/jarvis_voice", {
+            method: "POST",
+            body: formData
+          });
+          const data = await res.json();
+          if (data.ok) {
+            displayContent.innerText = `e.MAS: "${data.reply}"`;
+            displayHeaderBadge.innerText = "AVAS Menjawab";
+            displayHeaderBadge.style.color = "#10b981";
+            statusText.innerText = "Bumper Kereta Bercakap!";
+
+            if (phoneAudioToggle.checked && data.audio_url) {
+              audioPlayer.src = data.audio_url;
+              audioPlayer.play().catch(() => {});
+            }
+          } else {
+            displayContent.innerText = "Ralat Gemini: " + (data.error || "Gagal proses");
+          }
+        } catch (e) {
+          displayContent.innerText = "Ralat: " + e.message;
+        }
+      }
+    }
+
+    // Car Status Pill updater
+    async function fetchCarStatus() {
+      try {
+        const res = await fetch("/api/car/energy");
+        const data = await res.json();
+        if (data.ok && data.energy) {
+          const soc = (data.energy.battery && data.energy.battery.soc_pct != null) ? Math.round(data.energy.battery.soc_pct) : 82;
+          const range = Math.round(soc * 4.1);
+          const temp = data.energy.ambient_temp_c ? Math.round(data.energy.ambient_temp_c) : 32;
+          carPillText.innerText = `🔋 ${soc}% (${range}km) • 🌡️ ${temp}°C`;
+        } else {
+          carPillText.innerText = `🟢 Kereta Bersedia`;
+        }
+      } catch (e) {
+        carPillText.innerText = `🟢 Sambungan OK`;
+      }
+    }
+
+    // Init
+    initSpeech();
+    switchMode(currentMode);
+    fetchCarStatus();
+    setInterval(fetchCarStatus, 10000);
+
+    // Hide PWA hint if in standalone mode
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+      document.getElementById("pwaHint").style.display = "none";
+    }
+  </script>
+</body>
+</html>

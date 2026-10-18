@@ -1,0 +1,97 @@
+[
+  {
+    "id": "steering_mode",
+    "name": "1. Steering Wheel Shortcuts (Drive Mode & Regen)",
+    "description": "Double-click ▶: Comfort -> Sport -> Eco\nDouble-click ◀: Regen Low -> Med -> High",
+    "daemon_process": "SteeringModeDaemon",
+    "files": [
+      { "src": "steering_mode_controller.jar", "dst": "/data/local/window/steering_mode_controller.jar" },
+      { "src": "start_steering_daemon.sh", "dst": "/data/local/window/start_steering_daemon.sh" }
+    ],
+    "post_install": [
+      "chmod +x /data/local/window/start_steering_daemon.sh",
+      "/data/local/window/start_steering_daemon.sh"
+    ]
+  },
+  {
+    "id": "pressure_relief",
+    "name": "2. Cabin Pressure Relief (Auto Window Vent)",
+    "description": "Auto drops window 10mm when door opens & seals upon closing for ear comfort.",
+    "daemon_process": "DoorPressureReliefDaemon",
+    "files": [
+      { "src": "door_pressure_relief.jar", "dst": "/data/local/window/door_pressure_relief.jar" },
+      { "src": "start_pressure_relief.sh", "dst": "/data/local/window/start_pressure_relief.sh" }
+    ],
+    "post_install": [
+      "chmod +x /data/local/window/start_pressure_relief.sh",
+      "/data/local/window/start_pressure_relief.sh"
+    ]
+  },
+  {
+    "id": "salam_boot",
+    "name": "3. Cabin Salam & Doa Greeting",
+    "description": "Plays 'Assalamu'alaikum' & Doa Naik Kenderaan inside cabin when starting car.",
+    "daemon_process": "salam",
+    "files": [
+      { "src": "start_salam.sh", "dst": "/data/local/window/start_salam.sh" }
+    ],
+    "post_install": [
+      "chmod +x /data/local/window/start_salam.sh",
+      "sh /data/local/window/start_salam.sh &"
+    ]
+  },
+  {
+    "id": "gear_doa",
+    "name": "4. Gear Shift 'D' Audio Trigger",
+    "description": "Plays gentle reminder audio when shifting into Drive gear.",
+    "daemon_process": "GearAudioPoc",
+    "files": [
+      { "src": "start_gear_audio.sh", "dst": "/data/local/window/start_gear_audio.sh" }
+    ],
+    "post_install": [
+      "chmod +x /data/local/window/start_gear_audio.sh",
+      "/data/local/window/start_gear_audio.sh"
+    ]
+  },
+  {
+    "id": "door_chime",
+    "name": "5. Luxury Door Open/Close Chime",
+    "description": "Plays acoustic tone whenever vehicle doors open or close.",
+    "daemon_process": "DoorChime",
+    "files": [
+      { "src": "start_door_chime.sh", "dst": "/data/local/window/start_door_chime.sh" }
+    ],
+    "post_install": [
+      "chmod +x /data/local/window/start_door_chime.sh",
+      "/data/local/window/start_door_chime.sh"
+    ]
+  },
+  {
+    "id": "telemetry",
+    "name": "6. Telemetry & Live Data Daemon",
+    "description": "Broadcasts real-time vehicle speed, battery, and mode data over LAN.",
+    "daemon_process": "TelemetryDaemon",
+    "files": [
+      { "src": "start_telemetry.sh", "dst": "/data/local/window/start_telemetry.sh" }
+    ],
+    "post_install": [
+      "chmod +x /data/local/window/start_telemetry.sh",
+      "/data/local/window/start_telemetry.sh"
+    ]
+  },
+  {
+    "id": "avas_sync",
+    "name": "7. AVAS External Speaker Sync Daemon",
+    "description": "Restores factory sounds & syncs pedestrian warning sounds with UI settings.",
+    "daemon_process": "sync_avas",
+    "files": [
+      { "src": "avas_boot.sh", "dst": "/data/local/avas/avas_boot.sh" },
+      { "src": "sync_avas.sh", "dst": "/data/local/avas/sync_avas.sh" }
+    ],
+    "post_install": [
+      "chmod +x /data/local/avas/avas_boot.sh",
+      "chmod +x /data/local/avas/sync_avas.sh",
+      "/data/local/avas/avas_boot.sh"
+    ]
+  }
+]

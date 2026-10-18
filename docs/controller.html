@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>e.MAS Virtual Gamepad</title>
+<meta name="theme-color" content="#0a0e17">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+body {
+  background: #080c14;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  touch-action: none;
+}
+#pad-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: radial-gradient(circle at center, #111827 0%, #050811 100%);
+  overflow: hidden;
+}
+
+/* TOP STATUS BAR */
+#top-bar {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  z-index: 50;
+  pointer-events: auto;
+}
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(17, 24, 39, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  backdrop-filter: blur(8px);
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 6px #ef4444;
+}
+.dot.online {
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+.ip-input {
+  background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #38bdf8;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 11px;
+  width: 105px;
+  text-align: center;
+}
+.btn-top {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+  padding: 4px 9px;
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.btn-top.active-edit {
+  background: #eab308;
+  color: #000;
+  font-weight: bold;
+  border-color: #fef08a;
+  box-shadow: 0 0 10px #eab308;
+}
+
+/* MODE SELECTOR (DUAL / DPAD / STICK) */
+#mode-bar {
+  display: flex;
+  gap: 4px;
+  background: rgba(17, 24, 39, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 2px 4px;
+  border-radius: 20px;
+  backdrop-filter: blur(8px);
+}
+.mode-btn {
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.mode-btn.active {
+  background: #0284c7;
+  color: #fff;
+  box-shadow: 0 0 8px rgba(2, 132, 199, 0.6);
+}
+
+/* EDIT HUD BAR (PLACED AT BOTTOM CENTER SO TOP CONTROLS ARE CLEAR) */
+#edit-hud-bar {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid #38bdf8;
+  padding: 8px 16px;
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.8), 0 0 15px rgba(56, 189, 248, 0.3);
+  z-index: 100;
+  backdrop-filter: blur(10px);
+}
+.edit-hud-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: bold;
+}
+#selected-label {
+  color: #38bdf8;
+}
+#scale-label {
+  color: #e2e8f0;
+}
+.edit-hud-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.btn-edit-act {
+  background: #1e293b;
+  border: 1px solid #475569;
+  color: #f1f5f9;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.btn-edit-save {
+  background: #15803d;
+  border: 1px solid #22c55e;
+  color: #fff;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+}
+.btn-edit-reset {
+  background: #b91c1c;
+  border: 1px solid #ef4444;
+  color: #fff;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.btn-edit-close {
+  background: #374151;
+  border: 1px solid #6b7280;
+  color: #d1d5db;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* EDITING MODE HIGHLIGHTS */
+body.editing-layout .hud-movable {
+  outline: 2px dashed #38bdf8 !important;
+  cursor: grab !important;
+  touch-action: none !important;
+}
+body.editing-layout .hud-movable.selected-elem {
+  outline: 2px solid #22c55e !important;
+  box-shadow: 0 0 16px rgba(34, 197, 94, 0.6) !important;
+}
+body.editing-layout .hud-movable::after {
+  content: attr(data-label);
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0284c7;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  z-index: 99;
+}
+
+/* ALL 6 HUD ELEMENTS: ABSOLUTE AND DIRECT */
+.hud-movable {
+  position: absolute;
+  touch-action: none;
+}
+
+/* SHOULDERS */
+.shoulder-row {
+  top: 38px;
+  display: flex;
+  gap: 10px;
+  z-index: 40;
+}
+#shoulders-left { left: 24px; }
+#shoulders-right { right: 24px; }
+
+.btn-shoulder {
+  width: 68px;
+  height: 38px;
+  background: #1f2937;
+  border: 1px solid #374151;
+  color: #9ca3af;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+}
+.btn-shoulder.active {
+  background: #0284c7;
+  color: #fff;
+  border-color: #38bdf8;
+  box-shadow: 0 0 12px #0284c7;
+  transform: translateY(2px);
+}
+
+/* THUMBSTICK (ANALOG) */
+#stick-area {
+  border-radius: 50%;
+  background: rgba(31, 41, 55, 0.55);
+  border: 2px solid rgba(75, 85, 99, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+  z-index: 35;
+}
+#stick-knob {
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #4b5563, #111827);
+  border: 2px solid #6b7280;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+  position: absolute;
+  pointer-events: none;
+  transition: transform 0.04s ease-out;
+}
+
+/* D-PAD (CROSS) */
+#dpad {
+  touch-action: none;
+  z-index: 35;
+}
+.dbtn {
+  position: absolute;
+  background: #1f2937;
+  border: 1px solid #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  font-weight: 900;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.5);
+  pointer-events: none; /* Touches routed through #dpad */
+}
+.dbtn.active {
+  background: #0284c7;
+  color: #fff;
+  border-color: #38bdf8;
+  box-shadow: 0 0 14px #38bdf8;
+}
+#dp-center {
+  position: absolute;
+  background: #111827;
+  border: none;
+  pointer-events: none;
+}
+
+/* DEFAULT BASE PLACEMENTS (WHEN NO CUSTOM LAYOUT) */
+/* 1. DUAL MODE */
+body.mode-dual #stick-area {
+  top: calc(50% - 150px);
+  left: 35px;
+  width: 140px;
+  height: 140px;
+}
+body.mode-dual #stick-knob {
+  width: 62px;
+  height: 62px;
+}
+body.mode-dual #dpad {
+  top: calc(50% + 15px);
+  left: 35px;
+  width: 160px;
+  height: 160px;
+}
+body.mode-dual #dp-up    { top: 0; left: 52px; width: 56px; height: 55px; font-size: 20px; border-radius: 8px 8px 0 0; }
+body.mode-dual #dp-down  { bottom: 0; left: 52px; width: 56px; height: 55px; font-size: 20px; border-radius: 0 0 8px 8px; }
+body.mode-dual #dp-left  { top: 52px; left: 0; width: 55px; height: 56px; font-size: 20px; border-radius: 8px 0 0 8px; }
+body.mode-dual #dp-right { top: 52px; right: 0; width: 55px; height: 56px; font-size: 20px; border-radius: 0 8px 8px 0; }
+body.mode-dual #dp-center { top: 52px; left: 52px; width: 56px; height: 56px; }
+
+/* 2. DPAD FOCUS */
+body.mode-dpad #dpad {
+  top: calc(50% - 85px);
+  left: 45px;
+  width: 220px;
+  height: 220px;
+}
+body.mode-dpad #dp-up    { top: 0; left: 72px; width: 76px; height: 75px; font-size: 26px; border-radius: 12px 12px 0 0; }
+body.mode-dpad #dp-down  { bottom: 0; left: 72px; width: 76px; height: 75px; font-size: 26px; border-radius: 0 0 12px 12px; }
+body.mode-dpad #dp-left  { top: 72px; left: 0; width: 75px; height: 76px; font-size: 26px; border-radius: 12px 0 0 12px; }
+body.mode-dpad #dp-right { top: 72px; right: 0; width: 75px; height: 76px; font-size: 26px; border-radius: 0 12px 12px 0; }
+body.mode-dpad #dp-center { top: 72px; left: 72px; width: 76px; height: 76px; }
+body.mode-dpad #stick-area { display: none !important; }
+
+/* 3. STICK FOCUS */
+body.mode-stick #stick-area {
+  top: calc(50% - 85px);
+  left: 45px;
+  width: 200px;
+  height: 200px;
+}
+body.mode-stick #stick-knob {
+  width: 86px;
+  height: 86px;
+}
+body.mode-stick #dpad { display: none !important; }
+
+/* ACTION BUTTONS (RIGHT) - PERFECT SYMMETRICAL GIANT DIAMOND */
+#diamond {
+  top: calc(50% - 85px);
+  right: 45px;
+  width: 220px;
+  height: 220px;
+  z-index: 35;
+}
+.abtn {
+  position: absolute;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 900;
+  box-shadow: 0 5px 12px rgba(0,0,0,0.6);
+  border: 2px solid rgba(255,255,255,0.2);
+  transition: filter 0.05s ease;
+}
+.abtn.active {
+  filter: brightness(1.35);
+}
+
+/* NINTENDO / XBOX COLORS & PRECISE SYMMETRICAL POSITIONS */
+#btn-y {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(circle at 30% 30%, #eab308, #a16207);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(234, 179, 8, 0.45);
+}
+#btn-y.active {
+  transform: translateX(-50%) scale(0.92);
+}
+
+#btn-a {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(circle at 30% 30%, #22c55e, #15803d);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(34, 197, 94, 0.45);
+}
+#btn-a.active {
+  transform: translateX(-50%) scale(0.92);
+}
+
+#btn-x {
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: radial-gradient(circle at 30% 30%, #3b82f6, #1d4ed8);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(59, 130, 246, 0.45);
+}
+#btn-x.active {
+  transform: translateY(-50%) scale(0.92);
+}
+
+#btn-b {
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: radial-gradient(circle at 30% 30%, #ef4444, #b91c1c);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.45);
+}
+#btn-b.active {
+  transform: translateY(-50%) scale(0.92);
+}
+
+/* CENTER BUTTONS (PLUS, MINUS, HOME) */
+#center-controls {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  z-index: 30;
+}
+.cbtn {
+  background: #1f2937;
+  border: 1px solid #374151;
+  color: #9ca3af;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+}
+.cbtn.active {
+  background: #38bdf8;
+  color: #000;
+  box-shadow: 0 0 12px #38bdf8;
+}
+#logo-car {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #38bdf8;
+  opacity: 0.8;
+  text-align: center;
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+/* TOAST NOTIFICATION */
+#toast {
+  position: absolute;
+  top: 55px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid #38bdf8;
+  color: #fff;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  z-index: 200;
+  display: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  animation: fadeInOut 2.5s ease forwards;
+}
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translate(-50%, -10px); }
+  15% { opacity: 1; transform: translate(-50%, 0); }
+  85% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -10px); }
+}
+</style>
+</head>
+<body class="mode-dual">
+
+<div id="pad-container">
+  <!-- TOP BAR -->
+  <div id="top-bar">
+    <div class="status-pill">
+      <span class="dot" id="net-dot"></span>
+      <span id="net-status">Offline</span>
+      <input type="text" class="ip-input" id="car-ip" value="192.168.1.21" title="Car IP">
+      <button class="btn-top" onclick="reconnect()">Connect</button>
+    </div>
+
+    <!-- MODE SWITCHER -->
+    <div id="mode-bar">
+      <button class="mode-btn active" id="mbtn-dual" onclick="setMode('dual')">🎮 Dual</button>
+      <button class="mode-btn" id="mbtn-dpad" onclick="setMode('dpad')">➕ D-Pad</button>
+      <button class="mode-btn" id="mbtn-stick" onclick="setMode('stick')">🕹️ Stick</button>
+    </div>
+
+    <div style="display:flex; gap:6px;">
+      <button class="btn-top" id="btn-edit" onclick="toggleEditMode()">⚙️ Ubah Posisi</button>
+      <button class="btn-top" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+    </div>
+  </div>
+
+  <!-- FLOATING EDIT HUD TOOLBAR (AT BOTTOM) -->
+  <div id="edit-hud-bar">
+    <div class="edit-hud-info">
+      <span id="selected-label">👆 Sentuh butang untuk alih</span>
+      <span id="scale-label">Saiz: 100%</span>
+    </div>
+    <div class="edit-hud-actions">
+      <button class="btn-edit-act" onclick="scaleSelected(-0.1)">➖ Kecil</button>
+      <button class="btn-edit-act" onclick="scaleSelected(0.1)">➕ Besar</button>
+      <button class="btn-edit-act" onclick="resetDiamondPosition()" title="Panggil balik ABXY kalau hilang">🎯 Panggil ABXY</button>
+      <button class="btn-edit-save" onclick="saveCustomLayout()">💾 Simpan</button>
+      <button class="btn-edit-reset" onclick="resetCustomLayout()">🔄 Reset Asal</button>
+      <button class="btn-edit-close" onclick="cancelEditMode()">✕ Tutup</button>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast"></div>
+
+  <!-- 1. LEFT SHOULDERS -->
+  <div class="shoulder-row hud-movable" id="shoulders-left" data-hud="shoulders-left" data-label="L1 / L2">
+    <div class="btn-shoulder" data-btn="L2">L2 (ZL)</div>
+    <div class="btn-shoulder" data-btn="L1">L1 (L)</div>
+  </div>
+
+  <!-- 2. RIGHT SHOULDERS -->
+  <div class="shoulder-row hud-movable" id="shoulders-right" data-hud="shoulders-right" data-label="R1 / R2">
+    <div class="btn-shoulder" data-btn="R1">R1 (R)</div>
+    <div class="btn-shoulder" data-btn="R2">R2 (ZR)</div>
+  </div>
+
+  <!-- 3. ANALOG STICK -->
+  <div id="stick-area" class="hud-movable" data-hud="stick" data-label="Analog Stick">
+    <div id="stick-knob"></div>
+  </div>
+
+  <!-- 4. D-PAD CROSS -->
+  <div id="dpad" class="hud-movable" data-hud="dpad" data-label="D-Pad Cross">
+    <div class="dbtn" id="dp-up">▲</div>
+    <div class="dbtn" id="dp-down">▼</div>
+    <div class="dbtn" id="dp-left">◀</div>
+    <div class="dbtn" id="dp-right">▶</div>
+    <div id="dp-center"></div>
+  </div>
+
+  <!-- 5. CENTER CONTROLS -->
+  <div id="center-controls" class="hud-movable" data-hud="center-controls" data-label="Menu / Home">
+    <div class="cbtn" data-btn="SELECT" title="Select / Minus">-</div>
+    <div class="cbtn" data-btn="HOME" style="width:34px; height:34px; font-size:12px;">⚡</div>
+    <div class="cbtn" data-btn="START" title="Start / Plus">+</div>
+  </div>
+
+  <!-- 6. ABXY DIAMOND (NOW BIG 220PX SYMMETRICAL CLUSTER) -->
+  <div id="diamond" class="hud-movable" data-hud="diamond" data-label="ABXY Diamond">
+    <div class="abtn" id="btn-y" data-btn="Y">Y</div>
+    <div class="abtn" id="btn-x" data-btn="X">X</div>
+    <div class="abtn" id="btn-b" data-btn="B">B</div>
+    <div class="abtn" id="btn-a" data-btn="A">A</div>
+  </div>
+</div>
+
+<script>
+// Button masks: 1:A, 2:B, 4:X, 8:Y, 16:L1, 32:R1, 64:L2, 128:R2, 256:SELECT, 512:START, 1024:HOME, 2048:UP, 4096:DOWN, 8192:LEFT, 16384:RIGHT
+const BTN_MASKS = {
+   A: 1, B: 2, X: 4, Y: 8,
+  L1: 16, R1: 32, L2: 64, R2: 128,
+  SELECT: 256, START: 512, HOME: 1024,
+  UP: 2048, DOWN: 4096, LEFT: 8192, RIGHT: 16384
+};
+
+let buttonState = 0;
+let stickX = 0, stickY = 0;
+let stickDpadMask = 0;
+let ws = null;
+let activeMode = 'dual';
+let isEditMode = false;
+let selectedHudElem = null;
+
+// Layout configuration storage
+let customLayout = {};
+
+function vibrate(ms = 12) {
+  if (navigator.vibrate) try { navigator.vibrate(ms); } catch(e){}
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.innerText = msg;
+  t.style.display = 'block';
+  t.style.animation = 'none';
+  t.offsetHeight; // trigger reflow
+  t.style.animation = 'fadeInOut 2.5s ease forwards';
+  setTimeout(() => { t.style.display = 'none'; }, 2500);
+}
+
+// Mode Switcher (Dual / DPad / Stick)
+function setMode(mode) {
+  activeMode = mode;
+  document.body.className = `mode-${mode}` + (isEditMode ? ' editing-layout' : '');
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById(`mbtn-${mode}`);
+  if (btn) btn.classList.add('active');
+  try { localStorage.setItem('controller_mode', mode); } catch(e){}
+  vibrate(20);
+}
+
+// Button state toggle
+function updateButton(btnName, isDown) {
+  if (isEditMode) return;
+  const mask = BTN_MASKS[btnName];
+  if (!mask) return;
+  const prevState = buttonState;
+  if (isDown) {
+    buttonState |= mask;
+    vibrate(10);
+  } else {
+    buttonState &= ~mask;
+  }
+  if (prevState !== buttonState) {
+    sendInput();
+  }
+}
+
+// Bind Touch / Pointer Events for all standard buttons (ABXY, Shoulders, Center)
+document.querySelectorAll('[data-btn]').forEach(el => {
+  const name = el.getAttribute('data-btn');
+
+  el.addEventListener('pointerdown', (e) => {
+    if (isEditMode) return;
+    e.preventDefault();
+    el.setPointerCapture(e.pointerId);
+    el.classList.add('active');
+    updateButton(name, true);
+  });
+
+  const onUp = (e) => {
+    if (isEditMode) return;
+    e.preventDefault();
+    el.classList.remove('active');
+    updateButton(name, false);
+  };
+  el.addEventListener('pointerup', onUp);
+  el.addEventListener('pointercancel', onUp);
+});
+
+// SMOOTH CONTINUOUS D-PAD LOGIC (8-Directional with Diagonal Support)
+const dpadEl = document.getElementById('dpad');
+let dpadPointerId = null;
+
+function handleDpadMove(e) {
+  if (isEditMode) return;
+  const rect = dpadEl.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const dx = e.clientX - cx;
+  const dy = e.clientY - cy;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+
+  let up = false, down = false, left = false, right = false;
+
+  // Threshold from center: 16px
+  if (dist > 16) {
+    const angle = Math.atan2(dy, dx) * (180 / Math.PI); // -180 to 180
+    if (angle > -67.5 && angle < 67.5) right = true;
+    if (angle > 22.5 && angle < 157.5) down = true;
+    if (angle > 112.5 || angle < -112.5) left = true;
+    if (angle < -22.5 && angle > -157.5) up = true;
+  }
+
+  // Update visual classes
+  document.getElementById('dp-up').classList.toggle('active', up);
+  document.getElementById('dp-down').classList.toggle('active', down);
+  document.getElementById('dp-left').classList.toggle('active', left);
+  document.getElementById('dp-right').classList.toggle('active', right);
+
+  const prev = buttonState;
+  if (up) buttonState |= BTN_MASKS.UP; else buttonState &= ~BTN_MASKS.UP;
+  if (down) buttonState |= BTN_MASKS.DOWN; else buttonState &= ~BTN_MASKS.DOWN;
+  if (left) buttonState |= BTN_MASKS.LEFT; else buttonState &= ~BTN_MASKS.LEFT;
+  if (right) buttonState |= BTN_MASKS.RIGHT; else buttonState &= ~BTN_MASKS.RIGHT;
+
+  if (prev !== buttonState) {
+    vibrate(12);
+    sendInput();
+  }
+}
+
+dpadEl.addEventListener('pointerdown', (e) => {
+  if (isEditMode) return;
+  e.preventDefault();
+  dpadPointerId = e.pointerId;
+  handleDpadMove(e);
+});
+
+window.addEventListener('pointermove', (e) => {
+  if (isEditMode) return;
+  if (e.pointerId === dpadPointerId) {
+    e.preventDefault();
+    handleDpadMove(e);
+  }
+});
+
+const onDpadUp = (e) => {
+  if (isEditMode) return;
+  if (e.pointerId === dpadPointerId) {
+    e.preventDefault();
+    dpadPointerId = null;
+    ['dp-up', 'dp-down', 'dp-left', 'dp-right'].forEach(id => {
+      document.getElementById(id).classList.remove('active');
+    });
+    buttonState &= ~(BTN_MASKS.UP | BTN_MASKS.DOWN | BTN_MASKS.LEFT | BTN_MASKS.RIGHT);
+    sendInput();
+  }
+};
+window.addEventListener('pointerup', onDpadUp);
+window.addEventListener('pointercancel', onDpadUp);
+
+
+// LEFT STICK VIRTUAL JOYSTICK LOGIC
+const stickArea = document.getElementById('stick-area');
+const stickKnob = document.getElementById('stick-knob');
+let stickPointerId = null;
+let stickCenterX = 0, stickCenterY = 0;
+
+function getStickRadius() {
+  const baseR = (activeMode === 'stick') ? 85 : 58;
+  const scale = (customLayout['stick'] && customLayout['stick'].scale) || 1.0;
+  return baseR * scale;
+}
+
+stickArea.addEventListener('pointerdown', (e) => {
+  if (isEditMode) return;
+  e.preventDefault();
+  stickPointerId = e.pointerId;
+  const rect = stickArea.getBoundingClientRect();
+  stickCenterX = rect.left + rect.width / 2;
+  stickCenterY = rect.top + rect.height / 2;
+  handleStickMove(e);
+});
+
+window.addEventListener('pointermove', (e) => {
+  if (isEditMode) return;
+  if (e.pointerId === stickPointerId) {
+    e.preventDefault();
+    handleStickMove(e);
+  }
+});
+
+const onStickUp = (e) => {
+  if (isEditMode) return;
+  if (e.pointerId === stickPointerId) {
+    e.preventDefault();
+    stickPointerId = null;
+    stickX = 0;
+    stickY = 0;
+    stickDpadMask = 0;
+    stickKnob.style.transform = 'translate(0px, 0px)';
+    sendInput();
+  }
+};
+window.addEventListener('pointerup', onStickUp);
+window.addEventListener('pointercancel', onStickUp);
+
+function handleStickMove(e) {
+  if (isEditMode) return;
+  const maxR = getStickRadius();
+  let dx = e.clientX - stickCenterX;
+  let dy = e.clientY - stickCenterY;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+
+  if (dist > maxR) {
+    dx = (dx / dist) * maxR;
+    dy = (dy / dist) * maxR;
+  }
+
+  stickKnob.style.transform = `translate(${dx}px, ${dy}px)`;
+
+  // Normalize -32767 .. 32767 with 12% deadzone
+  let normX = dx / maxR;
+  let normY = dy / maxR;
+  const deadzone = 0.12;
+  if (Math.abs(normX) < deadzone) normX = 0;
+  if (Math.abs(normY) < deadzone) normY = 0;
+
+  stickX = Math.round(normX * 32767);
+  stickY = Math.round(normY * 32767);
+
+  // Smart Hybrid: Joystick tilt ALSO triggers D-Pad bits so 2D / Retro games work automatically!
+  stickDpadMask = 0;
+  if (normY < -0.32) stickDpadMask |= BTN_MASKS.UP;
+  else if (normY > 0.32) stickDpadMask |= BTN_MASKS.DOWN;
+  if (normX < -0.32) stickDpadMask |= BTN_MASKS.LEFT;
+  else if (normX > 0.32) stickDpadMask |= BTN_MASKS.RIGHT;
+
+  sendInput();
+}
+
+// WebSocket & Input Dispatch
+function sendInput() {
+  const combinedButtons = buttonState | stickDpadMask;
+
+  // If stick is neutral but D-Pad is pressed, mirror D-Pad to stick coordinates
+  let effectiveX = stickX;
+  let effectiveY = stickY;
+  if (effectiveX === 0 && effectiveY === 0) {
+    if (buttonState & BTN_MASKS.LEFT) effectiveX = -32767;
+    else if (buttonState & BTN_MASKS.RIGHT) effectiveX = 32767;
+    if (buttonState & BTN_MASKS.UP) effectiveY = -32767;
+    else if (buttonState & BTN_MASKS.DOWN) effectiveY = 32767;
+  }
+
+  const msg = `GP ${combinedButtons} ${effectiveX} ${effectiveY} 0 0 0 0`;
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(msg);
+  } else {
+    // Fallback: send via fetch / HTTP to car
+    const carIp = document.getElementById('car-ip').value.trim();
+    if (carIp) {
+      fetch(`http://${carIp}:8895/gp?b=${combinedButtons}&lx=${effectiveX}&ly=${effectiveY}`, { mode: 'no-cors' }).catch(()=>{});
+    }
+  }
+}
+
+function reconnect() {
+  if (ws) {
+    try { ws.close(); } catch(e){}
+    ws = null;
+  }
+  const carIp = document.getElementById('car-ip').value.trim();
+  const netDot = document.getElementById('net-dot');
+  const netStatus = document.getElementById('net-status');
+
+  netStatus.innerText = "Connecting...";
+  netDot.className = "dot";
+
+  try {
+    ws = new WebSocket(`ws://${carIp}:8895`);
+    ws.onopen = () => {
+      netStatus.innerText = "Connected";
+      netDot.className = "dot online";
+      vibrate(30);
+    };
+    ws.onclose = () => {
+      netStatus.innerText = "Offline";
+      netDot.className = "dot";
+    };
+    ws.onerror = () => {
+      netStatus.innerText = "Error (HTTP fallback)";
+      netDot.className = "dot";
+    };
+  } catch(e) {
+    netStatus.innerText = "Offline";
+  }
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(()=>{});
+  } else {
+    document.exitFullscreen().catch(()=>{});
+  }
+}
+
+
+/* ==========================================================
+   CUSTOM ERGONOMIC HUD DRAG & DROP / RESIZING ENGINE
+   ========================================================== */
+
+let activeDragEl = null;
+let dragStartX = 0, dragStartY = 0;
+let elemStartX = 0, elemStartY = 0;
+
+function toggleEditMode() {
+  isEditMode = !isEditMode;
+  const btn = document.getElementById('btn-edit');
+  const hudBar = document.getElementById('edit-hud-bar');
+
+  if (isEditMode) {
+    document.body.classList.add('editing-layout');
+    btn.classList.add('active-edit');
+    btn.innerHTML = '✕ Selesai';
+    hudBar.style.display = 'flex';
+    vibrate(25);
+    showToast('Mod Ubah Posisi: Seret butang ke mana-mana!');
+    selectHudElement(document.getElementById('diamond'));
+  } else {
+    cancelEditMode();
+  }
+}
+
+function cancelEditMode() {
+  isEditMode = false;
+  document.body.classList.remove('editing-layout');
+  const btn = document.getElementById('btn-edit');
+  btn.classList.remove('active-edit');
+  btn.innerHTML = '⚙️ Ubah Posisi';
+  document.getElementById('edit-hud-bar').style.display = 'none';
+  document.querySelectorAll('.hud-movable').forEach(el => el.classList.remove('selected-elem'));
+  selectedHudElem = null;
+}
+
+function selectHudElement(el) {
+  if (!el) return;
+  selectedHudElem = el;
+  document.querySelectorAll('.hud-movable').forEach(e => e.classList.remove('selected-elem'));
+  el.classList.add('selected-elem');
+  const key = el.getAttribute('data-hud');
+  const label = el.getAttribute('data-label') || key;
+  document.getElementById('selected-label').innerText = `Dipilih: ${label}`;
+
+  const currentScale = (customLayout[key] && customLayout[key].scale) || 1.0;
+  document.getElementById('scale-label').innerText = `Saiz: ${Math.round(currentScale * 100)}%`;
+}
+
+function scaleSelected(delta) {
+  if (!selectedHudElem) return;
+  const key = selectedHudElem.getAttribute('data-hud');
+  if (!customLayout[key]) {
+    const rect = selectedHudElem.getBoundingClientRect();
+    const cRect = document.getElementById('pad-container').getBoundingClientRect();
+    customLayout[key] = {
+      xPct: ((rect.left - cRect.left) / cRect.width) * 100,
+      yPct: ((rect.top - cRect.top) / cRect.height) * 100,
+      scale: 1.0
+    };
+  }
+
+  let s = (customLayout[key].scale || 1.0) + delta;
+  s = Math.max(0.65, Math.min(1.85, Math.round(s * 10) / 10));
+  customLayout[key].scale = s;
+  selectedHudElem.style.transform = `scale(${s})`;
+  document.getElementById('scale-label').innerText = `Saiz: ${Math.round(s * 100)}%`;
+  vibrate(15);
+}
+
+function resetDiamondPosition() {
+  const d = document.getElementById('diamond');
+  const container = document.getElementById('pad-container');
+  const cRect = container.getBoundingClientRect();
+  const safeX = Math.round(cRect.width - 250);
+  const safeY = Math.round(cRect.height / 2 - 110);
+
+  d.style.left = safeX + 'px';
+  d.style.top = safeY + 'px';
+  d.style.right = 'auto';
+  d.style.bottom = 'auto';
+  d.style.transform = 'scale(1)';
+
+  if (!customLayout['diamond']) customLayout['diamond'] = {};
+  customLayout['diamond'].xPct = (safeX / cRect.width) * 100;
+  customLayout['diamond'].yPct = (safeY / cRect.height) * 100;
+  customLayout['diamond'].scale = 1.0;
+
+  selectHudElement(d);
+  showToast('🎯 ABXY Diamond diposisikan semula!');
+  vibrate(25);
+}
+
+function initMovableHUD() {
+  const container = document.getElementById('pad-container');
+
+  document.querySelectorAll('.hud-movable').forEach(el => {
+    el.addEventListener('pointerdown', (e) => {
+      if (!isEditMode) return;
+      e.preventDefault();
+      e.stopPropagation();
+
+      selectHudElement(el);
+      activeDragEl = el;
+      el.setPointerCapture(e.pointerId);
+
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+
+      const rect = el.getBoundingClientRect();
+      const cRect = container.getBoundingClientRect();
+
+      // Current position relative to #pad-container
+      elemStartX = rect.left - cRect.left;
+      elemStartY = rect.top - cRect.top;
+
+      el.style.left = elemStartX + 'px';
+      el.style.top = elemStartY + 'px';
+      el.style.right = 'auto';
+      el.style.bottom = 'auto';
+      el.style.margin = '0';
+      el.style.transformOrigin = 'center center';
+    });
+
+    el.addEventListener('pointermove', (e) => {
+      if (!isEditMode || activeDragEl !== el) return;
+      e.preventDefault();
+      e.stopPropagation();
+
+      const dx = e.clientX - dragStartX;
+      const dy = e.clientY - dragStartY;
+
+      let newX = elemStartX + dx;
+      let newY = elemStartY + dy;
+
+      const cRect = container.getBoundingClientRect();
+      const w = el.offsetWidth;
+      const h = el.offsetHeight;
+
+      // Restrict inside container bounds
+      newX = Math.max(5, Math.min(newX, cRect.width - w - 5));
+      newY = Math.max(25, Math.min(newY, cRect.height - h - 5));
+
+      el.style.left = newX + 'px';
+      el.style.top = newY + 'px';
+
+      // Save percentage into customLayout memory
+      const key = el.getAttribute('data-hud');
+      if (!customLayout[key]) customLayout[key] = { scale: 1.0 };
+      customLayout[key].xPct = (newX / cRect.width) * 100;
+      customLayout[key].yPct = (newY / cRect.height) * 100;
+    });
+
+    const onDragEnd = (e) => {
+      if (activeDragEl === el) {
+        activeDragEl = null;
+      }
+    };
+    el.addEventListener('pointerup', onDragEnd);
+    el.addEventListener('pointercancel', onDragEnd);
+  });
+}
+
+function saveCustomLayout() {
+  try {
+    localStorage.setItem('emas_gamepad_layout_custom', JSON.stringify(customLayout));
+    showToast('💾 Posisi & saiz butang berjaya disimpan!');
+    vibrate(30);
+  } catch(e){}
+  cancelEditMode();
+}
+
+function resetCustomLayout() {
+  try {
+    localStorage.removeItem('emas_gamepad_layout_custom');
+  } catch(e){}
+  customLayout = {};
+
+  document.querySelectorAll('.hud-movable').forEach(el => {
+    el.style.left = '';
+    el.style.top = '';
+    el.style.right = '';
+    el.style.bottom = '';
+    el.style.margin = '';
+    el.style.transform = '';
+  });
+
+  showToast('🔄 Posisi dikembalikan ke tetapan asal!');
+  vibrate(20);
+  cancelEditMode();
+}
+
+function applySavedLayout() {
+  try {
+    const raw = localStorage.getItem('emas_gamepad_layout_custom');
+    if (!raw) return;
+    customLayout = JSON.parse(raw);
+    const container = document.getElementById('pad-container');
+    const cW = container.clientWidth || window.innerWidth;
+    const cH = container.clientHeight || window.innerHeight;
+
+    Object.keys(customLayout).forEach(key => {
+      const cfg = customLayout[key];
+      const el = document.querySelector(`[data-hud="${key}"]`);
+      if (el && cfg) {
+        let x = (cfg.xPct / 100) * cW;
+        let y = (cfg.yPct / 100) * cH;
+
+        // Auto-fix if coordinate is off-screen
+        if (key === 'diamond') {
+          if (x > cW - 150 || x < 50 || isNaN(x)) {
+            x = cW - 250;
+            y = (cH / 2) - 85;
+            cfg.xPct = (x / cW) * 100;
+            cfg.yPct = (y / cH) * 100;
+          }
+        }
+
+        x = Math.max(5, Math.min(x, cW - (el.offsetWidth || 220) - 5));
+        y = Math.max(25, Math.min(y, cH - (el.offsetHeight || 220) - 5));
+
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+        el.style.right = 'auto';
+        el.style.bottom = 'auto';
+        el.style.margin = '0';
+        if (cfg.scale !== undefined) {
+          el.style.transform = `scale(${cfg.scale})`;
+          el.style.transformOrigin = 'center center';
+        }
+      }
+    });
+  } catch(e){}
+}
+
+
+// Auto-connect on load
+window.addEventListener('load', () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const hostParam = urlParams.get('ip');
+  if (hostParam) {
+    document.getElementById('car-ip').value = hostParam;
+  } else if (window.location.hostname && !window.location.hostname.includes('43-159-63-29') && window.location.hostname !== 'localhost') {
+    document.getElementById('car-ip').value = window.location.hostname;
+  }
+
+  // Restore saved mode
+  try {
+    const saved = localStorage.getItem('controller_mode');
+    if (saved && (saved === 'dual' || saved === 'dpad' || saved === 'stick')) {
+      setMode(saved);
+    }
+  } catch(e){}
+
+  initMovableHUD();
+  applySavedLayout();
+  reconnect();
+});
+
+// Re-apply layout on orientation change
+window.addEventListener('resize', () => {
+  if (Object.keys(customLayout).length > 0) {
+    applySavedLayout();
+  }
+});
+</script>
+</body>
+</html>

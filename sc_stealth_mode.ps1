@@ -7,7 +7,7 @@
 # 3. Kunci sistem dalam mod asal kilang (Showroom Condition) untuk lawatan SC.
 # ==============================================================================
 
-$targetIp = "192.168.1.19"
+$targetIp = "192.168.1.20"
 if ($args.Count -gt 0) { $targetIp = $args[0] }
 $device = "${targetIp}:5555"
 
@@ -31,7 +31,8 @@ $appsToHide = @(
     "com.netflix.mediaclient",
     "org.smarttube.stable",
     "com.noor.thenoorcar",
-    "com.cybercat.acbridge"
+    "com.cybercat.acbridge",
+    "com.retroarch.aarch64"
 )
 
 foreach ($pkg in $appsToHide) {
@@ -51,7 +52,7 @@ adb -s $device shell "pkill -f 'GearAudioPoc'; pkill -f 'DoorDoaPoc'; pkill -f '
 
 # 4. Pengesahan status akhir
 Write-Host "`n[4/4] Memeriksa status akhir sistem..." -ForegroundColor White
-$disabledCheck = adb -s $device shell "pm list packages -d | grep -iE 'netflix|smarttube|noor|acbridge'"
+$disabledCheck = adb -s $device shell "pm list packages -d | grep -iE 'netflix|smarttube|noor|acbridge|retroarch'"
 $processCheck = adb -s $device shell "ps -A | grep -iE 'GearAudio|Megaphone|TelemetryDaemon'"
 
 Write-Host "`n==========================================================" -ForegroundColor Green

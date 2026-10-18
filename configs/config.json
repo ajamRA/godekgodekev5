@@ -1,0 +1,29 @@
+{
+  "active_slot": 3,
+  "slots": {
+    "1": {
+      "name": "Slot 1 (Galaxy)",
+      "custom_name": "Paddle Pop",
+      "audio_file": "slot1.wav",
+      "mute_chime": true,
+      "volume": [0, 2, 5, 6, 7, 2, 0],
+      "pitch": [100, 100, 100, 100, 100, 100, 100]
+    },
+    "2": {
+      "name": "Slot 2 (Space)",
+      "custom_name": "Space Pulse",
+      "audio_file": "space.wav",
+      "mute_chime": false,
+      "volume": [0, 6, 8, 11, 14, 6, 0],
+      "pitch": [100, 100, 100, 100, 100, 100, 100]
+    },
+    "3": {
+      "name": "Slot 3 (Pixel)",
+      "custom_name": "Super Mario Bros Theme",
+      "audio_file": "slot3.wav",
+      "mute_chime": true,
+      "volume": [0, 8, 11, 14, 16, 8, 0],
+      "pitch": [100, 102, 105, 108, 112, 116, 120]
+    }
+  }
+}
