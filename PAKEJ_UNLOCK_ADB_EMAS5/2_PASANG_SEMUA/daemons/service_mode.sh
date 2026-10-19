@@ -12,7 +12,7 @@ LOCK_SEL="/data/local/window/locksounds/lock_selection.properties"
 TARGET_LOCK="/sdcard/V3_Vehicle_Locked_Single.wav"
 CHIME="/data/local/window/mode_chime.wav"
 
-APPS="org.smarttube.stable com.netflix.mediaclient com.noor.thenoorcar com.vivaldi.browser.automotive me.zhanghai.android.files com.malaysia.syok com.thisisaim.hotfm com.cybercat.acbridge com.retroarch.aarch64"
+APPS="org.smarttube.stable com.netflix.mediaclient com.noor.thenoorcar com.vivaldi.browser.automotive me.zhanghai.android.files com.malaysia.syok com.thisisaim.hotfm com.cybercat.acbridge com.retroarch.aarch64 com.explusalpha.GbaEmu"
 
 ACTION="$1"
 if [ "$ACTION" = "toggle" ] || [ -z "$ACTION" ]; then
