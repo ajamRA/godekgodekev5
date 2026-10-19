@@ -211,18 +211,23 @@ elif [ "$ACTION" = "off" ]; then
         echo "[SERVICE_MODE] Custom lock sound restored."
     fi
 
-    # 5. Pulihkan AVAS custom
-    # /data/local/tmp dibersihkan pada reboot; /data/local/avas kekal.
-    # Cuba kedua-dua laluan, utamakan yang kekal.
-    if [ -f /data/local/avas/avas_boot.sh ]; then
-        sh /data/local/avas/avas_boot.sh 2>/dev/null &
-        echo "[SERVICE_MODE] Custom AVAS restored (persistent path)."
-    elif [ -f /data/local/tmp/avas_boot_new.sh ]; then
-        sh /data/local/tmp/avas_boot_new.sh 2>/dev/null &
-        echo "[SERVICE_MODE] Custom AVAS restored (tmp path)."
-    else
-        echo "[SERVICE_MODE] AMARAN: tiada skrip AVAS dijumpai; AVAS kekal kilang."
+    # 5. Pulihkan AVAS custom mengikut slot pilihan pengguna
+    if [ -f /data/local/avas/resume_avas_selection.sh ]; then
+        sh /data/local/avas/resume_avas_selection.sh 2>/dev/null
+    elif [ -f /data/local/avas/avas_cli.sh ]; then
+        sh /data/local/avas/avas_cli.sh resume 2>/dev/null
     fi
+    # Pastikan suis skrin dan HAL kembali hidup (ON) pada slot aktif terakhir
+    _last_mode=$(getprop persist.sys.avas.mode)
+    [ -z "$_last_mode" ] || [ "$_last_mode" = "0" ] && _last_mode=3
+    setprop persist.sys.avas.switch 1 2>/dev/null
+    setprop persist.avas.switch 1 2>/dev/null
+    setprop persist.sys.avas.mode "$_last_mode" 2>/dev/null
+    setprop persist.avas.mode "$_last_mode" 2>/dev/null
+    # Restart AVAS service supaya membaca mount slot pilihan
+    _avas_pid=$(pidof vendor.molead.hardware.avas_service@1.0-service)
+    [ -n "$_avas_pid" ] && kill -9 "$_avas_pid" 2>/dev/null
+    echo "[SERVICE_MODE] Custom AVAS restored (Slot $_last_mode, Switch ON)."
 
     # 6. Audio chime feedback satu kali beep
     if [ -f "$CHIME" ]; then
