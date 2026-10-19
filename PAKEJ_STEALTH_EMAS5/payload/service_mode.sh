@@ -138,23 +138,31 @@ elif [ "$ACTION" = "off" ]; then
     rm -f "$FLAG"
     rm -f /data/local/window/.service_mode 2>/dev/null
 
-    # 1. Hidupkan semula semua apps
-    for pkg in $APPS; do
-        pm enable "$pkg" 2>/dev/null
-    done
-    echo "[SERVICE_MODE] Apps restored and visible in app drawer."
-
-    # 1a. Pasang semula bind mount slot aplikasi (dibalikkan semasa 'on')
+    # 1. Pasang semula bind mount slot aplikasi DAHULU (mesti sebelum pm enable)
     if [ -d /data/local/custom_apps/SmartTube ]; then
-        mount -o bind /data/local/custom_apps/SmartTube /system/app/ttincar_tiktok_ACO 2>/dev/null
+        mount -o bind,rec /data/local/custom_apps/SmartTube /system/app/ttincar_tiktok_ACO 2>/dev/null
     fi
     if [ -d /data/local/custom_apps/Netflix ]; then
-        mount -o bind /data/local/custom_apps/Netflix /system/app/JOOXMusic_ACO 2>/dev/null
+        mount -o bind,rec /data/local/custom_apps/Netflix /system/app/JOOXMusic_ACO 2>/dev/null
     fi
     if [ -f /data/local/avas/Settings_MOLEAD_v8.apk ]; then
         mount -o bind /data/local/avas/Settings_MOLEAD_v8.apk /system/app/Settings_MOLEAD/Settings_MOLEAD.apk 2>/dev/null
     fi
     echo "[SERVICE_MODE] App slot bind mounts restored."
+
+    # 1a. Pastikan Netflix didaftar semula jika Android tercicir pendaftaran pakej
+    if ! pm list packages | grep -q com.netflix.mediaclient; then
+        pm install -r -d /data/local/custom_apps/Netflix/com.netflix.mediaclient.apk 2>/dev/null
+    fi
+
+    # 1b. Hidupkan semula semua apps
+    for pkg in $APPS; do
+        pm enable "$pkg" 2>/dev/null
+    done
+    echo "[SERVICE_MODE] Apps restored and visible in app drawer."
+
+    # 1c. Segarkan semula launcher supaya ikon muncul serta-merta tanpa lag
+    am force-stop com.malaysia.launcher3 2>/dev/null
 
     # 1b. Senyapkan bendera lama yang digunakan oleh sc_stealth_mode.ps1
     #     supaya skrip boot tidak menyangka Stealth masih aktif.

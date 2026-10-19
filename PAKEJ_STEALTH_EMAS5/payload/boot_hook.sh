@@ -50,6 +50,7 @@ mkdir -p /data/local/window 2>/dev/null
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') $*" >> "$LOG" 2>/dev/null
     [ "$DRY" = "1" ] && echo "$*"
+    return 0
 }
 
 # Rotate: simpan hanya boot terakhir
@@ -77,9 +78,11 @@ if [ "$STEALTH" = "0" ]; then
             if [ "$DRY" = "1" ]; then
                 log "WOULD MOUNT $_src -> $_tgt"
             else
-                mount none "$_src" "$_tgt" bind rec 2>>"$LOG" \
-                    && log "mount OK $_tgt" \
-                    || log "mount FAIL $_tgt"
+                if mount -o bind,rec "$_src" "$_tgt" 2>>"$LOG"; then
+                    log "mount OK $_tgt"
+                else
+                    log "mount FAIL $_tgt"
+                fi
             fi
         else
             log "skip (tiada sumber): $_src"
@@ -94,10 +97,12 @@ if [ "$STEALTH" = "0" ]; then
         if [ "$DRY" = "1" ]; then
             log "WOULD MOUNT Settings_MOLEAD"
         else
-            mount none /data/local/avas/Settings_MOLEAD_v8.apk \
-                /system/app/Settings_MOLEAD/Settings_MOLEAD.apk bind rec 2>>"$LOG" \
-                && log "mount OK Settings_MOLEAD" \
-                || log "mount FAIL Settings_MOLEAD"
+            if mount -o bind /data/local/avas/Settings_MOLEAD_v8.apk \
+                /system/app/Settings_MOLEAD/Settings_MOLEAD.apk 2>>"$LOG"; then
+                log "mount OK Settings_MOLEAD"
+            else
+                log "mount FAIL Settings_MOLEAD"
+            fi
         fi
     fi
 else
@@ -112,12 +117,14 @@ if [ "$STEALTH" = "0" ]; then
         if [ "$DRY" = "1" ]; then
             log "WOULD install retroarch.cfg (0444, u0_a90)"
         else
-            cp /data/local/retroarch_golden.cfg \
+            if cp /data/local/retroarch_golden.cfg \
                /data/data/com.retroarch.aarch64/retroarch.cfg 2>>"$LOG" \
                 && chmod 0444 /data/data/com.retroarch.aarch64/retroarch.cfg 2>>"$LOG" \
-                && chown u0_a90 u0_a90 /data/data/com.retroarch.aarch64/retroarch.cfg 2>>"$LOG" \
-                && log "retroarch cfg OK" \
-                || log "retroarch cfg FAIL"
+                && chown u0_a90:u0_a90 /data/data/com.retroarch.aarch64/retroarch.cfg 2>>"$LOG"; then
+                log "retroarch cfg OK"
+            else
+                log "retroarch cfg FAIL"
+            fi
         fi
     fi
 else
